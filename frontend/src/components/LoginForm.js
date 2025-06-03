@@ -18,7 +18,10 @@ function Login() {
       });
       const data = await res.json();
       if (res.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user._id);
         alert("Đăng nhập thành công!");
+        window.location.href = "profile";
 
         // chuyển hướng nếu cần
       } else {
@@ -39,9 +42,13 @@ function Login() {
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
       const data = await res.json();
+      console.log('data',data)
       if (res.ok) {
-        alert("Đăng nhập bằng Google thành công!");
-        // chuyển hướng nếu cần
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user._id);
+        alert("Đăng nhập thành công!");
+        window.location.href = "profile";
+         console.log('data._id',data.user._id)
       } else {
         alert(data.message || "Đăng nhập Google thất bại");
       }
