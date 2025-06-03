@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import SellerRegistrationWizard from "./pages/sellerRegister/SellerRegister";
+import AdminDashboard from "./pages/admin/AdminDashboard"
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 function App() {
@@ -11,6 +13,11 @@ function App() {
         <Routes>
           <Route path="/Ecommerce/login" element={<LoginPage />} />
           <Route path="/Ecommerce/register" element={<RegisterPage />} />
+          <Route
+            path="/seller-register"
+            element={<SellerRegistrationWizard />}
+          />
+          <Route path="/admin-dashboard" element={<AdminDashboard />}></Route>
         </Routes>
       </Router>
     </GoogleOAuthProvider>
