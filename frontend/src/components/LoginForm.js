@@ -10,7 +10,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/login", {
+      const res = await fetch("http://localhost:5000/customer/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -32,7 +32,7 @@ function Login() {
     try {
       const decoded = jwtDecode(credentialResponse.credential);
       // Gửi token hoặc email đến server để xử lý đăng nhập/đăng ký
-      const res = await fetch("http://localhost:5000/google-login", {
+      const res = await fetch("http://localhost:5000/customer/google-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
