@@ -153,14 +153,9 @@ function Login() {
       const data = await res.json();
 
       if (res.ok) {
+        setSuccess("Đăng nhập thành công!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-
-        setSuccess("Đăng nhập thành công!");
-        console.log('user',data.user)
-        window.location.href = "profile";
-   
-
 
         // Redirect after 2 seconds
         setTimeout(() => {
@@ -187,6 +182,8 @@ function Login() {
     setIsLoading(true);
 
     try {
+      //const decoded = jwtDecode(credentialResponse.credential);
+      // Gửi token hoặc email đến server để xử lý đăng nhập/đăng ký
       const decoded = jwtDecode(credentialResponse.credential);
       const res = await fetch("http://localhost:5000/customer/google-login", {
         method: "POST",
@@ -195,7 +192,6 @@ function Login() {
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
       const data = await res.json();
-      console.log('data',data)
 
       if (res.ok) {
         setSuccess("Đăng nhập bằng Google thành công!");
@@ -211,7 +207,6 @@ function Login() {
         const token = localStorage.getItem("token");
         console.log(user);
         console.log(token);
-          window.location.href = "profile";
       } else {
         setErrors((prev) => ({
           ...prev,
@@ -320,7 +315,7 @@ function Login() {
                       Remember me
                     </label>
                   </div>
-                  <a href="/forgot-password" className="text-body">
+                  <a href="/Ecommerce/forgot-password" className="text-body">
                     Forgot password?
                   </a>
                 </div>
