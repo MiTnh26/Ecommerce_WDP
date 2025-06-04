@@ -153,9 +153,14 @@ function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess("Đăng nhập thành công!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+
+        setSuccess("Đăng nhập thành công!");
+        console.log('user',data.user)
+        window.location.href = "profile";
+   
+
 
         // Redirect after 2 seconds
         setTimeout(() => {
@@ -190,6 +195,7 @@ function Login() {
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
       const data = await res.json();
+      console.log('data',data)
 
       if (res.ok) {
         setSuccess("Đăng nhập bằng Google thành công!");
@@ -205,6 +211,7 @@ function Login() {
         const token = localStorage.getItem("token");
         console.log(user);
         console.log(token);
+          window.location.href = "profile";
       } else {
         setErrors((prev) => ({
           ...prev,
