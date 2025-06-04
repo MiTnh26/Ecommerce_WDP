@@ -3,10 +3,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
-const client = new OAuth2Client(
-  "452044254054-auvkf89chh5uahvttnmqegnrf9uj9l98.apps.googleusercontent.com"
-);
 const nodemailer = require("nodemailer");
+const client = new OAuth2Client(process.env.O2Auth_Key);
+
 
 const getUsers = async (req, res) => {
   try {

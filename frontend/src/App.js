@@ -5,7 +5,7 @@ import PublicRoutes from "./routes/PublicRoutes"
 import { AppProvider } from './store/Context'
 function App() {
   return (
-    <GoogleOAuthProvider clientId="452044254054-auvkf89chh5uahvttnmqegnrf9uj9l98.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <AppProvider>
         <Router>
           <Routes>
