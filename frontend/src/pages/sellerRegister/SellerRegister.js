@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import styles from "./SellerRegister.module.scss";
 import "react-quill/dist/quill.snow.css";
 
-export default function SellerRegistrationWizard() {
+function SellerRegistrationWizard() {
   const step = 2;
 
   const [formData, setFormData] = useState({
@@ -125,3 +125,5 @@ export default function SellerRegistrationWizard() {
     </div>
   );
 }
+
+export default SellerRegistrationWizard;

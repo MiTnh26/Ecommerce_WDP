@@ -182,6 +182,8 @@ function Login() {
     setIsLoading(true);
 
     try {
+      //const decoded = jwtDecode(credentialResponse.credential);
+      // Gửi token hoặc email đến server để xử lý đăng nhập/đăng ký
       const decoded = jwtDecode(credentialResponse.credential);
       const res = await fetch("http://localhost:5000/customer/google-login", {
         method: "POST",
@@ -313,7 +315,7 @@ function Login() {
                       Remember me
                     </label>
                   </div>
-                  <a href="/forgot-password" className="text-body">
+                  <a href="/Ecommerce/forgot-password" className="text-body">
                     Forgot password?
                   </a>
                 </div>
