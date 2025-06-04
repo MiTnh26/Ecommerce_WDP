@@ -7,12 +7,28 @@ function ProfileView({ userId }) {
 
 
 
+  // useEffect(() => {
+  //   fetch(`http://localhost:5000/customer/profile/${userId}`)
+  //     .then((res) => res.json())
+  //     .then((data) => setUser(data))
+  //     .catch((err) => console.error("Lỗi khi lấy thông tin user:", err));
+  // }, [userId]);
   useEffect(() => {
-    fetch(`http://localhost:5000/profile/${userId}`)
+    if (!userId) return;
+
+    fetch(`http://localhost:5000/customer/profile/${userId}`)
       .then((res) => res.json())
-      .then((data) => setUser(data))
-      .catch((err) => console.error("Lỗi khi lấy thông tin user:", err));
+      .then((data) => {
+        console.log("✅ Data fetch thành công:", data); // <-- log ra data tại đây
+        setUser(data);
+      })
+      .catch((err) => console.error("❌ Lỗi khi lấy thông tin user:", err));
   }, [userId]);
+
+
+
+
+
 
   const handleCloseModal = () => setShowUpdateModal(false);
   const handleShowModal = () => setShowUpdateModal(true);
@@ -46,10 +62,13 @@ function ProfileView({ userId }) {
             <Col sm={4} className="fw-semibold">Email:</Col>
             <Col sm={8}>{user.Email || "-"}</Col>
           </Row>
-          <Row className="mb-2">
-            <Col sm={4} className="fw-semibold">Username:</Col>
-            <Col sm={8}>{user.Username || "-"}</Col>
-          </Row>
+          {user.Username && (
+            <Row className="mb-2">
+              <Col sm={4} className="fw-semibold">Username:</Col>
+              <Col sm={8}>{user.Username}</Col>
+            </Row>
+          )}
+
           <Row className="mb-2">
             <Col sm={4} className="fw-semibold">Full Name:</Col>
             <Col sm={8}>{user.FirstName} {user.LastName}</Col>

@@ -8,7 +8,7 @@ import PurchaseOrders from "../components/PurchaseOrders";
 
 const user = JSON.parse(localStorage.getItem("user"));
 const userId = user._id;
-console.log(userId);
+console.log("userid" ,userId);
 
 
 function ProfilePage() {

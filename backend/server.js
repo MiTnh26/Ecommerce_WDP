@@ -31,7 +31,13 @@ mongoose
 
 //Tao API
 const userRouter = require("./src/routes/UserRoutes");
-app.use("/", userRouter);
+
+
+const adminRouter = require("./src/routes/AdminRoutes");
+const sellerRouter = require("./src/routes/SellerRoutes");
+app.use("/customer", userRouter);
+app.use("/admin", adminRouter);
+app.use("/seller", sellerRouter);
 // //Cho server Khoi dong
 
 const port = process.env.PORT;
