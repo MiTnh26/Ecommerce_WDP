@@ -13,7 +13,7 @@ function UpdateProfileForm({ userId }) {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/profile/${userId}`)
+    fetch(`http://localhost:5000/customer/profile/${userId}`)
       .then((res) => res.json())
       .then((data) => {
         setFormData({
@@ -36,7 +36,7 @@ function UpdateProfileForm({ userId }) {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:5000/profile/${userId}`, {
+      const res = await fetch(`http://localhost:5000/customer/profile/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -54,108 +54,111 @@ function UpdateProfileForm({ userId }) {
 
   return (
     // <Container style={{ maxWidth: "650px" }} className="mt-5 mb-5">
-      <Card className="shadow-sm rounded">
+    <Card className="shadow-sm rounded">
       <Card.Body>
         {formData.Image && (
-        <div className="text-center mb-4">
-          <Image
-          src={formData.Image}
-          roundedCircle
-          width="120"
-          height="120"
-          alt="Avatar"
-          />
-        </div>
+          <div className="text-center mb-4">
+            <Image
+              src={formData.Image}
+              roundedCircle
+              width="120"
+              height="120"
+              alt="Avatar"
+            />
+          </div>
         )}
 
         <Form onSubmit={handleUpdate}>
-        <Form.Group className="mb-3">
-          <Form.Label>Avatar (URL)</Form.Label>
-          <Form.Control
-          type="text"
-          name="Image"
-          placeholder="Paste avatar image URL"
-          value={formData.Image}
-          onChange={handleChange}
-          />
-        </Form.Group>
-        <Form.Group className="mb-3"></Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-          name="Username"
-          value={formData.Username}
-          onChange={handleChange}
-          placeholder="Enter username"
-          />
-        </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Avatar (URL)</Form.Label>
+            <Form.Control
+              type="text"
+              name="Image"
+              placeholder="Paste avatar image URL"
+              value={formData.Image}
+              onChange={handleChange}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3"></Form.Group>
+          {formData.Username?.trim() && (
+            <Form.Group className="mb-3">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                name="Username"
+                value={formData.Username}
+                onChange={handleChange}
+                placeholder="Enter username"
+              />
+            </Form.Group>
+          )}
 
-        <Form.Group className="mb-3">
-          <Form.Label>First Name</Form.Label>
-          <Form.Control
-          name="FirstName"
-          value={formData.FirstName}
-          onChange={handleChange}
-          placeholder="Enter first name"
-          />
-        </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Last Name</Form.Label>
-          <Form.Control
-          name="LastName"
-          value={formData.LastName}
-          onChange={handleChange}
-          placeholder="Enter last name"
-          />
-        </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>First Name</Form.Label>
+            <Form.Control
+              name="FirstName"
+              value={formData.FirstName}
+              onChange={handleChange}
+              placeholder="Enter first name"
+            />
+          </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Gender</Form.Label>
-          <Form.Select
-          name="Gender"
-          value={formData.Gender}
-          onChange={handleChange}
+          <Form.Group className="mb-3">
+            <Form.Label>Last Name</Form.Label>
+            <Form.Control
+              name="LastName"
+              value={formData.LastName}
+              onChange={handleChange}
+              placeholder="Enter last name"
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Gender</Form.Label>
+            <Form.Select
+              name="Gender"
+              value={formData.Gender}
+              onChange={handleChange}
+            >
+              <option value="">-- Select --</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Date of Birth</Form.Label>
+            <Form.Control
+              type="date"
+              name="DateOfBirth"
+              value={formData.DateOfBirth}
+              onChange={handleChange}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Phone Number</Form.Label>
+            <Form.Control
+              name="PhoneNumber"
+              value={formData.PhoneNumber}
+              onChange={handleChange}
+              placeholder="Enter phone number"
+            />
+          </Form.Group>
+
+          <Button
+            variant="primary"
+            type="submit"
+            className="w-100 fw-semibold"
+            size="lg"
+            style={{ fontSize: "1.1rem" }}
           >
-          <option value="">-- Select --</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-          </Form.Select>
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Date of Birth</Form.Label>
-          <Form.Control
-          type="date"
-          name="DateOfBirth"
-          value={formData.DateOfBirth}
-          onChange={handleChange}
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3">
-          <Form.Label>Phone Number</Form.Label>
-          <Form.Control
-          name="PhoneNumber"
-          value={formData.PhoneNumber}
-          onChange={handleChange}
-          placeholder="Enter phone number"
-          />
-        </Form.Group>
-
-        <Button
-          variant="primary"
-          type="submit"
-          className="w-100 fw-semibold"
-          size="lg"
-          style={{ fontSize: "1.1rem" }}
-        >
-          Update
-        </Button>
+            Update
+          </Button>
         </Form>
       </Card.Body>
-      </Card>
+    </Card>
     // </Container>
   );
 }
