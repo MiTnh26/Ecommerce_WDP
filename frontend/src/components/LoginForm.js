@@ -1,14 +1,148 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+// Inline Error Message Component
+const InlineError = ({ message, show }) => {
+  if (!show || !message) return null;
+
+  return (
+    <div
+      className="alert alert-danger d-flex align-items-center mt-2 py-2 px-3"
+      style={{
+        fontSize: "0.875rem",
+        borderRadius: "8px",
+        border: "1px solid #f5c6cb",
+        backgroundColor: "#f8d7da",
+        color: "#721c24",
+      }}
+    >
+      <i
+        className="bi bi-exclamation-triangle-fill me-2"
+        style={{ fontSize: "1rem" }}
+      ></i>
+      <span>{message}</span>
+    </div>
+  );
+};
+
+// Success Message Component
+const InlineSuccess = ({ message, show }) => {
+  if (!show || !message) return null;
+
+  return (
+    <div
+      className="alert alert-success d-flex align-items-center mt-2 py-2 px-3"
+      style={{
+        fontSize: "0.875rem",
+        borderRadius: "8px",
+        border: "1px solid #c3e6cb",
+        backgroundColor: "#d4edda",
+        color: "#155724",
+      }}
+    >
+      <i
+        className="bi bi-check-circle-fill me-2"
+        style={{ fontSize: "1rem" }}
+      ></i>
+      <span>{message}</span>
+    </div>
+  );
+};
+
 function Login() {
   const [Email, setEmail] = useState("");
   const [Password, setPass] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Error states for each field
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    general: "",
+    google: "",
+  });
+
+  // Success state
+  const [success, setSuccess] = useState("");
+
+  // Clear all errors
+  const clearErrors = () => {
+    setErrors({
+      email: "",
+      password: "",
+      general: "",
+      google: "",
+    });
+    setSuccess("");
+  };
+
+  // Validate email
+  const validateEmail = (email) => {
+    if (!email.trim()) {
+      return "Email không được để trống";
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return "Email không đúng định dạng";
+    }
+    return "";
+  };
+
+  // Validate password
+  const validatePassword = (password) => {
+    if (!password.trim()) {
+      return "Mật khẩu không được để trống";
+    }
+    if (password.length < 6) {
+      return "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+    return "";
+  };
+
+  // Handle email change
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+
+    // Clear email error when user starts typing
+    if (errors.email) {
+      setErrors((prev) => ({ ...prev, email: "" }));
+    }
+  };
+
+  // Handle password change
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPass(value);
+
+    // Clear password error when user starts typing
+    if (errors.password) {
+      setErrors((prev) => ({ ...prev, password: "" }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearErrors();
+
+    // Validate form
+    const emailError = validateEmail(Email);
+    const passwordError = validatePassword(Password);
+
+    if (emailError || passwordError) {
+      setErrors({
+        email: emailError,
+        password: passwordError,
+        general: "",
+        google: "",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
       const res = await fetch("http://localhost:5000/customer/login", {
         method: "POST",
@@ -17,22 +151,38 @@ function Login() {
         body: JSON.stringify({ Email, Password: Password }),
       });
       const data = await res.json();
+
       if (res.ok) {
-        alert("Đăng nhập thành công!");
+        setSuccess("Đăng nhập thành công!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        // chuyển hướng nếu cần
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          // window.location.href = "/dashboard" // Uncomment to redirect
+        }, 2000);
       } else {
-        alert(data.message || "Sai tài khoản hoặc mật khẩu");
+        setErrors((prev) => ({
+          ...prev,
+          general: data.message || "Sai tài khoản hoặc mật khẩu",
+        }));
       }
     } catch (err) {
-      alert("Lỗi kết nối máy chủ");
+      setErrors((prev) => ({
+        ...prev,
+        general: "Lỗi kết nối máy chủ. Vui lòng thử lại sau.",
+      }));
+    } finally {
+      setIsLoading(false);
     }
   };
+
   const handleGoogleLogin = async (credentialResponse) => {
+    clearErrors();
+    setIsLoading(true);
+
     try {
       const decoded = jwtDecode(credentialResponse.credential);
-      // Gửi token hoặc email đến server để xử lý đăng nhập/đăng ký
       const res = await fetch("http://localhost:5000/customer/google-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,22 +190,53 @@ function Login() {
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
       const data = await res.json();
+
       if (res.ok) {
-        alert("Đăng nhập bằng Google thành công!");
+        setSuccess("Đăng nhập bằng Google thành công!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        // chuyển hướng nếu cần
+
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          // window.location.href = "/dashboard" // Uncomment to redirect
+        }, 2000);
+
+        const user = JSON.parse(localStorage.getItem("user"));
+        const token = localStorage.getItem("token");
+        console.log(user);
+        console.log(token);
       } else {
-        alert(data.message || "Đăng nhập Google thất bại");
+        setErrors((prev) => ({
+          ...prev,
+          google: data.message || "Đăng nhập Google thất bại",
+        }));
       }
     } catch (err) {
       console.error(err);
-      alert("Lỗi khi xử lý đăng nhập Google");
+      setErrors((prev) => ({
+        ...prev,
+        google: "Lỗi khi xử lý đăng nhập Google. Vui lòng thử lại.",
+      }));
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleGoogleError = () => {
+    setErrors((prev) => ({
+      ...prev,
+      google: "Đăng nhập Google thất bại. Vui lòng thử lại.",
+    }));
   };
 
   return (
     <div>
+      {/* Bootstrap Icons CDN */}
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      />
+
       {/* HEADER */}
       <div className="d-flex align-items-center p-3">
         <a href="/" className="d-flex align-items-center text-decoration-none">
@@ -82,27 +263,42 @@ function Login() {
 
             <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
               <form onSubmit={handleSubmit}>
+                {/* General Success Message */}
+                <InlineSuccess message={success} show={!!success} />
+
+                {/* General Error Message */}
+                <InlineError message={errors.general} show={!!errors.general} />
+
                 <div className="mb-4">
                   <label className="form-label">Email:</label>
                   <input
-                    type="username"
-                    className="form-control form-control-lg"
+                    type="email"
+                    className={`form-control form-control-lg ${
+                      errors.email ? "is-invalid" : ""
+                    }`}
                     placeholder="Enter email"
                     value={Email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     required
                   />
+                  <InlineError message={errors.email} show={!!errors.email} />
                 </div>
 
                 <div className="mb-3">
                   <label className="form-label">Password:</label>
                   <input
                     type="password"
-                    className="form-control form-control-lg"
+                    className={`form-control form-control-lg ${
+                      errors.password ? "is-invalid" : ""
+                    }`}
                     placeholder="Enter password"
                     value={Password}
-                    onChange={(e) => setPass(e.target.value)}
+                    onChange={handlePasswordChange}
                     required
+                  />
+                  <InlineError
+                    message={errors.password}
+                    show={!!errors.password}
                   />
                 </div>
 
@@ -126,15 +322,33 @@ function Login() {
                   <button
                     type="submit"
                     className="btn btn-primary btn-lg w-100"
+                    disabled={isLoading}
                   >
-                    Login
+                    {isLoading ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                          aria-hidden="true"
+                        ></span>
+                        Đang đăng nhập...
+                      </>
+                    ) : (
+                      "Login"
+                    )}
                   </button>
+
                   <div className="my-3 text-center">hoặc</div>
 
-                  <GoogleLogin
-                    onSuccess={handleGoogleLogin}
-                    onError={() => alert("Lỗi đăng nhập Google")}
-                  />
+                  <div className="d-flex justify-content-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleLogin}
+                      onError={handleGoogleError}
+                    />
+                  </div>
+
+                  {/* Google Error Message */}
+                  <InlineError message={errors.google} show={!!errors.google} />
 
                   <p className="small fw-bold mt-2 pt-1 mb-0">
                     Don't have an account?{" "}
