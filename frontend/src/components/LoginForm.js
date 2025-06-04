@@ -19,7 +19,8 @@ function Login() {
       const data = await res.json();
       if (res.ok) {
         alert("Đăng nhập thành công!");
-
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
         // chuyển hướng nếu cần
       } else {
         alert(data.message || "Sai tài khoản hoặc mật khẩu");
@@ -41,6 +42,8 @@ function Login() {
       const data = await res.json();
       if (res.ok) {
         alert("Đăng nhập bằng Google thành công!");
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
         // chuyển hướng nếu cần
       } else {
         alert(data.message || "Đăng nhập Google thất bại");
