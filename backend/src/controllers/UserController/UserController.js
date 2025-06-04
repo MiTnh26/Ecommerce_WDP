@@ -126,7 +126,7 @@ const googleLogin = async (req, res) => {
 };
 const changePassword = async (req, res) => {
   const {newPassword} = req.body;
-  console.log("hi", newPassword);
+  //console.log("hi", newPassword);
   
   try{
     if(!req.session.otp) return res.status(400).json({message: "OTP not found"});

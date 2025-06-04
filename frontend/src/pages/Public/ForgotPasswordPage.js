@@ -129,6 +129,23 @@ const ForgotPasswordPage = () => {
             inputRefs.current[index + 1]?.focus();
         }
     }
+    //xu ly paste input otp
+    const handlePaste = (e) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text/plain').replace(/\D/g, '');
+
+        if (pastedData.length <= otp.length) {
+            const newOtp = [...otp];
+            for (let i = 0; i < pastedData.length && i < otp.length; i++) {
+                newOtp[i] = pastedData[i];
+            }
+            setOtp(newOtp);
+
+            // Focus vào ô cuối cùng được điền hoặc ô tiếp theo
+            const nextIndex = Math.min(pastedData.length, otp.length - 1);
+            inputRefs.current[nextIndex]?.focus();
+        }
+    };
     //handleSubmitOtp
     const handleBackConfirmEmail = () => {
         setMessage('');
@@ -247,7 +264,7 @@ const ForgotPasswordPage = () => {
                                         value={digit}
                                         onChange={(e) => handleChange(index, e.target.value)}
                                         onKeyDown={(e) => handleDelete(index, e)}
-                                        //   onPaste={handlePaste}
+                                        onPaste={handlePaste}
                                         className="form-control text-center fw-bold border-2"
                                         style={{
                                             width: '48px',

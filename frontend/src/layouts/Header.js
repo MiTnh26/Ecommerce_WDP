@@ -58,6 +58,15 @@ const Header = () => {
                         <ul className="d-flex justify-content-end list-unstyled m-0 gap-2">
                             <li>
                                 <a
+                                    href='/Ecommerce/login'
+                                    className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                                    style={{ width: '50px', height: '50px' }}
+                                    >
+                                    <i className="fa-solid fa-right-to-bracket text-black fs-4"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a
                                     href='/'
                                     className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                                     style={{ width: '50px', height: '50px' }}
