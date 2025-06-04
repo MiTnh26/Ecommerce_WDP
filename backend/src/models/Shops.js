@@ -13,6 +13,7 @@ const shopSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    taxnumber: { type: Number },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

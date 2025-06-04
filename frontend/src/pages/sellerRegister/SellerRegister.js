@@ -31,9 +31,61 @@ export default function SellerRegistrationWizard() {
     setFormData((prev) => ({ ...prev, shopDescription: value }));
   };
 
-  const handleSave = () => {
-    console.log("Saving data:", formData);
-    alert("Form data submitted!");
+
+// // fetch shop info (later use)
+//   useEffect(() => {
+//   const fetchShops = async () => {
+//     try {
+//       const res = await fetch(
+//         `http://localhost:5000/seller/getShopInformation?userId=${userId}`
+//       );
+//       if (!res.ok) throw new Error("Failed to fetch shops");
+//       const shops = await res.json();
+//       console.log("My shops:", shops);
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+//   fetchShops();
+// }, [userId]);
+
+  const handleSave = async () => {
+    try {
+      // 1) Create a FormData object
+      const data = new FormData();
+      data.append("shopName", formData.shopName);
+      data.append("shopDescription", formData.shopDescription || "");
+      data.append("taxnumber", formData.taxnumber || "0");
+      data.append("owner", userIdFromContextOrProps);
+      // replace with the actual logged‐in user’s _id
+      if (formData.shopLogo) {
+        data.append("shopLogo", formData.shopLogo);
+      }
+
+      // 2) POST to /seller/registerShop
+      const response = await fetch(
+        "http://localhost:5000/seller/registerShop",
+        {
+          method: "POST",
+          body: data,
+          // NOTE: Do not add a Content-Type header!
+          // The browser will set multipart/form-data boundary automatically.
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to register shop.");
+      }
+
+      const newShop = await response.json();
+      console.log("Shop registered:", newShop);
+      alert("Shop registered successfully!");
+      // Optionally, redirect or clear the form…
+    } catch (err) {
+      console.error("Error registering shop:", err);
+      alert("Error: " + err.message);
+    }
   };
 
   const handleSaveForLater = () => {
