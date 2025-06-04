@@ -56,7 +56,7 @@ export default function SellerRegistrationWizard() {
       data.append("shopName", formData.shopName);
       data.append("shopDescription", formData.shopDescription || "");
       data.append("taxnumber", formData.taxnumber || "0");
-      data.append("owner", userIdFromContextOrProps);
+      data.append("owner", localStorage.getItem("user")._id);
       // replace with the actual logged‐in user’s _id
       if (formData.shopLogo) {
         data.append("shopLogo", formData.shopLogo);

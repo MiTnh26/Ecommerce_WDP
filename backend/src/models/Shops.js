@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 
 const shopSchema = new mongoose.Schema(
   {
-    describe: {
+    description: {
       type: String,
     },
-    logo: {
+    shopAvatar: {
       type: String,
       default: "",
     },
@@ -13,11 +13,20 @@ const shopSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    taxnumber: { type: Number },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       require: true,
+    },
+    address: {
+      province: { type: String, default: "" },
+      district: { type: String, default: "" },
+      ward: { type: String, default: "" },
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Active", "Banned"],
+      default: "Pending",
     },
   },
   { timestamps: true }
