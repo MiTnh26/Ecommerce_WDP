@@ -3,9 +3,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
+<<<<<<< HEAD
 const client = new OAuth2Client(
   "452044254054-auvkf89chh5uahvttnmqegnrf9uj9l98.apps.googleusercontent.com"
 );
+const nodemailer = require("nodemailer");
+=======
+const client = new OAuth2Client(process.env.O2Auth_Key);
+>>>>>>> ff6d01e1f709c075ad28951ded09ac8c3c2b68e1
 
 const getUsers = async (req, res) => {
   try {
@@ -54,18 +59,7 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const {
-    Username,
-    Address,
-    DateOfBirth,
-    Email,
-    FirstName,
-    LastName,
-    Gender,
-    Image,
-    Password,
-    PhoneNumber,
-  } = req.body;
+  const { Username, Email, Gender, Password, PhoneNumber } = req.body;
   try {
     const existing = await User.findOne({ Email });
     if (existing) {
@@ -74,13 +68,8 @@ const register = async (req, res) => {
     const hashed = await bcrypt.hash(Password, 10);
     const user = new User({
       Username,
-      Address,
-      DateOfBirth,
       Email,
-      FirstName,
-      LastName,
       Gender,
-      Image,
       Password: hashed,
       PhoneNumber,
     });
@@ -90,21 +79,18 @@ const register = async (req, res) => {
     res.status(500).json({ message: "Failed to register", error });
   }
 };
-
 const googleLogin = async (req, res) => {
   const { token } = req.body;
 
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience:
-        "452044254054-auvkf89chh5uahvttnmqegnrf9uj9l98.apps.googleusercontent.com",
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
     const { email, given_name, family_name, picture } = payload;
 
-    // Kiểm tra người dùng đã tồn tại
     let user = await User.findOne({ Email: email });
 
     if (!user) {
@@ -113,18 +99,59 @@ const googleLogin = async (req, res) => {
         FirstName: given_name || "",
         LastName: family_name || "",
         Image: picture || "",
-        Password: "", // để trống vì không đăng ký bằng mật khẩu
+        Password: "", // không có mật khẩu
         UserRole: "Customer",
         Status: "Active",
       });
 
-      await user.save(); // 💥 Nếu thiếu trường bắt buộc thì dòng này sẽ gây lỗi
+      await user.save();
     }
 
-    res.status(200).json({ message: "Đăng nhập Google thành công", user });
+    // ✅ Tạo token để frontend sử dụng sau này
+    const tokenJWT = jwt.sign(
+      {
+        id: user._id,
+        email: user.Email,
+        role: user.UserRole || "Customer",
+      },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.status(200).json({
+      message: "Đăng nhập Google thành công",
+      user,
+      token: tokenJWT, // ✅ trả token về
+    });
   } catch (error) {
     console.error("Lỗi khi đăng nhập Google:", error);
     res.status(401).json({ message: "Token không hợp lệ hoặc lỗi server" });
   }
 };
+<<<<<<< HEAD
+const changePassword = async (req, res) => {
+  const {newPassword} = req.body;
+  console.log("hi", newPassword);
+  
+  try{
+    if(!req.session.otp) return res.status(400).json({message: "OTP not found"});
+    const user = await User.findOne({Email: req.session.otp.email});
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.Password = hashed;
+    await user.save();
+    // xoa otp
+    req.session.otp = null;
+    res.json({ message: "Change password successfully" });
+  }catch(error){
+    console.log("Loi change password");
+    res.status(500).json({ message: "Failed to change password"});
+  }
+}
+module.exports = { getUsers, login, register, googleLogin, changePassword };
+=======
+
 module.exports = { getUsers, login, register, googleLogin };
+>>>>>>> ff6d01e1f709c075ad28951ded09ac8c3c2b68e1
