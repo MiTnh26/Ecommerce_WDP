@@ -19,8 +19,10 @@ function Login() {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        localStorage.setItem("userId", data.user._id);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
         alert("Đăng nhập thành công!");
+        console.log('user',data.user)
         window.location.href = "profile";
 
         // chuyển hướng nếu cần
@@ -45,10 +47,11 @@ function Login() {
       console.log('data',data)
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        localStorage.setItem("userId", data.user._id);
+         localStorage.setItem("user", JSON.stringify(data.user));
+        // luu user
         alert("Đăng nhập thành công!");
         window.location.href = "profile";
-         console.log('data._id',data.user._id)
+         console.log('useruser',data.user)
       } else {
         alert(data.message || "Đăng nhập Google thất bại");
       }

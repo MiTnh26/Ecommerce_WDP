@@ -6,7 +6,10 @@ import ProfileView from "../components/ProfileViewForm";
 import UpdateProfileForm from "../components/UpdateProfileForm";
 import PurchaseOrders from "../components/PurchaseOrders";
 
-const userId = localStorage.getItem("userId");
+const user = JSON.parse(localStorage.getItem("user"));
+const userId = user._id;
+console.log(userId);
+
 
 function ProfilePage() {
   const [activeTab, setActiveTab] = useState("view");
