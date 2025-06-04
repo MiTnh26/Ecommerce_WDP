@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
-// import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // Inline Error Message Component
@@ -182,12 +182,9 @@ function Login() {
     setIsLoading(true);
 
     try {
-<<<<<<< HEAD:frontend/src/components/public/LoginForm.js
       //const decoded = jwtDecode(credentialResponse.credential);
       // Gửi token hoặc email đến server để xử lý đăng nhập/đăng ký
-=======
       const decoded = jwtDecode(credentialResponse.credential);
->>>>>>> ff6d01e1f709c075ad28951ded09ac8c3c2b68e1:frontend/src/components/LoginForm.js
       const res = await fetch("http://localhost:5000/customer/google-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

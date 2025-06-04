@@ -3,14 +3,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
-<<<<<<< HEAD
 const client = new OAuth2Client(
   "452044254054-auvkf89chh5uahvttnmqegnrf9uj9l98.apps.googleusercontent.com"
 );
 const nodemailer = require("nodemailer");
-=======
-const client = new OAuth2Client(process.env.O2Auth_Key);
->>>>>>> ff6d01e1f709c075ad28951ded09ac8c3c2b68e1
 
 const getUsers = async (req, res) => {
   try {
@@ -128,7 +124,6 @@ const googleLogin = async (req, res) => {
     res.status(401).json({ message: "Token không hợp lệ hoặc lỗi server" });
   }
 };
-<<<<<<< HEAD
 const changePassword = async (req, res) => {
   const {newPassword} = req.body;
   console.log("hi", newPassword);
@@ -151,7 +146,4 @@ const changePassword = async (req, res) => {
   }
 }
 module.exports = { getUsers, login, register, googleLogin, changePassword };
-=======
 
-module.exports = { getUsers, login, register, googleLogin };
->>>>>>> ff6d01e1f709c075ad28951ded09ac8c3c2b68e1

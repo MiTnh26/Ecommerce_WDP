@@ -9,5 +9,5 @@ router.post("/register", UserController.register);
 router.post("/google-login", UserController.googleLogin);
 router.post("/send-email", sendEmailOtp);
 router.post("/verify-otp", verifyOtp);
-router.put("/change-password",UserController.changePassword);
+router.put("/change-password",verifyOtpMiddleware, UserController.changePassword);
 module.exports = router;

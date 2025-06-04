@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-<<<<<<< HEAD
 import PublicRoutes from "./routes/PublicRoutes"
 import { AppProvider } from './store/Context'
 function App() {
@@ -27,17 +26,6 @@ function App() {
           </Routes>
         </Router>
       </AppProvider>
-=======
-function App() {
-  return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <Router>
-        <Routes>
-          <Route path="/Ecommerce/login" element={<LoginPage />} />
-          <Route path="/Ecommerce/register" element={<RegisterPage />} />
-        </Routes>
-      </Router>
->>>>>>> ff6d01e1f709c075ad28951ded09ac8c3c2b68e1
     </GoogleOAuthProvider>
   );
 }
