@@ -40,33 +40,40 @@ const updateShopProfile = async (req, res) => {
 
 const registerShop = async (req, res) => {
   try {
-    const { shopName, shopDescription = "", taxnumber = 0, owner } = req.body;
+    const {
+      shopName,
+      shopDescription = "",
+      owner,
+      province = "",
+      district = "",
+      ward = "",
+    } = req.body;
 
-    // Validate 
+    // 1) Validate required fields
     if (!shopName || !owner) {
       return res
         .status(400)
         .json({ message: "shopName and owner are required." });
     }
 
-    // Owner exists
+    // 2) Ensure owner (User) exists
     const user = await User.findById(owner);
     if (!user) {
-      return res.status(404).json({ message: "Owner not found." });
+      return res.status(404).json({ message: "Owner (user) not found." });
     }
 
-    // upload to Cloudinary
-    let logoUrl = "";
+    // 3) Handle file upload to Cloudinary (optional)
+    let avatarUrl = "";
     if (req.file) {
-      // multer
+      // Convert multer buffer to a readable stream
       const bufferStream = new Readable();
       bufferStream.push(req.file.buffer);
       bufferStream.push(null);
 
-      // upload to Cloudinary
+      // Upload to Cloudinary under folder "seller_avatars"
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { folder: "seller_logos" },
+          { folder: "seller_avatars" },
           (error, result) => {
             if (error) return reject(error);
             resolve(result);
@@ -75,16 +82,21 @@ const registerShop = async (req, res) => {
         bufferStream.pipe(stream);
       });
 
-      logoUrl = uploadResult.secure_url; // HTTPS URL from Cloudinary
+      avatarUrl = uploadResult.secure_url; // e.g. "https://res.cloudinary.com/...jpg"
     }
 
-    // Create document
+    // 4) Create new Shop document using the updated schema fields
     const newShop = new Shop({
-      name:      shopName,
-      describe:  shopDescription,
-      logo:      logoUrl,
-      taxnumber: taxnumber,
-      owner:     owner, // user._id
+      name:       shopName,
+      description: shopDescription,
+      shopAvatar:  avatarUrl,
+      owner:       owner,
+      address: {
+        province,
+        district,
+        ward,
+      },
+      // status will default to "Pending"
     });
 
     const savedShop = await newShop.save();

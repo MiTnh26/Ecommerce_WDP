@@ -1,75 +1,85 @@
 // SellerRegister.js
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactQuill from "react-quill";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import styles from "./SellerRegister.module.scss";
 import "react-quill/dist/quill.snow.css";
 
 export default function SellerRegistrationWizard() {
+  // We’re on step 2 (Shop Setup) in your wizard
   const step = 2;
 
+  // 1) All possible fields in the updated Shop schema:
   const [formData, setFormData] = useState({
-    shopName: "",
-    shopLogo: null,
-
+    shopName:        "",
+    shopAvatar:      null,   // file input
     shopDescription: "",
+    province:        "",
+    district:        "",
+    ward:            "",
+    // status is not set manually; defaults to "Pending"
   });
 
+  // 2) Logged-in owner's ObjectId (read from localStorage)
+  const [ownerId, setOwnerId] = useState("");
+  useEffect(() => {
+    const raw = window.localStorage.getItem("user");
+    if (raw) {
+      try {
+        const user = JSON.parse(raw);
+        if (user && user._id) {
+          setOwnerId(user._id);
+        }
+      } catch {
+        console.warn("Could not parse stored user");
+      }
+    }
+  }, []);
+
+  // 3) handleChange for text + file inputs
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    if (type === "checkbox") {
-      setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (type === "file") {
+    const { name, value, type, files } = e.target;
+    if (type === "file") {
       setFormData((prev) => ({ ...prev, [name]: files[0] }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
+  // 4) handleDescriptionChange for ReactQuill
   const handleDescriptionChange = (value) => {
     setFormData((prev) => ({ ...prev, shopDescription: value }));
   };
 
-
-// // fetch shop info (later use)
-//   useEffect(() => {
-//   const fetchShops = async () => {
-//     try {
-//       const res = await fetch(
-//         `http://localhost:5000/seller/getShopInformation?userId=${userId}`
-//       );
-//       if (!res.ok) throw new Error("Failed to fetch shops");
-//       const shops = await res.json();
-//       console.log("My shops:", shops);
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-//   fetchShops();
-// }, [userId]);
-
+  // 5) handleSave → build FormData and POST to /seller/registerShop
   const handleSave = async () => {
     try {
-      // 1) Create a FormData object
-      const data = new FormData();
-      data.append("shopName", formData.shopName);
-      data.append("shopDescription", formData.shopDescription || "");
-      data.append("taxnumber", formData.taxnumber || "0");
-      data.append("owner", localStorage.getItem("user")._id);
-      // replace with the actual logged‐in user’s _id
-      if (formData.shopLogo) {
-        data.append("shopLogo", formData.shopLogo);
+      if (!ownerId) {
+        alert("Error: You must be logged in to register a shop.");
+        return;
       }
 
-      // 2) POST to /seller/registerShop
+      // Build FormData
+      const data = new FormData();
+      data.append("shopName",        formData.shopName);
+      data.append("shopDescription", formData.shopDescription);
+      data.append("owner",           ownerId);
+      data.append("province",        formData.province);
+      data.append("district",        formData.district);
+      data.append("ward",            formData.ward);
+      // Append the file under the field name "shopAvatar" to match Multer config
+      if (formData.shopAvatar) {
+        data.append("shopAvatar", formData.shopAvatar);
+      }
+
+      // POST to back end
       const response = await fetch(
         "http://localhost:5000/seller/registerShop",
         {
           method: "POST",
           body: data,
-          // NOTE: Do not add a Content-Type header!
-          // The browser will set multipart/form-data boundary automatically.
+          // Do NOT set Content-Type; browser will set multipart/form-data boundary
         }
       );
 
@@ -81,16 +91,19 @@ export default function SellerRegistrationWizard() {
       const newShop = await response.json();
       console.log("Shop registered:", newShop);
       alert("Shop registered successfully!");
-      // Optionally, redirect or clear the form…
+      // Optionally, clear form or navigate:
+      setFormData({
+        shopName:        "",
+        shopAvatar:      null,
+        shopDescription: "",
+        province:        "",
+        district:        "",
+        ward:            "",
+      });
     } catch (err) {
       console.error("Error registering shop:", err);
       alert("Error: " + err.message);
     }
-  };
-
-  const handleSaveForLater = () => {
-    console.log("Progress saved:", formData);
-    alert("Progress saved for later!");
   };
 
   return (
@@ -100,6 +113,7 @@ export default function SellerRegistrationWizard() {
       <form>
         {step === 2 && (
           <div className={styles.fieldset}>
+            {/* Shop Name */}
             <div>
               <label className={styles.label} htmlFor="shopName">
                 Shop Name
@@ -115,14 +129,15 @@ export default function SellerRegistrationWizard() {
               />
             </div>
 
-            <div style={{ display: "flex", gap: "1rem" }}>
+            {/* Shop Avatar (file upload) */}
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
               <div style={{ flex: 1 }}>
-                <label className={styles.label} htmlFor="shopLogo">
-                  Shop Logo
+                <label className={styles.label} htmlFor="shopAvatar">
+                  Shop Avatar
                 </label>
                 <input
-                  id="shopLogo"
-                  name="shopLogo"
+                  id="shopAvatar"
+                  name="shopAvatar"
                   type="file"
                   accept="image/*"
                   className={styles.fileInput}
@@ -131,7 +146,8 @@ export default function SellerRegistrationWizard() {
               </div>
             </div>
 
-            <div>
+            {/* Shop Description (Rich‐text) */}
+            <div style={{ marginTop: "1rem" }}>
               <label className={styles.label}>Shop Description</label>
               <ReactQuill
                 theme="snow"
@@ -140,14 +156,56 @@ export default function SellerRegistrationWizard() {
               />
             </div>
 
-            <div>
+            {/* Address Fields */}
+            <div style={{ marginTop: "1rem" }}>
+              <label className={styles.label} htmlFor="province">
+                Province
+              </label>
+              <input
+                id="province"
+                name="province"
+                type="text"
+                className={styles.input}
+                value={formData.province}
+                onChange={handleChange}
+              />
+            </div>
+            <div style={{ marginTop: "1rem" }}>
+              <label className={styles.label} htmlFor="district">
+                District
+              </label>
+              <input
+                id="district"
+                name="district"
+                type="text"
+                className={styles.input}
+                value={formData.district}
+                onChange={handleChange}
+              />
+            </div>
+            <div style={{ marginTop: "1rem" }}>
+              <label className={styles.label} htmlFor="ward">
+                Ward
+              </label>
+              <input
+                id="ward"
+                name="ward"
+                type="text"
+                className={styles.input}
+                value={formData.ward}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Preview Section */}
+            <div style={{ marginTop: "1rem" }}>
               <label className={styles.label}>Preview</label>
               <div className={styles.previewBox}>
                 <div className={styles.previewHeader}>
-                  {formData.shopLogo && (
+                  {formData.shopAvatar && (
                     <img
-                      src={URL.createObjectURL(formData.shopLogo)}
-                      alt="Logo"
+                      src={URL.createObjectURL(formData.shopAvatar)}
+                      alt="Avatar Preview"
                       className={styles.previewLogo}
                     />
                   )}
@@ -155,14 +213,24 @@ export default function SellerRegistrationWizard() {
                 </div>
                 <div
                   className={styles.previewDesc}
-                  dangerouslySetInnerHTML={{ __html: formData.shopDescription }}
+                  dangerouslySetInnerHTML={{
+                    __html: formData.shopDescription,
+                  }}
                 />
+                <div className={styles.previewAddress}>
+                  {formData.province || formData.district || formData.ward ? (
+                    <p>
+                      {formData.province}, {formData.district}, {formData.ward}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        <div className={styles.navRow}>
+        {/* Navigation / Save Button */}
+        <div className={styles.navRow} style={{ marginTop: "1.5rem" }}>
           <button
             type="button"
             onClick={handleSave}

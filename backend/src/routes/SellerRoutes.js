@@ -9,7 +9,7 @@ router.get("/getShopInformation", SellerController.getShopByUserId);
 router.put("/updateShopProfile", SellerController.updateShopProfile);
 router.post(
   "/registerShop",
-  upload.single("shopLogo"),
+  upload.single("shopAvatar"),
   SellerController.registerShop
 );
 
