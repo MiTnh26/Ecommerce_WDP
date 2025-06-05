@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import styles from "./SellerRegister.module.scss";
 import "react-quill/dist/quill.snow.css";
 
-export default function SellerRegistrationWizard() {
+function SellerRegistrationWizard() {
   // We’re on step 2 (Shop Setup) in your wizard
   const step = 2;
 
@@ -245,3 +245,5 @@ export default function SellerRegistrationWizard() {
     </div>
   );
 }
+
+export default SellerRegistrationWizard;
