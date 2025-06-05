@@ -14,10 +14,11 @@ app.use(
 //Tao session
 app.use(
   session({
-  secret: `${process.env.SECRET_KEY}`,
-  resave: false,
-  saveUninitialized: false,
-}));
+    secret: `${process.env.SECRET_KEY}`,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 //Ket noi voi mongodb
 console.log("MongoDB URI:", `${process.env.URL}${process.env.DBNAME}`);
@@ -31,7 +32,6 @@ mongoose
 
 //Tao API
 const userRouter = require("./src/routes/UserRoutes");
-
 
 const adminRouter = require("./src/routes/AdminRoutes");
 const sellerRouter = require("./src/routes/SellerRoutes");

@@ -96,6 +96,30 @@ const findShopByEmail = async (req, res) => {
     res.status(500).json({ message: "Fail to fetch shops", error });
   }
 };
+const banShopById = async (req, res) => {
+  const { owner } = req.body;
+  try {
+    // Tìm shop theo owner
+    const shop = await Shop.findOne({ owner }).populate("owner");
+    if (!shop) {
+      return res.status(404).json({ message: "Shop not found" });
+    }
+
+    // Đảo trạng thái shop
+    const newStatus = shop.status === "Active" ? "Banned" : "Active";
+
+    // Cập nhật shop theo owner
+    const updatedShop = await Shop.findOneAndUpdate(
+      { owner },
+      { status: newStatus },
+      { new: true }
+    );
+
+    res.status(200).json(updatedShop);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to toggle shop status", error });
+  }
+};
 
 module.exports = {
   getAllUser,
@@ -104,4 +128,5 @@ module.exports = {
   getUserProfile,
   findUserByEmail,
   findShopByEmail,
+  banShopById,
 };

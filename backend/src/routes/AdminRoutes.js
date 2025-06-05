@@ -7,5 +7,6 @@ router.put("/banUserById", AdminController.banUserById);
 router.get("/getUserProfile", AdminController.getUserProfile);
 router.get("/findUserByEmail", AdminController.findUserByEmail);
 router.get("/findShopByEmail", AdminController.findShopByEmail);
+router.put("/banShop", AdminController.banShopById);
 
 module.exports = router;

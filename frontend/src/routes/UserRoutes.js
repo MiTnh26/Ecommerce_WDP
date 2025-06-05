@@ -1,4 +1,4 @@
-import  ProfilePage  from "../pages/ProfilePage";
+import ProfilePage from "../pages/ProfilePage";
 const UserRoutes = [
   {
     path: "/Ecommerce/user",
@@ -9,7 +9,6 @@ const UserRoutes = [
       },
     ],
   },
-
 ];
 
 export default UserRoutes;

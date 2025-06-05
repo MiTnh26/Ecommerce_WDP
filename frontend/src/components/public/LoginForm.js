@@ -2,6 +2,7 @@ import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useNavigate } from "react-router-dom";
 
 // Inline Error Message Component
 const InlineError = ({ message, show }) => {
@@ -78,6 +79,8 @@ function Login() {
     setSuccess("");
   };
 
+  const navigate = useNavigate();
+
   // Validate email
   const validateEmail = (email) => {
     if (!email.trim()) {
@@ -153,12 +156,15 @@ function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess("Đăng nhập thành công!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
+        setSuccess("Đăng nhập thành công!");
+
         // Redirect after 2 seconds
         setTimeout(() => {
+          navigate("/Ecommerce/home");
+
           // window.location.href = "/dashboard" // Uncomment to redirect
         }, 2000);
       } else {
@@ -182,8 +188,6 @@ function Login() {
     setIsLoading(true);
 
     try {
-      //const decoded = jwtDecode(credentialResponse.credential);
-      // Gửi token hoặc email đến server để xử lý đăng nhập/đăng ký
       const decoded = jwtDecode(credentialResponse.credential);
       const res = await fetch("http://localhost:5000/customer/google-login", {
         method: "POST",
@@ -192,21 +196,22 @@ function Login() {
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
       const data = await res.json();
+      console.log("data", data);
 
       if (res.ok) {
         setSuccess("Đăng nhập bằng Google thành công!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // Redirect after 2 seconds
+        // // Redirect after 2 seconds
+        // setTimeout(() => {
+        //   window.location.href = "/home"; // Uncomment to redirect
+        // }, 2000);
         setTimeout(() => {
+          navigate("/Ecommerce/home");
+
           // window.location.href = "/dashboard" // Uncomment to redirect
         }, 2000);
-
-        const user = JSON.parse(localStorage.getItem("user"));
-        const token = localStorage.getItem("token");
-        console.log(user);
-        console.log(token);
       } else {
         setErrors((prev) => ({
           ...prev,
@@ -241,7 +246,10 @@ function Login() {
 
       {/* HEADER */}
       <div className="d-flex align-items-center p-3">
-        <a href="/" className="d-flex align-items-center text-decoration-none">
+        <a
+          href="/Ecommerce/home"
+          className="d-flex align-items-center text-decoration-none"
+        >
           <img
             src="/logo-ecommerce.jpg"
             alt="Logo"
@@ -315,7 +323,7 @@ function Login() {
                       Remember me
                     </label>
                   </div>
-                  <a href="/Ecommerce/forgot-password" className="text-body">
+                  <a href="/forgot-password" className="text-body">
                     Forgot password?
                   </a>
                 </div>
