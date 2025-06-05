@@ -12,12 +12,12 @@ function SellerRegistrationWizard() {
 
   // 1) All possible fields in the updated Shop schema:
   const [formData, setFormData] = useState({
-    shopName:        "",
-    shopAvatar:      null,   // file input
+    shopName: "",
+    shopAvatar: null, // file input
     shopDescription: "",
-    province:        "",
-    district:        "",
-    ward:            "",
+    province: "",
+    district: "",
+    ward: "",
     // status is not set manually; defaults to "Pending"
   });
 
@@ -62,12 +62,12 @@ function SellerRegistrationWizard() {
 
       // Build FormData
       const data = new FormData();
-      data.append("shopName",        formData.shopName);
+      data.append("shopName", formData.shopName);
       data.append("shopDescription", formData.shopDescription);
-      data.append("owner",           ownerId);
-      data.append("province",        formData.province);
-      data.append("district",        formData.district);
-      data.append("ward",            formData.ward);
+      data.append("owner", ownerId);
+      data.append("province", formData.province);
+      data.append("district", formData.district);
+      data.append("ward", formData.ward);
       // Append the file under the field name "shopAvatar" to match Multer config
       if (formData.shopAvatar) {
         data.append("shopAvatar", formData.shopAvatar);
@@ -93,12 +93,12 @@ function SellerRegistrationWizard() {
       alert("Shop registered successfully!");
       // Optionally, clear form or navigate:
       setFormData({
-        shopName:        "",
-        shopAvatar:      null,
+        shopName: "",
+        shopAvatar: null,
         shopDescription: "",
-        province:        "",
-        district:        "",
-        ward:            "",
+        province: "",
+        district: "",
+        ward: "",
       });
     } catch (err) {
       console.error("Error registering shop:", err);
@@ -156,45 +156,49 @@ function SellerRegistrationWizard() {
               />
             </div>
 
-            {/* Address Fields */}
-            <div style={{ marginTop: "1rem" }}>
-              <label className={styles.label} htmlFor="province">
-                Province
-              </label>
-              <input
-                id="province"
-                name="province"
-                type="text"
-                className={styles.input}
-                value={formData.province}
-                onChange={handleChange}
-              />
-            </div>
-            <div style={{ marginTop: "1rem" }}>
-              <label className={styles.label} htmlFor="district">
-                District
-              </label>
-              <input
-                id="district"
-                name="district"
-                type="text"
-                className={styles.input}
-                value={formData.district}
-                onChange={handleChange}
-              />
-            </div>
-            <div style={{ marginTop: "1rem" }}>
-              <label className={styles.label} htmlFor="ward">
-                Ward
-              </label>
-              <input
-                id="ward"
-                name="ward"
-                type="text"
-                className={styles.input}
-                value={formData.ward}
-                onChange={handleChange}
-              />
+            <div className={styles.addressSection}>
+              <div className={styles.addressLabel}>Address</div>
+              <div className={styles.addressInputs}>
+                <div className={styles.addressField}>
+                  <label className={styles.label} htmlFor="province">
+                    Province
+                  </label>
+                  <input
+                    id="province"
+                    name="province"
+                    type="text"
+                    className={styles.input}
+                    value={formData.province}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className={styles.addressField}>
+                  <label className={styles.label} htmlFor="district">
+                    District
+                  </label>
+                  <input
+                    id="district"
+                    name="district"
+                    type="text"
+                    className={styles.input}
+                    value={formData.district}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className={styles.addressField}>
+                  <label className={styles.label} htmlFor="ward">
+                    Ward
+                  </label>
+                  <input
+                    id="ward"
+                    name="ward"
+                    type="text"
+                    className={styles.input}
+                    value={formData.ward}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Preview Section */}

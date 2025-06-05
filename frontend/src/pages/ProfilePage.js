@@ -7,9 +7,16 @@ import UpdateProfileForm from "../components/UpdateProfileForm";
 import PurchaseOrders from "../components/PurchaseOrders";
 
 const user = JSON.parse(localStorage.getItem("user"));
-const userId = user._id;
-console.log("userid" ,userId);
+// const userId = user._id;
+// console.log("userid" ,userId);
 
+let userId = "0";
+try {
+  userId = user._id;
+  console.log("userid", userId);
+} catch (error) {
+  console.error(error);
+}
 
 function ProfilePage() {
   const [activeTab, setActiveTab] = useState("view");
@@ -51,10 +58,14 @@ function ProfilePage() {
                   <ProfileView userId={userId} />
                 </Tab.Pane>
                 <Tab.Pane eventKey="security">
-                  <div className="mt-4">The "Change Password" feature is under development...</div>
+                  <div className="mt-4">
+                    The "Change Password" feature is under development...
+                  </div>
                 </Tab.Pane>
                 <Tab.Pane eventKey="history">
-                  <div className="mt-4">The "Transaction History" feature is under development...</div>
+                  <div className="mt-4">
+                    The "Transaction History" feature is under development...
+                  </div>
                 </Tab.Pane>
                 <Tab.Pane eventKey="puchaseorder">
                   <PurchaseOrders userId={userId} />
