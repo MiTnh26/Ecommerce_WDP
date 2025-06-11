@@ -9,6 +9,12 @@ router.post("/register", UserController.register);
 router.post("/google-login", UserController.googleLogin);
 router.get("/profile/:id", UserController.getUserById);
 router.put("/profile/:id", UserController.updateUser);
+// Trong routes/user.js (hoặc tương tự)
+router.post("/user/:id/address", UserController.addAddress);
+router.put("/user/:userId/address/:addressId", UserController.updateAddress);
+router.get("/user/:userId/address/:addressId", UserController.getAddressById);
+router.delete("/user/:userId/address/:addressId", UserController.deleteAddress); // optional
+
 
 
 router.post("/send-email", sendEmailOtp);
