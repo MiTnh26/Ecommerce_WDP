@@ -3,6 +3,7 @@ const OrderItems = require("./OrderItems");
 const Orders = require("./Orders");
 const Payment = require("./Payment");
 const Products = require("./Products");
+const ProductVariants = require("./ProductVariants")
  
 
-module.exports = { User,OrderItems,Orders,Payment,Products};
+module.exports = { ProductVariants,User,OrderItems,Orders,Payment,Products};

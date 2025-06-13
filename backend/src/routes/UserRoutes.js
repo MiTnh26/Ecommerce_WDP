@@ -9,12 +9,23 @@ router.post("/register", UserController.register);
 router.post("/google-login", UserController.googleLogin);
 router.get("/profile/:id", UserController.getUserById);
 router.put("/profile/:id", UserController.updateUser);
-// Trong routes/user.js (hoặc tương tự)
+// ADDRESS 
 router.post("/user/:id/address", UserController.addAddress);
 router.put("/user/:userId/address/:addressId", UserController.updateAddress);
 router.get("/user/:userId/address/:addressId", UserController.getAddressById);
 router.delete("/user/:userId/address/:addressId", UserController.deleteAddress); // optional
+//order
+router.get("/orders/:userId",UserController.getOrderByUserId)
+router.get("/:orderId", UserController.getOrderDetails);
 
+// // POST tạo đơn hàng mới
+// router.post("/", createOrder);
+
+// // PUT cập nhật trạng thái đơn hàng
+// router.put("/:orderId/status", updateOrderStatus);
+
+// // DELETE đơn hàng
+// router.delete("/:orderId", deleteOrder);
 
 
 router.post("/send-email", sendEmailOtp);
