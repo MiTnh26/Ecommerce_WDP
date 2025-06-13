@@ -7,6 +7,7 @@ import UserRoutes from "./routes/UserRoutes";
 import AdminRoutes from "./routes/AdminRoutes";
 import SellerRoutes from "./routes/SellerRoutes";
 import { AppProvider } from "./store/Context";
+import ProductRoutes from "./routes/ProductRoutes";
 function App() {
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
@@ -57,6 +58,20 @@ function App() {
               );
             })}
             {SellerRoutes.map((route, index) => {
+              return (
+                <Route key={index} path={route.path} element={route.element}>
+                  {route.children &&
+                    route.children.map((childRoute, idx) => (
+                      <Route
+                        key={idx}
+                        path={childRoute.path}
+                        element={childRoute.element}
+                      />
+                    ))}
+                </Route>
+              );
+            })}
+            {ProductRoutes.map((route, index) => {
               return (
                 <Route key={index} path={route.path} element={route.element}>
                   {route.children &&
