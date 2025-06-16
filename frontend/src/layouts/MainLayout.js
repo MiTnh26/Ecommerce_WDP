@@ -15,7 +15,7 @@ const MainLayout = () => {
         <SideBar />
       </div> */}
 
-      <main className="flex-fill container-fluid">
+      <main className="flex-fill container-fluid" style={{backgroundColor:"#f5f5f5"}}>
         <Outlet />
       </main>
 
