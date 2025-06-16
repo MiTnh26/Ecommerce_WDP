@@ -1,4 +1,4 @@
-import { AdminDashboard } from "../pages/admin/AdminIndex";
+import { AdminDashboard } from "../pages/Admin/AdminIndex";
 const AdminRoutes = [
   {
     path: "/Ecommerce/admin",

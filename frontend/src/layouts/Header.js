@@ -57,6 +57,7 @@ const Header = () => {
               <Col md={6} lg={7}>
                 <Form id="search-form" className="text-center">
                   <Form.Control
+                  
                     type="text"
                     className="border-0 bg-transparent"
                     placeholder="Search for more than 20,000 products"

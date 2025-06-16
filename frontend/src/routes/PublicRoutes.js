@@ -5,6 +5,7 @@ import {
   LoginPage,
   RegisterPage,
   ForgotPasswordPage,
+  ProductDetail
 } from "../pages/Public/index";
 const PublicRoutes = [
   {
@@ -14,6 +15,10 @@ const PublicRoutes = [
       {
         path: "home",
         element: <HomePage />,
+      },
+      {
+        path: "product-detail/:id",
+        element: <ProductDetail />,
       },
     ],
   },
