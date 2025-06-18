@@ -4,9 +4,6 @@ const userSchema = new mongoose.Schema(
   {
     Username: {
       type: String,
-    },
-    Address: {
-      type: String,
       default: "",
     },
     DateOfBirth: {
@@ -39,6 +36,18 @@ const userSchema = new mongoose.Schema(
     PhoneNumber: {
       type: String,
     },
+    ShippingAddress: [
+      {
+        address: String,
+        phoneNumber: Number,
+        status: {
+          type: String,
+          enum: ["Inactive", "Default"],
+          default: "Inactive",
+        },
+        receiverName: String,
+      },
+    ],
     Status: {
       type: String,
       enum: ["Active", "Banned"],

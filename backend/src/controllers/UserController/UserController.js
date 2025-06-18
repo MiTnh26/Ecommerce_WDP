@@ -3,9 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
-const client = new OAuth2Client(
-  "452044254054-auvkf89chh5uahvttnmqegnrf9uj9l98.apps.googleusercontent.com"
-);
+const client = new OAuth2Client(process.env.O2Auth_Key);
 
 const getUsers = async (req, res) => {
   try {
@@ -54,18 +52,7 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const {
-    Username,
-    Address,
-    DateOfBirth,
-    Email,
-    FirstName,
-    LastName,
-    Gender,
-    Image,
-    Password,
-    PhoneNumber,
-  } = req.body;
+  const { Username, Email, Gender, Password, PhoneNumber } = req.body;
   try {
     const existing = await User.findOne({ Email });
     if (existing) {
@@ -74,13 +61,8 @@ const register = async (req, res) => {
     const hashed = await bcrypt.hash(Password, 10);
     const user = new User({
       Username,
-      Address,
-      DateOfBirth,
       Email,
-      FirstName,
-      LastName,
       Gender,
-      Image,
       Password: hashed,
       PhoneNumber,
     });
@@ -90,21 +72,18 @@ const register = async (req, res) => {
     res.status(500).json({ message: "Failed to register", error });
   }
 };
-
 const googleLogin = async (req, res) => {
   const { token } = req.body;
 
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience:
-        "452044254054-auvkf89chh5uahvttnmqegnrf9uj9l98.apps.googleusercontent.com",
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
     const { email, given_name, family_name, picture } = payload;
 
-    // Kiểm tra người dùng đã tồn tại
     let user = await User.findOne({ Email: email });
 
     if (!user) {
@@ -113,18 +92,34 @@ const googleLogin = async (req, res) => {
         FirstName: given_name || "",
         LastName: family_name || "",
         Image: picture || "",
-        Password: "", // để trống vì không đăng ký bằng mật khẩu
+        Password: "", // không có mật khẩu
         UserRole: "Customer",
         Status: "Active",
       });
 
-      await user.save(); // 💥 Nếu thiếu trường bắt buộc thì dòng này sẽ gây lỗi
+      await user.save();
     }
 
-    res.status(200).json({ message: "Đăng nhập Google thành công", user });
+    // ✅ Tạo token để frontend sử dụng sau này
+    const tokenJWT = jwt.sign(
+      {
+        id: user._id,
+        email: user.Email,
+        role: user.UserRole || "Customer",
+      },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    res.status(200).json({
+      message: "Đăng nhập Google thành công",
+      user,
+      token: tokenJWT, // ✅ trả token về
+    });
   } catch (error) {
     console.error("Lỗi khi đăng nhập Google:", error);
     res.status(401).json({ message: "Token không hợp lệ hoặc lỗi server" });
   }
 };
+
 module.exports = { getUsers, login, register, googleLogin };
