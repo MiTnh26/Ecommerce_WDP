@@ -1,5 +1,7 @@
 import ProfilePage from "../pages/ProfilePage";
+import OrderDetail from "../components/OrderDetail";
 const UserRoutes = [
+
   {
     path: "/Ecommerce/user",
     children: [
@@ -8,6 +10,10 @@ const UserRoutes = [
         element: <ProfilePage />,
       },
     ],
+  },
+  {
+    path: "/orderdetail/:orderId",
+    element: <OrderDetail  />,
   },
 ];
 

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Container, Card, Spinner, Alert, Table, Form, Button, Row, Col, InputGroup } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+
 
 const orange = "#ff5722";
 
@@ -12,6 +14,10 @@ const PurchaseOrders = () => {
   const [statusFilter, setStatusFilter] = useState("");
 
   const userId = "68393a96a8b0479a7a0219a9"; // test ID
+  const fallbackImg = "../assets/images/no-image.png";
+  const navigate = useNavigate();
+
+
 
   const statusList = Array.from(new Set(orders.map((o) => o.Status))).filter(Boolean);
 
@@ -85,121 +91,321 @@ const PurchaseOrders = () => {
   }
 
   return (
-    <Container className="mt-5">
-      <h4 className="mb-4" style={{ color: orange, fontWeight: 700 }}>
-        Your Orders
-      </h4>
-      <Row className="mb-4">
-        <Col md={6} lg={5}>
-          <InputGroup>
-            <Form.Control
-              type="text"
-              placeholder="Search by product name or variant"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ borderColor: orange }}
-            />
-            <InputGroup.Text style={{ background: orange, color: "#fff" }}>
-              <i className="bi bi-search" />
-            </InputGroup.Text>
-          </InputGroup>
-        </Col>
-        <Col md={4} lg={3}>
-          <Form.Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ borderColor: orange }}
-          >
-            <option value="">All Status</option>
-            {statusList.map((status) => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </Form.Select>
-        </Col>
-      </Row>
+    <Container className="mt-4" style={{ maxWidth: 950 }}>
+      {/* Shopee-style header */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 4,
+          border: "1px solid #f5f5f5",
+          padding: "18px 24px 10px 24px",
+          marginBottom: 18,
+          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+        }}
+      >
+        <i className="bi bi-bag" style={{ fontSize: 28, color: orange }} />
+        <span style={{ fontSize: 22, fontWeight: 700, color: "#222" }}>My Orders</span>
+        <div style={{ flex: 1 }} />
+        <InputGroup style={{ maxWidth: 320 }}>
+          <Form.Control
+            type="text"
+            placeholder="Search product, shop, order"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ borderColor: "#e0e0e0", borderRadius: 20, fontSize: 15 }}
+          />
+          <InputGroup.Text style={{ background: "#fff", border: "none" }}>
+            <i className="bi bi-search" style={{ color: "#888" }} />
+          </InputGroup.Text>
+        </InputGroup>
+      </div>
 
+      {/* Shopee-style status tabs */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 4,
+          border: "1px solid #f5f5f5",
+          marginBottom: 18,
+          padding: "0 24px",
+          display: "flex",
+          alignItems: "center",
+          gap: 32,
+          height: 56,
+        }}
+      >
+        <div
+          onClick={() => setStatusFilter("")}
+          style={{
+            cursor: "pointer",
+            color: !statusFilter ? orange : "#555",
+            fontWeight: !statusFilter ? 700 : 500,
+            borderBottom: !statusFilter ? `2.5px solid ${orange}` : "2.5px solid transparent",
+            padding: "16px 0",
+            fontSize: 16,
+          }}
+        >
+          All
+        </div>
+        {statusList.map((status) => (
+          <div
+            key={status}
+            onClick={() => setStatusFilter(status)}
+            style={{
+              cursor: "pointer",
+              color: statusFilter === status ? orange : "#555",
+              fontWeight: statusFilter === status ? 700 : 500,
+              borderBottom: statusFilter === status ? `2.5px solid ${orange}` : "2.5px solid transparent",
+              padding: "16px 0",
+              fontSize: 16,
+              textTransform: "capitalize",
+            }}
+          >
+            {status}
+          </div>
+        ))}
+      </div>
+
+      {/* Orders list */}
       {filteredOrders.length === 0 ? (
-        <p>No orders found.</p>
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: 4,
+            border: "1px solid #f5f5f5",
+            padding: "48px 0",
+            textAlign: "center",
+            color: "#888",
+            fontSize: 17,
+          }}
+        >
+          <img
+            src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/order/empty-order.png"
+            alt="empty"
+            style={{ width: 90, marginBottom: 12 }}
+          />
+          <div>No orders yet</div>
+        </div>
       ) : (
         filteredOrders.map((order) => (
-          <Card
+          <div
             key={order._id}
-            className="mb-4"
-            style={{ borderColor: orange, boxShadow: "0 2px 8px rgba(255,87,34,0.08)" }}
+            style={{
+              background: "#fff",
+              borderRadius: 4,
+              border: "1px solid #f5f5f5",
+              marginBottom: 18,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              overflow: "hidden",
+            }}
           >
-            <Card.Header
+            {/* Order header */}
+            <div
               style={{
-                background: orange,
-                color: "#fff",
-                fontWeight: 600,
+                background: "#fffefb",
+                borderBottom: "1px solid #f5f5f5",
+                padding: "14px 24px",
                 display: "flex",
+                alignItems: "center",
                 justifyContent: "space-between",
               }}
             >
-              <span><strong>Shop:</strong> {order.ShopId.name}</span>
-              <span><strong>Status:</strong> {order.Status}</span>
-            </Card.Header>
-            <Card.Body>
-              <Table bordered>
-                <tbody>
-                  <tr><td><strong>Order Date</strong></td><td>{new Date(order.OrderDate).toLocaleDateString()}</td></tr>
-                  <tr><td><strong>Shipping Address</strong></td><td>{order.ShippingAddress}</td></tr>
-                  <tr><td><strong>Total Amount</strong></td><td>${Number(order.TotalAmount || 0).toFixed(2)}</td></tr>
-                  <tr><td><strong>Payment ID</strong></td><td>{order.PaymentId || "N/A"}</td></tr>
-                </tbody>
-              </Table>
-
-              <h6 style={{ color: orange, fontWeight: 600 }}>Items:</h6>
-              <Table striped bordered>
-                <thead style={{ background: "#fff3e0" }}>
-                  <tr>
-                    <th>Product Name</th>
-                    <th>Variant</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(order.Items || []).flatMap((item) =>
-                    (item.Product || []).flatMap((product) => {
-                      if (!product.ProductVariant || product.ProductVariant.length === 0) {
-                        // fallback nếu không có variant
-                        return (
-                          <tr key={`${item._id}-${product._id}-no-variant`}>
-                            <td>{product.ProductName}</td>
-                            <td>—</td>
-                            <td>{product.Quantity || "N/A"}</td>
-                            <td>${Number(product.Price || 0).toFixed(2)}</td>
-                            <td>{item.Status}</td>
-                          </tr>
-                        );
-                      }
-
-                      return product.ProductVariant.map((variant, i) => (
-                        <tr key={`${item._id}-${product._id}-${i}`}>
-                          <td>{product.ProductName}</td>
-                          <td>{variant.ProductVariantName}</td>
-                          <td>{variant.Quantity}</td>
-                          <td>${Number(variant.Price || 0).toFixed(2)}</td>
-                          <td>{item.Status}</td>
-                        </tr>
-                      ));
-                    })
-                  )}
-                </tbody>
-              </Table>
-
-              <div className="d-flex justify-content-end">
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="bi bi-shop" style={{ color: orange, fontSize: 18 }} />
+                <span style={{ fontWeight: 600, fontSize: 15 }}>{order.ShopId?.name || "Shop"}</span>
                 <Button
-                  onClick={() => handleBuyAgain(order)}
-                  style={{ background: orange, borderColor: orange, fontWeight: 600 }}
+                  size="sm"
+                  variant="link"
+                  style={{ color: orange, textDecoration: "none", fontWeight: 600, padding: 0, marginLeft: 8 }}
+                  onClick={() => alert(`Contact seller: ${order.ShopId?.name}`)}
                 >
-                  Buy Again
+                  Contact seller
                 </Button>
               </div>
-            </Card.Body>
-          </Card>
+              <span
+                style={{
+                  color: orange,
+                  fontWeight: 700,
+                  fontSize: 15,
+                  textTransform: "capitalize",
+                }}
+              >
+                {order.Status}
+              </span>
+            </div>
+
+            {/* Order items */}
+            {(order.Items || []).flatMap((item) =>
+              (item.Product || []).flatMap((product) => {
+                if (!product.ProductVariant || product.ProductVariant.length === 0) {
+                  // fallback if no variant
+                  return (
+                    <div
+                      key={`${item._id}-${product._id}-no-variant`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "18px 24px",
+                        borderBottom: "1px solid #f5f5f5",
+                        gap: 16,
+                      }}
+                    >
+                      <img
+                        src={product.ProductImage || fallbackImg}
+                        alt=""
+                        style={{
+                          width: 80,
+                          height: 80,
+                          objectFit: "cover",
+                          border: "1px solid #f0f0f0",
+                          borderRadius: 4,
+                          background: "#fafafa",
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 500, fontSize: 15, color: "#222" }}>
+                          {product.ProductName}
+                        </div>
+                        <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>none</div>
+                      </div>
+                      <div style={{ minWidth: 80, textAlign: "center", color: "#555" }}>
+                        x{product.Quantity || "N/A"}
+                      </div>
+                      <div style={{ minWidth: 120, textAlign: "right", color: orange, fontWeight: 600 }}>
+                        ₫{Number(product.Price || 0).toLocaleString("vi-VN")}
+                      </div>
+                    </div>
+                  );
+                }
+
+                return product.ProductVariant.map((variant, i) => (
+                  <div
+                    key={`${item._id}-${product._id}-${i}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "18px 24px",
+                      borderBottom: "1px solid #f5f5f5",
+                      gap: 16,
+                    }}
+                  >
+                    <img
+                      src={product.ProductImage || fallbackImg}
+                      alt=""
+                      style={{
+                        width: 80,
+                        height: 80,
+                        objectFit: "cover",
+                        border: "1px solid #f0f0f0",
+                        borderRadius: 4,
+                        background: "#fafafa",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500, fontSize: 15, color: "#222" }}>
+                        {product.ProductName}
+                      </div>
+                      <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
+                        {variant.ProductVariantName}
+                      </div>
+                    </div>
+                    <div style={{ minWidth: 80, textAlign: "center", color: "#555" }}>
+                      x{variant.Quantity}
+                    </div>
+                    <div style={{ minWidth: 120, textAlign: "right", color: orange, fontWeight: 600 }}>
+                      ₫{Number(variant.Price || 0).toLocaleString("vi-VN")}
+                    </div>
+                  </div>
+                ));
+              })
+            )}
+
+            {/* Order summary & actions */}
+            <div
+              style={{
+                background: "#fffefb",
+                padding: "16px 24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderTop: "1px solid #f5f5f5",
+              }}
+            >
+              <div style={{ color: "#888", fontSize: 14 }}>
+                <div>
+                  <span>Order date: </span>
+                  <span style={{ color: "#222" }}>
+                    {new Date(order.OrderDate).toLocaleDateString()}
+                  </span>
+                </div>
+                <div>
+                  <span>Address: </span>
+                  <span style={{ color: "#222" }}>{order.ShippingAddress}</span>
+                </div>
+                <div>
+                  <span>Payment: </span>
+                  <span style={{ color: "#222" }}>{order.PaymentId || "N/A"}</span>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 15, color: "#555" }}>
+                  Total amount:{" "}
+                  <span style={{ color: orange, fontWeight: 700, fontSize: 20 }}>
+                    ₫{Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
+                  </span>
+                </div>
+                <div style={{ marginTop: 10, display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    style={{
+                      borderColor: "#bbb",
+                      color: "#555",
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      minWidth: 120,
+                    }}
+                    onClick={() =>
+                      navigate(`/orderdetail/${order._id}${order.Status === "Đã hủy" ? "?cancelled=true" : ""}`)
+                    }
+                  >
+                    {order.Status === "Đã hủy" ? "Cancellation details" : "View details"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    style={{
+                      background: orange,
+                      borderColor: orange,
+                      color: "#fff",
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      minWidth: 120,
+                    }}
+                    onClick={() => handleBuyAgain(order)}
+                  >
+                    Buy again
+                  </Button>
+                  <Button
+                    variant="outline-warning"
+                    size="sm"
+                    style={{
+                      borderColor: "#ffc107",
+                      color: "#ffc107",
+                      fontWeight: 600,
+                      borderRadius: 2,
+                      minWidth: 120,
+                    }}
+                    onClick={() => alert(`View shop reviews: ${order.ShopId?.name}`)}
+                  >
+                    Rate shop
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         ))
       )}
     </Container>
