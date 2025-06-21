@@ -1,26 +1,53 @@
 const mongoose = require("mongoose");
 
+const productVariantSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
+  Image: {
+    type: String,
+    required: true,
+  },
+  Price: {
+    type: Number,
+    required: true,
+  },
+
+
+  ProductVariantName: {
+    type: String,
+    required: true,
+  },
+  Quantity: {
+    type: Number,
+    required: true,
+  },
+});
+
 const orderItemSchema = new mongoose.Schema(
   {
-    OrderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
-      required: true,
-    },
-    ProductVariantId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ProductVariant",
-      required: true,
-    },
-    Price: {
+
+    Product: [
+      {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+        },
+        ProductName: {
+          type: String,
+          required: true,
+        },
+        ProductImage: {
+          type: String,
+          required: true,
+        },
+        ProductVariant: [productVariantSchema],
+      },
+    ],
+    Total: {
       type: Number,
       required: true,
-      default: 0,
-    },
-    Quantity: {
-      type: Number,
-      required: true,
-      default: 1,
     },
     Status: {
       type: String,

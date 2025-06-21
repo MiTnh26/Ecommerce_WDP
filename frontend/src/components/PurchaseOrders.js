@@ -9,18 +9,17 @@ const PurchaseOrders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState(""); // Thêm state filter
+  const [statusFilter, setStatusFilter] = useState("");
 
-  const userId = "68393a96a8b0479a7a0219a9"; // hard-code for testing
+  const userId = "68393a96a8b0479a7a0219a9"; // test ID
 
-  // Lấy danh sách status duy nhất
   const statusList = Array.from(new Set(orders.map((o) => o.Status))).filter(Boolean);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/customer/orders/${userId}`);
-        const data = await response.json();
+        const res = await fetch(`http://localhost:5000/customer/orders/${userId}`);
+        const data = await res.json();
 
         if (Array.isArray(data)) {
           setOrders(data);
@@ -34,33 +33,31 @@ const PurchaseOrders = () => {
         setLoading(false);
       }
     };
-
     fetchOrders();
   }, []);
 
   useEffect(() => {
     let result = orders;
 
-    // Filter theo status
     if (statusFilter) {
       result = result.filter((order) => order.Status === statusFilter);
     }
 
-    // Filter theo search
     if (search.trim()) {
       const lower = search.toLowerCase();
       result = result.filter((order) => {
-        const shopName = order.items[0]?.ProductVariantId?.ProductId?.ShopId?.name?.toLowerCase() || "";
         const orderId = (order._id || "").toLowerCase();
-        const hasProduct = (order.items || []).some(
-          (item) =>
-            item.ProductVariantId?.productName?.toLowerCase().includes(lower)
+
+        const hasMatch = (order.Items || []).some((item) =>
+          (item.Product || []).some((p) =>
+            p.ProductName?.toLowerCase().includes(lower) ||
+            (p.ProductVariant || []).some((v) =>
+              v.ProductVariantName?.toLowerCase().includes(lower)
+            )
+          )
         );
-        return (
-          shopName.includes(lower) ||
-          orderId.includes(lower) ||
-          hasProduct
-        );
+
+        return orderId.includes(lower) || hasMatch;
       });
     }
 
@@ -68,7 +65,6 @@ const PurchaseOrders = () => {
   }, [search, orders, statusFilter]);
 
   const handleBuyAgain = (order) => {
-    // Implement buy again logic here
     alert("Buy again clicked for order " + order._id);
   };
 
@@ -98,13 +94,13 @@ const PurchaseOrders = () => {
           <InputGroup>
             <Form.Control
               type="text"
-              placeholder="Search by shop name, order ID or product name"
+              placeholder="Search by product name or variant"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ borderColor: orange }}
             />
             <InputGroup.Text style={{ background: orange, color: "#fff" }}>
-              <i className="bi bi-search"></i>
+              <i className="bi bi-search" />
             </InputGroup.Text>
           </InputGroup>
         </Col>
@@ -121,17 +117,15 @@ const PurchaseOrders = () => {
           </Form.Select>
         </Col>
       </Row>
+
       {filteredOrders.length === 0 ? (
         <p>No orders found.</p>
       ) : (
         filteredOrders.map((order) => (
           <Card
-            className="mb-4"
             key={order._id}
-            style={{
-              borderColor: orange,
-              boxShadow: "0 2px 8px rgba(255,87,34,0.08)",
-            }}
+            className="mb-4"
+            style={{ borderColor: orange, boxShadow: "0 2px 8px rgba(255,87,34,0.08)" }}
           >
             <Card.Header
               style={{
@@ -140,46 +134,22 @@ const PurchaseOrders = () => {
                 fontWeight: 600,
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center",
               }}
             >
-              <span>
-                <strong>Shop:</strong>{" "}
-                {order.items[0]?.ProductVariantId?.ProductId?.ShopId?.name || "Unknown"}
-              </span>
-              <span>
-                <strong>Order ID:</strong> {order._id}
-              </span>
+              <span><strong>Shop:</strong> {order.ShopId.name}</span>
+              <span><strong>Status:</strong> {order.Status}</span>
             </Card.Header>
             <Card.Body>
               <Table bordered>
                 <tbody>
-                  <tr>
-                    <td style={{ width: 180 }}><strong>Order Date</strong></td>
-                    <td>{new Date(order.OrderDate).toLocaleDateString()}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Status</strong></td>
-                    <td>{order.Status}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Shipping Address</strong></td>
-                    <td>{order.ShippingAddress}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Total Amount</strong></td>
-                    <td>
-                      ${parseFloat(order.TotalAmount?.$numberDecimal || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>Payment ID</strong></td>
-                    <td>{order.PaymentId || "N/A"}</td>
-                  </tr>
+                  <tr><td><strong>Order Date</strong></td><td>{new Date(order.OrderDate).toLocaleDateString()}</td></tr>
+                  <tr><td><strong>Shipping Address</strong></td><td>{order.ShippingAddress}</td></tr>
+                  <tr><td><strong>Total Amount</strong></td><td>${Number(order.TotalAmount || 0).toFixed(2)}</td></tr>
+                  <tr><td><strong>Payment ID</strong></td><td>{order.PaymentId || "N/A"}</td></tr>
                 </tbody>
               </Table>
 
-              <h6 className="mt-4" style={{ color: orange, fontWeight: 600 }}>Items:</h6>
+              <h6 style={{ color: orange, fontWeight: 600 }}>Items:</h6>
               <Table striped bordered>
                 <thead style={{ background: "#fff3e0" }}>
                   <tr>
@@ -191,25 +161,39 @@ const PurchaseOrders = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(order.items || []).map((item) => (
-                    <tr key={item._id}>
-                      <td>{item.ProductVariantId?.productName || "Unknown"}</td>
-                      <td>{item.ProductVariantId?.ProductVariantName || "Unknown"}</td>
-                      <td>{item.Quantity}</td>
-                      <td>${Number(item.Price || 0).toFixed(2)}</td>
-                      <td>{item.Status}</td>
-                    </tr>
-                  ))}
+                  {(order.Items || []).flatMap((item) =>
+                    (item.Product || []).flatMap((product) => {
+                      if (!product.ProductVariant || product.ProductVariant.length === 0) {
+                        // fallback nếu không có variant
+                        return (
+                          <tr key={`${item._id}-${product._id}-no-variant`}>
+                            <td>{product.ProductName}</td>
+                            <td>—</td>
+                            <td>{product.Quantity || "N/A"}</td>
+                            <td>${Number(product.Price || 0).toFixed(2)}</td>
+                            <td>{item.Status}</td>
+                          </tr>
+                        );
+                      }
+
+                      return product.ProductVariant.map((variant, i) => (
+                        <tr key={`${item._id}-${product._id}-${i}`}>
+                          <td>{product.ProductName}</td>
+                          <td>{variant.ProductVariantName}</td>
+                          <td>{variant.Quantity}</td>
+                          <td>${Number(variant.Price || 0).toFixed(2)}</td>
+                          <td>{item.Status}</td>
+                        </tr>
+                      ));
+                    })
+                  )}
                 </tbody>
               </Table>
+
               <div className="d-flex justify-content-end">
                 <Button
-                  style={{
-                    background: orange,
-                    borderColor: orange,
-                    fontWeight: 600,
-                  }}
                   onClick={() => handleBuyAgain(order)}
+                  style={{ background: orange, borderColor: orange, fontWeight: 600 }}
                 >
                   Buy Again
                 </Button>

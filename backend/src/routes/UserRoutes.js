@@ -16,7 +16,7 @@ router.get("/user/:userId/address/:addressId", UserController.getAddressById);
 router.delete("/user/:userId/address/:addressId", UserController.deleteAddress); // optional
 //order
 router.get("/orders/:userId",UserController.getOrderByUserId)
-router.get("/:orderId", UserController.getOrderDetails);
+// router.get("/:orderId", UserController.getOrderDetails);
 
 // // POST tạo đơn hàng mới
 // router.post("/", createOrder);

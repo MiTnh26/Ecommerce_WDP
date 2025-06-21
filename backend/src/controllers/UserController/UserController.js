@@ -305,41 +305,26 @@ const getOrderByUserId = async (req, res) => {
       return res.status(400).json({ message: "Invalid userId format" });
     }
 
-    const orders = await Order.find({ UserId: mongoose.Types.ObjectId.createFromHexString(userId) })
-      .lean()
-      .sort({ createdAt: -1 });
-
-    // Lấy thêm các order item và populate variant
-    const fullOrders = await Promise.all(
-      orders.map(async (order) => {
-        const items = await OrderItem.find({ OrderId: new mongoose.Types.ObjectId(order._id) })
-          .populate({
-            path: "ProductVariantId",
-            populate: {
-              path: "ProductId", // tên trường trong ProductVariant
-              populate: {
-                path: 'ShopId',
-                model: 'Shop' // Đảm bảo đã mongoose.model('Shop', ...) rồi
-              } // đảm bảo đúng tên model
-            },
-          })
-
-
-        return {
-          ...order,
-          items,
-        };
+    const orders = await Order.find({ BuyerId: userId })
+      .populate({
+        path: "Items",
+        select: "-__v -createdAt -updatedAt", // bỏ bớt trường phụ nếu cần
       })
-    );
+      .populate({
+        path: "ShopId",
+       
+      })
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.status(200).json(fullOrders);
+    res.status(200).json(orders);
   } catch (error) {
     console.error("Error when getting orders by user:", error);
     res.status(500).json({ message: "Failed to get orders", error: error.message });
   }
 };
 
-const getOrderItemByOrderId = async (req, res) => {
+const getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
 
@@ -347,100 +332,25 @@ const getOrderItemByOrderId = async (req, res) => {
       return res.status(400).json({ message: "Invalid orderId format" });
     }
 
-    const order = await Order.findById(orderId);
+    // Tìm đơn hàng và populate các OrderItem
+    const order = await Order.findById(orderId)
+      .populate({
+        path: "Items", // ref trong Order schema
+        select: "-__v -createdAt -updatedAt"
+      })
+      .lean();
+
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    res.status(200).json(order.OrderItems || []);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to get order items", error: error.message || error.toString() });
-  }
-};
-
-
-const getOrderDetails = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
-      return res.status(400).json({ message: "Invalid orderId format" });
-    }
-
-    const order = await Order.findById(orderId).lean();
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    const orderItems = await OrderItem.find({ OrderId: order._id })
-      .populate({
-        path: "ProductVariantId",
-        populate: { path: "ProductId" },
-      })
-      .lean();
-
-    order.items = orderItems;
-
     res.status(200).json(order);
   } catch (error) {
+    console.error("Error fetching order details:", error);
     res.status(500).json({ message: "Error fetching order details", error: error.message });
   }
 };
-const createOrder = async (req, res) => {
-  try {
-    const { UserId, ShippingAddress, items } = req.body;
 
-    if (!items || !Array.isArray(items) || items.length === 0)
-      return res.status(400).json({ message: "Order must contain items." });
-
-    // Tính tổng
-    const total = items.reduce((sum, item) => sum + item.Price * item.Quantity, 0);
-
-    // Tạo đơn hàng
-    const order = new Order({ UserId, ShippingAddress, TotalAmount: total });
-    await order.save();
-
-    // Tạo các order items
-    const orderItems = items.map((item) => ({
-      ...item,
-      OrderId: order._id,
-    }));
-    await OrderItem.insertMany(orderItems);
-
-    res.status(201).json({ message: "Order created", orderId: order._id });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to create order", error: error.message });
-  }
-};
-const updateOrderStatus = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { status } = req.body;
-
-    const allowed = ["Pending", "Completed", "Cancelled"];
-    if (!allowed.includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
-
-    const updated = await Order.findByIdAndUpdate(orderId, { Status: status }, { new: true });
-    if (!updated) return res.status(404).json({ message: "Order not found" });
-
-    res.status(200).json({ message: "Order status updated", order: updated });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating status", error: error.message });
-  }
-};
-const deleteOrder = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-
-    const deleted = await Order.findByIdAndDelete(orderId);
-    if (!deleted) return res.status(404).json({ message: "Order not found" });
-
-    await OrderItem.deleteMany({ OrderId: orderId });
-
-    res.status(200).json({ message: "Order and items deleted" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting order", error: error.message });
-  }
-};
 
 
 
