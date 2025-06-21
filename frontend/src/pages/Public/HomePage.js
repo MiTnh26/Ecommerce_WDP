@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom';
 import { Row, Col, Carousel, Button, Nav } from 'react-bootstrap'
 import slide1 from '../../assets/images/slide-1.jpg'
 import slide3 from '../../assets/images/slide-3.jpg'
@@ -19,7 +20,8 @@ const dataCategory = [
 const HomePage = () => {  
   const [filterTrending, setFilterTrending] = useState("All");
   const [widthCartTrending, setWidthCartTrending] = useState(1); // default với mobile = 1
-
+  // navigate
+  const navigate = useNavigate();
   useEffect(() => {
     const updateWidthCartTrending = () => {
       if (window.innerWidth >= 1200) {
@@ -128,8 +130,8 @@ const HomePage = () => {
           </Nav>
         </div>
               <p>Giá trị hiện tại: {filterTrending}</p>
-        <div className="body-nav d-flex gap-3 flex-wrap">
-              <div className="item-cart" 
+              <div className="body-nav d-flex gap-3 flex-wrap">
+              <div className="item-cart" onClick={() => navigate("/Ecommerce/product-detail/1")}
               style={{width: `calc(${100 / widthCartTrending}% - 1rem)`}} >
               <Card />
               </div>

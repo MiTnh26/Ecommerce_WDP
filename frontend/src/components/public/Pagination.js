@@ -1,15 +1,15 @@
-import React from "react";
 
-const Pagination = ({ currentPage, totalPages }) => {
-  /* 
-        Ít trang (≤ 5 trang) [1] [2] [3] [4] 
-        Nhiều trang - ở đầu  [1] [2] [3] ... [10]
-        Nhiều trang - ở giữa [1] ... [8] [9] [10] ... [20]
-        Nhiều trang - ở cuối [1] ... [16] [17] [18] [19] [20]
-        */
+/* 
+      Ít trang (≤ 5 trang) [1] [2] [3] [4] 
+      Nhiều trang - ở đầu  [1] [2] [3] ... [10]
+      Nhiều trang - ở giữa [1] ... [8] [9] [10] ... [20]
+      Nhiều trang - ở cuối [1] ... [16] [17] [18] [19] [20]
+      */
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const delta = 2; // số trang hiển thị trước và sau trang hiện tại
   const range = [];
   const rangeWithDots = [];
+
 
   // Luôn bao gồm trang đầu tiên
   range.push(1, Math.min(totalPages, 1));
@@ -51,6 +51,11 @@ const Pagination = ({ currentPage, totalPages }) => {
           className={`btn border mx-1 d-flex align-items-center justify-content-center ${currentPage === rangeItem ? 'text-white bg-warning' : ''}`}
           disabled={typeof rangeItem !== 'number'}
           style={{ width: '35px', height: '35px' }}
+          onClick={() => {
+            if (typeof rangeItem === 'number' && rangeItem !== currentPage) {
+              onPageChange(rangeItem);
+            }
+          }}
         >
           <span className="">{rangeItem}</span>
         </button>
