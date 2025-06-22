@@ -3,7 +3,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
+
+
+
+const nodemailer = require("nodemailer");
 const client = new OAuth2Client(process.env.O2Auth_Key);
+
 
 const getUsers = async (req, res) => {
   try {
@@ -122,4 +127,49 @@ const googleLogin = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, login, register, googleLogin };
+
+
+
+const changePassword = async (req, res) => {
+  const {newPassword} = req.body;
+  //console.log("hi", newPassword);
+  
+  try{
+    if(!req.session.otp) return res.status(400).json({message: "OTP not found"});
+    const user = await User.findOne({Email: req.session.otp.email});
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.Password = hashed;
+    await user.save();
+    // xoa otp
+    req.session.otp = null;
+    res.json({ message: "Change password successfully" });
+  }catch(error){
+    console.log("Loi change password");
+    res.status(500).json({ message: "Failed to change password"});
+  }
+}
+const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const updateData = req.body;
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+module.exports = { getUsers, login, register, googleLogin, changePassword,getUserById,updateUser };
+
+
