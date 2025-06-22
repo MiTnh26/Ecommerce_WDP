@@ -1,10 +1,12 @@
-import React from 'react'
+import React from "react";
 
 const Footer = () => {
   return (
     <footer style={{ backgroundColor: "#2d3748", color: "white" }}>
       {/* Main Footer */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px" }}>
+      <div
+        style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 20px" }}
+      >
         <div
           style={{
             display: "grid",
@@ -14,51 +16,52 @@ const Footer = () => {
         >
           {/* Company Info */}
           <div>
-            <h3 style={{ color: "#4299e1", marginBottom: "15px", fontSize: "24px" }}>EZ SHop</h3>
-            <p style={{ color: "#a0aec0", lineHeight: "1.6", marginBottom: "20px" }}>
-              Sàn thương mại điện tử đơn giản, mang đến trải nghiệm mua sắm tuyệt vời cho khách hàng Việt Nam.
+            <h3
+              style={{
+                color: "#4299e1",
+                marginBottom: "15px",
+                fontSize: "24px",
+              }}
+            >
+              EZ Shop
+            </h3>
+            <p
+              style={{
+                color: "#a0aec0",
+                lineHeight: "1.6",
+                marginBottom: "20px",
+              }}
+            >
+              Sàn thương mại điện tử đơn giản, mang đến trải nghiệm mua sắm
+              tuyệt vời cho khách hàng.
             </p>
-</div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 style={{ marginBottom: "15px" }}>Liên kết nhanh</h4>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {["Trang chủ", "Sản phẩm", "Về chúng tôi", "Liên hệ", "Chính sách", "Hỗ trợ"].map((link) => (
-                <li key={link} style={{ marginBottom: "8px" }}>
-                  <a
-                    href="/"
-                    style={{
-                      color: "#a0aec0",
-                      textDecoration: "none",
-                      fontSize: "14px",
-                      transition: "color 0.3s",
-                    }}
-                    onMouseEnter={(e) => (e.target.style.color = "white")}
-                    onMouseLeave={(e) => (e.target.style.color = "#a0aec0")}
-                  >
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
           </div>
-
           {/* Contact Info */}
           <div>
             <h4 style={{ marginBottom: "15px" }}>Liên hệ</h4>
-            <div style={{ color: "#a0aec0", fontSize: "14px", lineHeight: "1.8" }}>
-              <p style={{ margin: "5px 0" }}>📍 123 Đường ABC, Quận 1, TP.HCM</p>
+            <div
+              style={{ color: "#a0aec0", fontSize: "14px", lineHeight: "1.8" }}
+            >
+              <p style={{ margin: "5px 0" }}>
+                📍 123 Đường ABC, Quận Hoàng Mai, TP.HN
+              </p>
               <p style={{ margin: "5px 0" }}>📞 Hotline: 1900 1234</p>
               <p style={{ margin: "5px 0" }}>✉️ Email: support@shopeasy.vn</p>
-              <p style={{ margin: "5px 0" }}>🕒 Thời gian: 8:00 - 22:00 hàng ngày</p>
+              <p style={{ margin: "5px 0" }}>
+                🕒 Thời gian: 8:00 - 22:00 hàng ngày
+              </p>
             </div>
           </div>
-
           {/* Newsletter */}
-          <div>
+          {/* <div>
             <h4 style={{ marginBottom: "15px" }}>Nhận tin khuyến mãi</h4>
-            <p style={{ color: "#a0aec0", fontSize: "14px", marginBottom: "15px" }}>
+            <p
+              style={{
+                color: "#a0aec0",
+                fontSize: "14px",
+                marginBottom: "15px",
+              }}
+            >
               Đăng ký để nhận thông tin sản phẩm mới và ưu đãi đặc biệt
             </p>
             <form>
@@ -91,13 +94,17 @@ const Footer = () => {
                   fontWeight: "bold",
                   transition: "background-color 0.3s",
                 }}
-                onMouseEnter={(e) => (e.target.style.backgroundColor = "#3182ce")}
-                onMouseLeave={(e) => (e.target.style.backgroundColor = "#4299e1")}
+                onMouseEnter={(e) =>
+                  (e.target.style.backgroundColor = "#3182ce")
+                }
+                onMouseLeave={(e) =>
+                  (e.target.style.backgroundColor = "#4299e1")
+                }
               >
                 Đăng ký ngay
               </button>
             </form>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -115,8 +122,8 @@ const Footer = () => {
             gap: "15px",
           }}
         > */}
-          {/* Payment Methods */}
-          {/* <div style={{ display: "flex", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
+      {/* Payment Methods */}
+      {/* <div style={{ display: "flex", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
             <span style={{ color: "#a0aec0", fontSize: "14px" }}>Thanh toán:</span>
             <div style={{ display: "flex", gap: "8px" }}>
               {["💳", "🏧", "📱", "💰"].map((icon, index) => (
@@ -135,14 +142,14 @@ const Footer = () => {
             </div>
           </div> */}
 
-          {/* Copyright */}
-           {/* <div style={{ textAlign: "center" }}>
+      {/* Copyright */}
+      {/* <div style={{ textAlign: "center" }}>
             <p style={{ color: "#a0aec0", fontSize: "14px", margin: 0 }}>© 2024 ShopEasy. Tất cả quyền được bảo lưu.</p>
           </div> 
         </div>
       </div> */}
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

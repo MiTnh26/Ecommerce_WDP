@@ -1,5 +1,32 @@
 const mongoose = require("mongoose");
 
+const productVariantSchema = new mongoose.Schema({
+  ProductVariantName: {
+    type: String,
+    required: true,
+    default: "",
+  },
+  Image: {
+    type: String,
+    default: "",
+  },
+  Price: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  StockQuantity: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  Status: {
+    type: String,
+    enum: ["Active", "Inactive"],
+    default: "Active",
+  },
+});
+
 const productSchema = new mongoose.Schema(
   {
     CategoryId: {
@@ -21,10 +48,18 @@ const productSchema = new mongoose.Schema(
       ref: "Shop",
       required: true,
     },
+    ProductVariant: {
+      type: [productVariantSchema],
+      default: [],
+    },
     Status: {
       type: String,
       enum: ["Active", "Inactive"],
       default: "Active",
+    },
+    ProductImage: {
+      type: String,
+      default: "",
     },
     CreatedAt: {
       type: Date,
