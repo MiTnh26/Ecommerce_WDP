@@ -42,63 +42,88 @@ function ProfileView({ userId }) {
   }
 
   return (
-    <Container className="mt-5" style={{ maxWidth: "600px" }}>
-      <Card className="shadow-sm">
-        <Card.Header className="bg-primary text-white">
-          <h4 className="mb-0">Personal Information</h4>
-        </Card.Header>
-        <Card.Body>
-          <Row className="mb-4">
-            <Col xs={12} className="text-center">
+    <Container className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+      <Card className="shadow-lg border-0" style={{ width: "100%", maxWidth: "520px", borderRadius: "20px" }}>
+        <Card.Body className="p-4">
+          <div className="d-flex flex-column align-items-center mb-4">
+            <div
+              style={{
+                border: "4px solid #0d6efd",
+                borderRadius: "50%",
+                padding: "6px",
+                background: "linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)",
+                marginBottom: "12px"
+              }}
+            >
               <Image
                 src={user.Image || "/default-avatar.png"}
                 roundedCircle
                 alt="Avatar"
-                style={{ width: "130px", height: "130px", objectFit: "cover" }}
+                style={{
+                  width: "120px",
+                  height: "120px",
+                  objectFit: "cover",
+                  boxShadow: "0 4px 24px rgba(13,110,253,0.15)"
+                }}
               />
-            </Col>
+            </div>
+            <h4 className="fw-bold mb-1">{user.FirstName} {user.LastName}</h4>
+            <span className="text-muted">{user.Username ? `@${user.Username}` : user.Email}</span>
+          </div>
+          <hr />
+          <Row className="mb-3">
+            <Col xs={5} className="fw-semibold text-secondary">Email</Col>
+            <Col xs={7} className="text-break">{user.Email || "-"}</Col>
           </Row>
-          <Row className="mb-2">
-            <Col sm={4} className="fw-semibold">Email:</Col>
-            <Col sm={8}>{user.Email || "-"}</Col>
+          <Row className="mb-3">
+            <Col xs={5} className="fw-semibold text-secondary">Gender</Col>
+            <Col xs={7}>{user.Gender || "-"}</Col>
           </Row>
-          {user.Username && (
-            <Row className="mb-2">
-              <Col sm={4} className="fw-semibold">Username:</Col>
-              <Col sm={8}>{user.Username}</Col>
-            </Row>
-          )}
-
-          <Row className="mb-2">
-            <Col sm={4} className="fw-semibold">Full Name:</Col>
-            <Col sm={8}>{user.FirstName} {user.LastName}</Col>
-          </Row>
-          <Row className="mb-2">
-            <Col sm={4} className="fw-semibold">Gender:</Col>
-            <Col sm={8}>{user.Gender || "-"}</Col>
-          </Row>
-          <Row className="mb-2">
-            <Col sm={4} className="fw-semibold">Date of Birth:</Col>
-            <Col sm={8}>
+          <Row className="mb-3">
+            <Col xs={5} className="fw-semibold text-secondary">Date of Birth</Col>
+            <Col xs={7}>
               {user.DateOfBirth
                 ? new Date(user.DateOfBirth).toLocaleDateString()
                 : "-"}
             </Col>
           </Row>
-          <Row className="mb-2">
-            <Col sm={4} className="fw-semibold">Phone Number:</Col>
-            <Col sm={8}>{user.PhoneNumber || "-"}</Col>
+          <Row className="mb-3">
+            <Col xs={5} className="fw-semibold text-secondary">Phone</Col>
+            <Col xs={7}>{user.PhoneNumber || "-"}</Col>
           </Row>
+          <div className="d-grid mt-4">
+            <Button
+              variant="primary"
+              size="lg"
+              className="rounded-pill fw-semibold"
+              onClick={handleShowModal}
+              style={{
+                background: "linear-gradient(90deg, #0d6efd 60%, #4f8cff 100%)",
+                border: "none",
+                boxShadow: "0 2px 12px rgba(13,110,253,0.10)"
+              }}
+            >
+              <i className="bi bi-pencil-square me-2"></i>
+              Update Profile
+            </Button>
+          </div>
         </Card.Body>
-        <Button variant="primary" onClick={handleShowModal}>
-          Update Profile
-        </Button>
       </Card>
-      <Modal show={showUpdateModal} onHide={handleCloseModal} size="lg" centered>
-        <Modal.Header closeButton>
-          <h4 className="mb-0">Update Personal Profile</h4>
+      <Modal
+        show={showUpdateModal}
+        onHide={handleCloseModal}
+        size="md"
+        centered
+        contentClassName="border-0 rounded-4"
+        dialogClassName="modal-dialog-centered"
+        backdrop="static"
+      >
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title as="h5" className="fw-bold">Update Personal Profile</Modal.Title>
         </Modal.Header>
-        <UpdateProfileForm userId={userId} />
+        <Modal.Body className="pt-2 pb-4 px-4">
+          <UpdateProfileForm userId={userId} />
+        </Modal.Body>
       </Modal>
     </Container>
   );

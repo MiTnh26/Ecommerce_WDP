@@ -25,11 +25,23 @@ const orderSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
-    UserId: {
+    BuyerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    ShopId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shop",
+      required: true,
+    },
+    Items: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "OrderItem",
+      }
+    ],
+
   },
   { timestamps: true }
 );
