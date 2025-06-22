@@ -13,7 +13,7 @@ const PurchaseOrders = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const userId = "68393a96a8b0479a7a0219a9"; // test ID
+  const userId = "68393a96a8b0479a7a0219a9";
   const fallbackImg = "../assets/images/no-image.png";
   const navigate = useNavigate();
 
@@ -90,7 +90,7 @@ const PurchaseOrders = () => {
     );
   }
 
-  // Define blue color palette
+
   const blue = "#1976d2";
   const blueLight = "#e3f2fd";
   const blueBorder = "#bbdefb";
@@ -98,7 +98,7 @@ const PurchaseOrders = () => {
 
   return (
     <Container className="mt-4" style={{ maxWidth: 950 }}>
-      {/* Header */}
+  
       <div
         style={{
           background: "#fff",
@@ -129,7 +129,7 @@ const PurchaseOrders = () => {
         </InputGroup>
       </div>
 
-      {/* Status tabs */}
+
       <div
         style={{
           background: "#fff",
@@ -175,7 +175,7 @@ const PurchaseOrders = () => {
         ))}
       </div>
 
-      {/* Orders list */}
+    
       {filteredOrders.length === 0 ? (
         <div
           style={{
@@ -208,7 +208,7 @@ const PurchaseOrders = () => {
               overflow: "hidden",
             }}
           >
-            {/* Order header */}
+        
             <div
               style={{
                 background: blueLight,
@@ -251,11 +251,11 @@ const PurchaseOrders = () => {
               </span>
             </div>
 
-            {/* Order items */}
+          
             {(order.Items || []).flatMap((item) =>
               (item.Product || []).flatMap((product) => {
                 if (!product.ProductVariant || product.ProductVariant.length === 0) {
-                  // fallback if no variant
+            
                   return (
                     <div
                       key={`${item._id}-${product._id}-no-variant`}
@@ -337,7 +337,7 @@ const PurchaseOrders = () => {
               })
             )}
 
-            {/* Order summary & actions */}
+  
             <div
               style={{
                 background: blueLight,

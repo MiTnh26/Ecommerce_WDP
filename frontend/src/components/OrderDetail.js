@@ -46,12 +46,11 @@ const OrderDetail = () => {
 
   if (!order) return null;
 
-  // Đổi màu chủ đạo sang xanh dương
   const blue = "#007bff";
 
   return (
     <Container className="mt-4" style={{ maxWidth: 900 }}>
-      {/* Header */}
+  
       <div
         style={{
           background: "#fff",
@@ -73,7 +72,7 @@ const OrderDetail = () => {
         </Button>
       </div>
 
-      {/* Order Info */}
+    
       <div
         style={{
           background: "#fff",
@@ -121,7 +120,7 @@ const OrderDetail = () => {
         </div>
       </div>
 
-      {/* Order Items */}
+
       <div
         style={{
           background: "#fff",
@@ -215,7 +214,7 @@ const OrderDetail = () => {
         )}
       </div>
 
-      {/* Order Summary */}
+
       <div
         style={{
           background: "#fff",
@@ -234,7 +233,7 @@ const OrderDetail = () => {
         </div>
       </div>
 
-      {/* Actions */}
+     
       <div
         style={{
           background: "#fff",
