@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import "./checkout.css";
 
@@ -95,73 +97,136 @@ const mockPaymentMethods = [
   },
 ];
 
-// Mock data for cart items
-const mockCartItems = [
-  {
-    id: 1,
-    name: "iPhone 15 Pro Max 256GB",
-    image: "/placeholder.svg?height=80&width=80",
-    price: 29990000,
-    quantity: 1,
-    shop: "Tech Store VN",
-    variant: "Titan Tự Nhiên",
+// Mock data for cart items grouped by shop
+const mockCartItemsByShop = {
+  "Tech Store VN": {
+    shopId: 1,
+    shopName: "Tech Store VN",
+    shopAvatar: "/placeholder.svg?height=40&width=40",
+    isOnline: true,
+    items: [
+      {
+        id: 1,
+        name: "iPhone 15 Pro Max 256GB",
+        image: "/placeholder.svg?height=80&width=80",
+        price: 29990000,
+        quantity: 1,
+        variant: "Titan Tự Nhiên",
+      },
+      {
+        id: 2,
+        name: "AirPods Pro 2nd Generation",
+        image: "/placeholder.svg?height=80&width=80",
+        price: 6490000,
+        quantity: 2,
+        variant: "Trắng",
+      },
+    ],
+    insurance: {
+      available: true,
+      price: 5500,
+      selected: false,
+    },
+    vouchers: [
+      {
+        id: 1,
+        code: "FREESHIP50K",
+        discount: 50000,
+        type: "shipping",
+        description: "Miễn phí vận chuyển đơn từ 500k",
+      },
+    ],
+    selectedVoucher: null,
+    note: "",
+    shippingOptions: [
+      {
+        id: 1,
+        name: "Giao hàng tiêu chuẩn",
+        description: "3-5 ngày làm việc",
+        price: 30000,
+        estimatedDays: "3-5",
+      },
+      {
+        id: 2,
+        name: "Giao hàng nhanh",
+        description: "1-2 ngày làm việc",
+        price: 50000,
+        estimatedDays: "1-2",
+      },
+    ],
+    selectedShipping: null,
   },
-  {
-    id: 2,
-    name: "AirPods Pro 2nd Generation",
-    image: "/placeholder.svg?height=80&width=80",
-    price: 6490000,
-    quantity: 2,
-    shop: "Tech Store VN",
-    variant: "Trắng",
+  "Apple Store Official": {
+    shopId: 2,
+    shopName: "Apple Store Official",
+    shopAvatar: "/placeholder.svg?height=40&width=40",
+    isOnline: true,
+    items: [
+      {
+        id: 3,
+        name: "MacBook Air M2 13 inch",
+        image: "/placeholder.svg?height=80&width=80",
+        price: 27990000,
+        quantity: 1,
+        variant: "Midnight - 256GB",
+      },
+    ],
+    insurance: {
+      available: true,
+      price: 4200,
+      selected: false,
+    },
+    vouchers: [
+      {
+        id: 2,
+        code: "NEWUSER20",
+        discount: 200000,
+        type: "discount",
+        description: "Giảm 200k cho khách hàng mới",
+      },
+    ],
+    selectedVoucher: null,
+    note: "",
+    shippingOptions: [
+      {
+        id: 1,
+        name: "Giao hàng tiêu chuẩn",
+        description: "3-5 ngày làm việc",
+        price: 32000,
+        estimatedDays: "3-5",
+      },
+      {
+        id: 2,
+        name: "Giao hàng nhanh",
+        description: "1-2 ngày làm việc",
+        price: 52000,
+        estimatedDays: "1-2",
+      },
+    ],
+    selectedShipping: null,
   },
-  {
-    id: 3,
-    name: "MacBook Air M2 13 inch",
-    image: "/placeholder.svg?height=80&width=80",
-    price: 27990000,
-    quantity: 1,
-    shop: "Apple Store Official",
-    variant: "Midnight - 256GB",
-  },
-];
-
-// Mock data for shipping options
-const shippingOptions = [
-  {
-    id: 1,
-    name: "Giao hàng tiêu chuẩn",
-    description: "3-5 ngày làm việc",
-    price: 30000,
-    estimatedDays: "3-5",
-  },
-  {
-    id: 2,
-    name: "Giao hàng nhanh",
-    description: "1-2 ngày làm việc",
-    price: 50000,
-    estimatedDays: "1-2",
-  },
-  {
-    id: 3,
-    name: "Giao hàng hỏa tốc",
-    description: "Trong ngày (nội thành)",
-    price: 80000,
-    estimatedDays: "Trong ngày",
-  },
-];
+};
 
 function CheckoutPage() {
   const [selectedAddress, setSelectedAddress] = useState(
     mockAddresses.find((addr) => addr.isDefault) || mockAddresses[0]
   );
   const [selectedPayment, setSelectedPayment] = useState(null);
-  const [selectedShipping, setSelectedShipping] = useState(shippingOptions[0]);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [orderNote, setOrderNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
+  const [newAddressForm, setNewAddressForm] = useState({
+    name: "",
+    phone: "",
+    province: "",
+    district: "",
+    ward: "",
+    detailAddress: "",
+    isDefault: false,
+    type: "home",
+  });
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -169,36 +234,100 @@ function CheckoutPage() {
     }).format(amount);
   };
 
-  const getAddressTypeIcon = (type) => {
-    switch (type) {
-      case "home":
-        return "ti ti-home";
-      case "office":
-        return "ti ti-building";
-      default:
-        return "ti ti-map-pin";
-    }
+  const handleAddressFormChange = (field, value) => {
+    setNewAddressForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const getAddressTypeLabel = (type) => {
-    switch (type) {
-      case "home":
-        return "Nhà riêng";
-      case "office":
-        return "Văn phòng";
-      default:
-        return "Khác";
+  const handleAddNewAddress = () => {
+    // Validate form
+    if (
+      !newAddressForm.name ||
+      !newAddressForm.phone ||
+      !newAddressForm.detailAddress
+    ) {
+      alert("Vui lòng điền đầy đủ thông tin");
+      return;
     }
+
+    // Create new address object
+    const newAddress = {
+      id: mockAddresses.length + 1,
+      name: newAddressForm.name,
+      phone: newAddressForm.phone,
+      address: newAddressForm.detailAddress,
+      ward: newAddressForm.ward,
+      district: newAddressForm.district,
+      city: newAddressForm.province,
+      fullAddress: `${newAddressForm.detailAddress}, ${newAddressForm.ward}, ${newAddressForm.district}, ${newAddressForm.province}`,
+      isDefault: newAddressForm.isDefault,
+      type: newAddressForm.type,
+    };
+
+    // Add to addresses list (in real app, this would be an API call)
+    mockAddresses.push(newAddress);
+
+    // Set as selected address if it's default or if no address is selected
+    if (newAddressForm.isDefault || !selectedAddress) {
+      setSelectedAddress(newAddress);
+    }
+
+    // Reset form and close modal
+    setNewAddressForm({
+      name: "",
+      phone: "",
+      province: "",
+      district: "",
+      ward: "",
+      detailAddress: "",
+      isDefault: false,
+      type: "home",
+    });
+    setShowAddAddressModal(false);
+    setShowAddressModal(false);
+  };
+  // const getAddressTypeIcon = (type) => {
+  //   switch (type) {
+  //     case "home":
+  //       return "ti ti-home";
+  //     case "office":
+  //       return "ti ti-building";
+  //     default:
+  //       return "ti ti-map-pin";
+  //   }
+  // };
+
+  // const getAddressTypeLabel = (type) => {
+  //   switch (type) {
+  //     case "home":
+  //       return "Nhà riêng";
+  //     case "office":
+  //       return "Văn phòng";
+  //     default:
+  //       return "Khác";
+  //   }
+  // };
+
+  // Calculate totals for all shops
+  const calculateGrandTotal = () => {
+    return Object.values(mockCartItemsByShop).reduce((grandTotal, shop) => {
+      const shopSubtotal = shop.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
+      const shopInsurance = shop.insurance.selected ? shop.insurance.price : 0;
+      const shopShipping = shop.selectedShipping?.price || 0;
+      const shopDiscount = shop.selectedVoucher?.discount || 0;
+
+      return (
+        grandTotal + shopSubtotal + shopInsurance + shopShipping - shopDiscount
+      );
+    }, 0);
   };
 
-  // Calculate totals
-  const subtotal = mockCartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shippingFee = selectedShipping.price;
-  const paymentFee = selectedPayment?.fee || 0;
-  const total = subtotal + shippingFee + paymentFee;
+  const grandTotal = calculateGrandTotal();
 
   const handleSelectAddress = (address) => {
     setSelectedAddress(address);
@@ -273,12 +402,12 @@ function CheckoutPage() {
                       <span className="address-phone">
                         {selectedAddress.phone}
                       </span>
-                      <span className={`address-type ${selectedAddress.type}`}>
+                      {/* <span className={`address-type ${selectedAddress.type}`}>
                         <i
                           className={getAddressTypeIcon(selectedAddress.type)}
                         ></i>
                         {getAddressTypeLabel(selectedAddress.type)}
-                      </span>
+                      </span> */}
                       {selectedAddress.isDefault && (
                         <span className="default-badge">Mặc định</span>
                       )}
@@ -302,7 +431,7 @@ function CheckoutPage() {
             </div>
           </div>
 
-          {/* Order Items Section */}
+          {/* Shop Items Section */}
           <div className="checkout-section">
             <div className="section-header">
               <h3>
@@ -311,62 +440,133 @@ function CheckoutPage() {
               </h3>
             </div>
             <div className="section-content">
-              <div className="order-items">
-                {mockCartItems.map((item) => (
-                  <div key={item.id} className="order-item">
-                    <img
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.name}
-                      className="item-image"
-                    />
-                    <div className="item-info">
-                      <h4 className="item-name">{item.name}</h4>
-                      <p className="item-variant">{item.variant}</p>
-                      <p className="item-shop">Bán bởi: {item.shop}</p>
+              {Object.values(mockCartItemsByShop).map((shop) => (
+                <div key={shop.shopId} className="shop-section">
+                  {/* Shop Header */}
+                  <div className="shop-header">
+                    <div className="shop-info">
+                      <img
+                        src={shop.shopAvatar || "/placeholder.svg"}
+                        alt={shop.shopName}
+                        className="shop-avatar"
+                      />
+                      <div className="shop-details">
+                        <span className="shop-name">{shop.shopName}</span>
+                      </div>
                     </div>
-                    <div className="item-quantity">x{item.quantity}</div>
-                    <div className="item-price">
-                      {formatCurrency(item.price)}
+                    {/* <button className="btn-chat">
+                      <i className="ti ti-message-circle"></i>
+                      Chat ngay
+                    </button> */}
+                  </div>
+
+                  {/* Shop Items */}
+                  <div className="shop-items">
+                    {shop.items.map((item) => (
+                      <div key={item.id} className="order-item">
+                        <img
+                          src={item.image || "/placeholder.svg"}
+                          alt={item.name}
+                          className="item-image"
+                        />
+                        <div className="item-info">
+                          <h4 className="item-name">{item.name}</h4>
+                          <p className="item-variant">{item.variant}</p>
+                        </div>
+                        <div className="item-quantity">x{item.quantity}</div>
+                        <div className="item-price">
+                          {formatCurrency(item.price)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Shop Note */}
+                  <div className="shop-note">
+                    <label>Lời nhắn:</label>
+                    <input
+                      type="text"
+                      placeholder="Lưu ý cho Người bán..."
+                      value={shop.note}
+                      onChange={(e) => {
+                        shop.note = e.target.value;
+                      }}
+                    />
+                  </div>
+
+                  {/* Shop Shipping */}
+                  <div className="shop-shipping">
+                    <div className="shipping-header">
+                      <span>Phương thức vận chuyển:</span>
+                    </div>
+                    <div className="shipping-options">
+                      {shop.shippingOptions.map((option) => (
+                        <label key={option.id} className="shipping-option">
+                          <input
+                            type="radio"
+                            name={`shipping-${shop.shopId}`}
+                            value={option.id}
+                            // checked={shop.selectedShipping?.id === option.id}
+                            onChange={() => {
+                              shop.selectedShipping = option;
+                            }}
+                          />
+                          <div className="option-content">
+                            <div className="option-info">
+                              <span className="option-name">{option.name}</span>
+                              <span className="option-description">
+                                {option.description}
+                              </span>
+                            </div>
+                            <div className="option-price">
+                              {formatCurrency(option.price)}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Shipping Options Section */}
-          <div className="checkout-section">
-            <div className="section-header">
-              <h3>
-                <i className="ti ti-truck"></i>
-                Phương thức vận chuyển
-              </h3>
-            </div>
-            <div className="section-content">
-              <div className="shipping-options">
-                {shippingOptions.map((option) => (
-                  <label key={option.id} className="shipping-option">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value={option.id}
-                      checked={selectedShipping.id === option.id}
-                      onChange={() => setSelectedShipping(option)}
-                    />
-                    <div className="option-content">
-                      <div className="option-info">
-                        <span className="option-name">{option.name}</span>
-                        <span className="option-description">
-                          {option.description}
+                  {/* Shop Vouchers */}
+                  {/* <div className="shop-vouchers">
+                    <div className="voucher-header">
+                      <i className="ti ti-ticket"></i>
+                      <span>Voucher của Shop</span>
+                      <button className="btn-select-voucher">
+                        Chọn Voucher
+                      </button>
+                    </div>
+                    {shop.selectedVoucher && (
+                      <div className="selected-voucher">
+                        <span>Đã áp dụng: {shop.selectedVoucher.code}</span>
+                        <span>
+                          -{formatCurrency(shop.selectedVoucher.discount)}
                         </span>
                       </div>
-                      <div className="option-price">
-                        {formatCurrency(option.price)}
-                      </div>
+                    )}
+                  </div> */}
+
+                  {/* Shop Total */}
+                  <div className="shop-total">
+                    <div className="total-row">
+                      <span>Tổng số tiền ({shop.items.length} sản phẩm):</span>
+                      <span className="total-amount">
+                        {formatCurrency(
+                          shop.items.reduce(
+                            (sum, item) => sum + item.price * item.quantity,
+                            0
+                          ) +
+                            (shop.insurance.selected
+                              ? shop.insurance.price
+                              : 0) +
+                            (shop.selectedShipping?.price || 0) -
+                            (shop.selectedVoucher?.discount || 0)
+                        )}
+                      </span>
                     </div>
-                  </label>
-                ))}
-              </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -417,25 +617,6 @@ function CheckoutPage() {
               )}
             </div>
           </div>
-
-          {/* Order Note Section */}
-          <div className="checkout-section">
-            <div className="section-header">
-              <h3>
-                <i className="ti ti-note"></i>
-                Ghi chú đơn hàng
-              </h3>
-            </div>
-            <div className="section-content">
-              <textarea
-                className="order-note"
-                placeholder="Ghi chú cho người bán (tùy chọn)"
-                value={orderNote}
-                onChange={(e) => setOrderNote(e.target.value)}
-                rows="3"
-              ></textarea>
-            </div>
-          </div>
         </div>
 
         {/* Order Summary Sidebar */}
@@ -444,27 +625,53 @@ function CheckoutPage() {
             <h3>Tóm tắt đơn hàng</h3>
 
             <div className="summary-row">
-              <span>Tạm tính ({mockCartItems.length} sản phẩm)</span>
-              <span>{formatCurrency(subtotal)}</span>
+              <span>
+                Tạm tính (
+                {Object.values(mockCartItemsByShop).reduce(
+                  (total, shop) => total + shop.items.length,
+                  0
+                )}{" "}
+                sản phẩm)
+              </span>
+              <span>
+                {formatCurrency(
+                  Object.values(mockCartItemsByShop).reduce(
+                    (sum, shop) =>
+                      sum +
+                      shop.items.reduce(
+                        (shopSum, item) => shopSum + item.price * item.quantity,
+                        0
+                      ),
+                    0
+                  )
+                )}
+              </span>
             </div>
 
             <div className="summary-row">
               <span>Phí vận chuyển</span>
-              <span>{formatCurrency(shippingFee)}</span>
+              <span>
+                {formatCurrency(
+                  Object.values(mockCartItemsByShop).reduce(
+                    (sum, shop) => sum + (shop.selectedShipping?.price || 0),
+                    0
+                  )
+                )}
+              </span>
             </div>
 
-            {paymentFee > 0 && (
+            {/* {paymentFee > 0 && (
               <div className="summary-row">
                 <span>Phí thanh toán</span>
                 <span>{formatCurrency(paymentFee)}</span>
               </div>
-            )}
+            )} */}
 
             <div className="summary-divider"></div>
 
             <div className="summary-row total">
               <span>Tổng cộng</span>
-              <span>{formatCurrency(total)}</span>
+              <span>{formatCurrency(grandTotal)}</span>
             </div>
 
             <button
@@ -534,10 +741,10 @@ function CheckoutPage() {
                       <div className="address-header">
                         <span className="address-name">{address.name}</span>
                         <span className="address-phone">{address.phone}</span>
-                        <span className={`address-type ${address.type}`}>
+                        {/* <span className={`address-type ${address.type}`}>
                           <i className={getAddressTypeIcon(address.type)}></i>
                           {getAddressTypeLabel(address.type)}
-                        </span>
+                        </span> */}
                         {address.isDefault && (
                           <span className="default-badge">Mặc định</span>
                         )}
@@ -549,7 +756,10 @@ function CheckoutPage() {
                   </div>
                 ))}
               </div>
-              <button className="btn btn-outline add-address-btn">
+              <button
+                className="btn btn-outline add-address-btn"
+                onClick={() => setShowAddAddressModal(true)}
+              >
                 <i className="ti ti-plus"></i>
                 Thêm địa chỉ mới
               </button>
@@ -620,6 +830,109 @@ function CheckoutPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Add New Address Modal */}
+      {showAddAddressModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowAddAddressModal(false)}
+        >
+          <div
+            className="modal-content add-address-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Địa chỉ mới</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowAddAddressModal(false)}
+              >
+                <i className="ti ti-x"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="address-form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <input
+                      type="text"
+                      placeholder="Họ và tên"
+                      value={newAddressForm.name}
+                      onChange={(e) =>
+                        handleAddressFormChange("name", e.target.value)
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <input
+                      type="tel"
+                      placeholder="Số điện thoại"
+                      value={newAddressForm.phone}
+                      onChange={(e) =>
+                        handleAddressFormChange("phone", e.target.value)
+                      }
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <select
+                    value={newAddressForm.province}
+                    onChange={(e) =>
+                      handleAddressFormChange("province", e.target.value)
+                    }
+                    className="form-select"
+                  >
+                    <option value="">
+                      Tỉnh/Thành phố, Quận/Huyện, Phường/Xã
+                    </option>
+                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <textarea
+                    placeholder="Địa chỉ cụ thể"
+                    value={newAddressForm.detailAddress}
+                    onChange={(e) =>
+                      handleAddressFormChange("detailAddress", e.target.value)
+                    }
+                    className="form-textarea"
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={newAddressForm.isDefault}
+                      onChange={(e) =>
+                        handleAddressFormChange("isDefault", e.target.checked)
+                      }
+                    />
+                    <span>Thiết lập làm địa chỉ mặc định</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setShowAddAddressModal(false)}
+              >
+                Trở Lại
+              </button>
+              <button className="btn btn-primary" onClick={handleAddNewAddress}>
+                Hoàn thành
+              </button>
             </div>
           </div>
         </div>

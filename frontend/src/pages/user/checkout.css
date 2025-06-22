@@ -667,12 +667,12 @@
 }
 
 .btn-primary {
-  background-color: #007bff;
+  background-color: #ff4444;
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #e63939;
 }
 
 .btn-outline {
@@ -684,6 +684,340 @@
 .btn-outline:hover {
   background-color: #007bff;
   color: white;
+}
+
+.btn-secondary {
+  padding: 10px 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: white;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #f5f5f5;
+}
+
+/* Shop Section */
+.shop-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: white;
+}
+
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.shop-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shop-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.shop-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shop-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.shop-status.online {
+  font-size: 12px;
+  color: #059669;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shop-status.online::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: #059669;
+  border-radius: 50%;
+}
+
+.btn-chat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-chat:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.shop-items {
+  padding: 16px;
+}
+
+.shop-insurance {
+  padding: 0 16px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.insurance-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.insurance-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.insurance-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.insurance-description {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.insurance-price {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.shop-note {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.shop-note label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.shop-note input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.shop-note input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.shop-shipping {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.shipping-header {
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.shop-vouchers {
+  padding: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.voucher-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.voucher-header i {
+  color: #f59e0b;
+}
+
+.voucher-header span {
+  flex: 1;
+  font-weight: 500;
+  color: #374151;
+}
+
+.btn-select-voucher {
+  padding: 4px 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #3b82f6;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn-select-voucher:hover {
+  background: #f3f4f6;
+}
+
+.selected-voucher {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.shop-total {
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+/* Add Address Modal Styles */
+.add-address-modal {
+  width: 90%;
+  max-width: 500px;
+}
+
+.address-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.form-select {
+  background-color: white;
+  cursor: pointer;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.form-label {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.address-type-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.type-btn:hover {
+  border-color: #007bff;
+}
+
+.type-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 1.5rem;
+  border-top: 1px solid #e0e0e0;
 }
 
 /* Responsive */
@@ -729,6 +1063,33 @@
   .address-radio,
   .payment-radio {
     align-self: flex-start;
+  }
+
+  .shop-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .shop-info {
+    width: 100%;
+  }
+
+  .btn-chat {
+    align-self: flex-end;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    width: 100%;
   }
 }
 
