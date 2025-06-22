@@ -351,12 +351,37 @@ const getOrderDetails = async (req, res) => {
   }
 };
 
+const setDefaultAddress = async (req, res) => {
+  const { userId, addressId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const addr = user.ShippingAddress.id(addressId);
+    if (!addr) return res.status(404).json({ message: "Address not found" });
+
+    // Set tất cả địa chỉ về Inactive
+    user.ShippingAddress.forEach((a) => {
+      a.status = "Inactive";
+    });
+
+    // Set địa chỉ này là Default
+    addr.status = "Default";
+
+    await user.save();
+    res.status(200).json({ message: "Set default address successfully" });
+  } catch (error) {
+    console.error("❌ Error setting default address:", error);
+    res.status(500).json({ message: "Failed to set default address", error });
+  }
+};
 
 
 
 
 
-module.exports = {
+module.exports = {setDefaultAddress ,
   getOrderDetails, getOrderByUserId,
   addAddress, updateAddress,
   getAddressById, deleteAddress,

@@ -46,6 +46,9 @@ const OrderDetail = () => {
 
   if (!order) return null;
 
+  // Đổi màu chủ đạo sang xanh dương
+  const blue = "#007bff";
+
   return (
     <Container className="mt-4" style={{ maxWidth: 900 }}>
       {/* Header */}
@@ -62,10 +65,10 @@ const OrderDetail = () => {
           gap: 16,
         }}
       >
-        <i className="bi bi-receipt" style={{ fontSize: 28, color: orange }} />
+        <i className="bi bi-receipt" style={{ fontSize: 28, color: blue }} />
         <span style={{ fontSize: 22, fontWeight: 700, color: "#222" }}>Chi tiết đơn hàng</span>
         <div style={{ flex: 1 }} />
-        <Button variant="outline-secondary" size="sm" onClick={() => navigate(-1)}>
+        <Button variant="outline-primary" size="sm" onClick={() => navigate(-1)}>
           Quay lại
         </Button>
       </div>
@@ -83,7 +86,7 @@ const OrderDetail = () => {
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 16 }}>
-              Mã đơn hàng: <span style={{ color: orange }}>{order._id}</span>
+              Mã đơn hàng: <span style={{ color: blue }}>{order._id}</span>
             </div>
             <div style={{ color: "#888", fontSize: 14 }}>
               Ngày đặt: {new Date(order.OrderDate).toLocaleString()}
@@ -92,7 +95,7 @@ const OrderDetail = () => {
           <div>
             <span
               style={{
-                color: orange,
+                color: blue,
                 fontWeight: 700,
                 fontSize: 16,
                 textTransform: "capitalize",
@@ -163,7 +166,7 @@ const OrderDetail = () => {
                   <div style={{ minWidth: 80, textAlign: "center", color: "#555" }}>
                     x{product.Quantity || "N/A"}
                   </div>
-                  <div style={{ minWidth: 120, textAlign: "right", color: orange, fontWeight: 600 }}>
+                  <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
                     ₫{Number(product.Price || 0).toLocaleString("vi-VN")}
                   </div>
                 </div>
@@ -203,7 +206,7 @@ const OrderDetail = () => {
                 <div style={{ minWidth: 80, textAlign: "center", color: "#555" }}>
                   x{variant.Quantity}
                 </div>
-                <div style={{ minWidth: 120, textAlign: "right", color: orange, fontWeight: 600 }}>
+                <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
                   ₫{Number(variant.Price || 0).toLocaleString("vi-VN")}
                 </div>
               </div>
@@ -225,7 +228,7 @@ const OrderDetail = () => {
       >
         <div style={{ fontSize: 16, color: "#555" }}>
           Tổng số tiền:{" "}
-          <span style={{ color: orange, fontWeight: 700, fontSize: 22 }}>
+          <span style={{ color: blue, fontWeight: 700, fontSize: 22 }}>
             ₫{Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
           </span>
         </div>
@@ -245,7 +248,6 @@ const OrderDetail = () => {
         }}
       >
 
-      
       </div>
     </Container>
   );

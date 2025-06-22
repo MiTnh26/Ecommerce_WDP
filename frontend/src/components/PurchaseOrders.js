@@ -90,24 +90,30 @@ const PurchaseOrders = () => {
     );
   }
 
+  // Define blue color palette
+  const blue = "#1976d2";
+  const blueLight = "#e3f2fd";
+  const blueBorder = "#bbdefb";
+  const blueText = "#1565c0";
+
   return (
     <Container className="mt-4" style={{ maxWidth: 950 }}>
-      {/* Shopee-style header */}
+      {/* Header */}
       <div
         style={{
           background: "#fff",
           borderRadius: 4,
-          border: "1px solid #f5f5f5",
+          border: `1px solid ${blueBorder}`,
           padding: "18px 24px 10px 24px",
           marginBottom: 18,
-          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+          boxShadow: "0 1px 2px rgba(25, 118, 210, 0.06)",
           display: "flex",
           alignItems: "center",
           gap: 16,
         }}
       >
-        <i className="bi bi-bag" style={{ fontSize: 28, color: orange }} />
-        <span style={{ fontSize: 22, fontWeight: 700, color: "#222" }}>My Orders</span>
+        <i className="bi bi-bag" style={{ fontSize: 28, color: blue }} />
+        <span style={{ fontSize: 22, fontWeight: 700, color: blueText }}>My Orders</span>
         <div style={{ flex: 1 }} />
         <InputGroup style={{ maxWidth: 320 }}>
           <Form.Control
@@ -115,20 +121,20 @@ const PurchaseOrders = () => {
             placeholder="Search product, shop, order"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ borderColor: "#e0e0e0", borderRadius: 20, fontSize: 15 }}
+            style={{ borderColor: blueBorder, borderRadius: 20, fontSize: 15 }}
           />
           <InputGroup.Text style={{ background: "#fff", border: "none" }}>
-            <i className="bi bi-search" style={{ color: "#888" }} />
+            <i className="bi bi-search" style={{ color: blueText }} />
           </InputGroup.Text>
         </InputGroup>
       </div>
 
-      {/* Shopee-style status tabs */}
+      {/* Status tabs */}
       <div
         style={{
           background: "#fff",
           borderRadius: 4,
-          border: "1px solid #f5f5f5",
+          border: `1px solid ${blueBorder}`,
           marginBottom: 18,
           padding: "0 24px",
           display: "flex",
@@ -141,9 +147,9 @@ const PurchaseOrders = () => {
           onClick={() => setStatusFilter("")}
           style={{
             cursor: "pointer",
-            color: !statusFilter ? orange : "#555",
+            color: !statusFilter ? blue : "#555",
             fontWeight: !statusFilter ? 700 : 500,
-            borderBottom: !statusFilter ? `2.5px solid ${orange}` : "2.5px solid transparent",
+            borderBottom: !statusFilter ? `2.5px solid ${blue}` : "2.5px solid transparent",
             padding: "16px 0",
             fontSize: 16,
           }}
@@ -156,9 +162,9 @@ const PurchaseOrders = () => {
             onClick={() => setStatusFilter(status)}
             style={{
               cursor: "pointer",
-              color: statusFilter === status ? orange : "#555",
+              color: statusFilter === status ? blue : "#555",
               fontWeight: statusFilter === status ? 700 : 500,
-              borderBottom: statusFilter === status ? `2.5px solid ${orange}` : "2.5px solid transparent",
+              borderBottom: statusFilter === status ? `2.5px solid ${blue}` : "2.5px solid transparent",
               padding: "16px 0",
               fontSize: 16,
               textTransform: "capitalize",
@@ -175,17 +181,17 @@ const PurchaseOrders = () => {
           style={{
             background: "#fff",
             borderRadius: 4,
-            border: "1px solid #f5f5f5",
+            border: `1px solid ${blueBorder}`,
             padding: "48px 0",
             textAlign: "center",
-            color: "#888",
+            color: blueText,
             fontSize: 17,
           }}
         >
           <img
             src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/order/empty-order.png"
             alt="empty"
-            style={{ width: 90, marginBottom: 12 }}
+            style={{ width: 90, marginBottom: 12, filter: "hue-rotate(180deg)" }}
           />
           <div>No orders yet</div>
         </div>
@@ -196,17 +202,17 @@ const PurchaseOrders = () => {
             style={{
               background: "#fff",
               borderRadius: 4,
-              border: "1px solid #f5f5f5",
+              border: `1px solid ${blueBorder}`,
               marginBottom: 18,
-              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              boxShadow: "0 1px 2px rgba(25, 118, 210, 0.06)",
               overflow: "hidden",
             }}
           >
             {/* Order header */}
             <div
               style={{
-                background: "#fffefb",
-                borderBottom: "1px solid #f5f5f5",
+                background: blueLight,
+                borderBottom: `1px solid ${blueBorder}`,
                 padding: "14px 24px",
                 display: "flex",
                 alignItems: "center",
@@ -214,12 +220,20 @@ const PurchaseOrders = () => {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <i className="bi bi-shop" style={{ color: orange, fontSize: 18 }} />
-                <span style={{ fontWeight: 600, fontSize: 15 }}>{order.ShopId?.name || "Shop"}</span>
+                <i className="bi bi-shop" style={{ color: blue, fontSize: 18 }} />
+                <span style={{ fontWeight: 600, fontSize: 15, color: blueText }}>
+                  {order.ShopId?.name || "Shop"}
+                </span>
                 <Button
                   size="sm"
                   variant="link"
-                  style={{ color: orange, textDecoration: "none", fontWeight: 600, padding: 0, marginLeft: 8 }}
+                  style={{
+                    color: blue,
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    padding: 0,
+                    marginLeft: 8,
+                  }}
                   onClick={() => alert(`Contact seller: ${order.ShopId?.name}`)}
                 >
                   Contact seller
@@ -227,7 +241,7 @@ const PurchaseOrders = () => {
               </div>
               <span
                 style={{
-                  color: orange,
+                  color: blue,
                   fontWeight: 700,
                   fontSize: 15,
                   textTransform: "capitalize",
@@ -249,7 +263,7 @@ const PurchaseOrders = () => {
                         display: "flex",
                         alignItems: "center",
                         padding: "18px 24px",
-                        borderBottom: "1px solid #f5f5f5",
+                        borderBottom: `1px solid ${blueBorder}`,
                         gap: 16,
                       }}
                     >
@@ -260,13 +274,13 @@ const PurchaseOrders = () => {
                           width: 80,
                           height: 80,
                           objectFit: "cover",
-                          border: "1px solid #f0f0f0",
+                          border: `1px solid ${blueBorder}`,
                           borderRadius: 4,
-                          background: "#fafafa",
+                          background: blueLight,
                         }}
                       />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 500, fontSize: 15, color: "#222" }}>
+                        <div style={{ fontWeight: 500, fontSize: 15, color: blueText }}>
                           {product.ProductName}
                         </div>
                         <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>none</div>
@@ -274,7 +288,7 @@ const PurchaseOrders = () => {
                       <div style={{ minWidth: 80, textAlign: "center", color: "#555" }}>
                         x{product.Quantity || "N/A"}
                       </div>
-                      <div style={{ minWidth: 120, textAlign: "right", color: orange, fontWeight: 600 }}>
+                      <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
                         ₫{Number(product.Price || 0).toLocaleString("vi-VN")}
                       </div>
                     </div>
@@ -288,7 +302,7 @@ const PurchaseOrders = () => {
                       display: "flex",
                       alignItems: "center",
                       padding: "18px 24px",
-                      borderBottom: "1px solid #f5f5f5",
+                      borderBottom: `1px solid ${blueBorder}`,
                       gap: 16,
                     }}
                   >
@@ -299,13 +313,13 @@ const PurchaseOrders = () => {
                         width: 80,
                         height: 80,
                         objectFit: "cover",
-                        border: "1px solid #f0f0f0",
+                        border: `1px solid ${blueBorder}`,
                         borderRadius: 4,
-                        background: "#fafafa",
+                        background: blueLight,
                       }}
                     />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 500, fontSize: 15, color: "#222" }}>
+                      <div style={{ fontWeight: 500, fontSize: 15, color: blueText }}>
                         {product.ProductName}
                       </div>
                       <div style={{ color: "#888", fontSize: 13, marginTop: 2 }}>
@@ -315,7 +329,7 @@ const PurchaseOrders = () => {
                     <div style={{ minWidth: 80, textAlign: "center", color: "#555" }}>
                       x{variant.Quantity}
                     </div>
-                    <div style={{ minWidth: 120, textAlign: "right", color: orange, fontWeight: 600 }}>
+                    <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
                       ₫{Number(variant.Price || 0).toLocaleString("vi-VN")}
                     </div>
                   </div>
@@ -326,34 +340,34 @@ const PurchaseOrders = () => {
             {/* Order summary & actions */}
             <div
               style={{
-                background: "#fffefb",
+                background: blueLight,
                 padding: "16px 24px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                borderTop: "1px solid #f5f5f5",
+                borderTop: `1px solid ${blueBorder}`,
               }}
             >
               <div style={{ color: "#888", fontSize: 14 }}>
                 <div>
                   <span>Order date: </span>
-                  <span style={{ color: "#222" }}>
+                  <span style={{ color: blueText }}>
                     {new Date(order.OrderDate).toLocaleDateString()}
                   </span>
                 </div>
                 <div>
                   <span>Address: </span>
-                  <span style={{ color: "#222" }}>{order.ShippingAddress}</span>
+                  <span style={{ color: blueText }}>{order.ShippingAddress}</span>
                 </div>
                 <div>
                   <span>Payment: </span>
-                  <span style={{ color: "#222" }}>{order.PaymentId || "N/A"}</span>
+                  <span style={{ color: blueText }}>{order.PaymentId || "N/A"}</span>
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 15, color: "#555" }}>
                   Total amount:{" "}
-                  <span style={{ color: orange, fontWeight: 700, fontSize: 20 }}>
+                  <span style={{ color: blue, fontWeight: 700, fontSize: 20 }}>
                     ₫{Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
                   </span>
                 </div>
@@ -362,8 +376,8 @@ const PurchaseOrders = () => {
                     variant="outline-secondary"
                     size="sm"
                     style={{
-                      borderColor: "#bbb",
-                      color: "#555",
+                      borderColor: blue,
+                      color: blueText,
                       fontWeight: 600,
                       borderRadius: 2,
                       minWidth: 120,
@@ -377,8 +391,8 @@ const PurchaseOrders = () => {
                   <Button
                     size="sm"
                     style={{
-                      background: orange,
-                      borderColor: orange,
+                      background: blue,
+                      borderColor: blue,
                       color: "#fff",
                       fontWeight: 600,
                       borderRadius: 2,
@@ -389,11 +403,11 @@ const PurchaseOrders = () => {
                     Buy again
                   </Button>
                   <Button
-                    variant="outline-warning"
+                    variant="outline-primary"
                     size="sm"
                     style={{
-                      borderColor: "#ffc107",
-                      color: "#ffc107",
+                      borderColor: blue,
+                      color: blue,
                       fontWeight: 600,
                       borderRadius: 2,
                       minWidth: 120,

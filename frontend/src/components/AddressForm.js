@@ -3,8 +3,6 @@ import PropTypes from "prop-types";
 import {
   Card,
   Container,
-  Row,
-  Col,
   Image,
   Modal,
   Button,
@@ -43,9 +41,6 @@ function AddressForm({ userId }) {
 
   const handleShowModal = () => setShowModal(true);
 
-
-
-
   const handleChange = (e) => {
     setNewAddress({ ...newAddress, [e.target.name]: e.target.value });
   };
@@ -83,13 +78,12 @@ function AddressForm({ userId }) {
       setIsEditing(false);
       setEditingAddressId(null);
 
-      alert(isEditing ? "✅ Cập nhật địa chỉ thành công!" : "✅ Thêm địa chỉ thành công!");
+      alert(isEditing ? " Cập nhật địa chỉ thành công!" : " Thêm địa chỉ thành công!");
     } catch (error) {
       console.error("❌ Lỗi:", error);
       alert(isEditing ? "Cập nhật địa chỉ thất bại!" : "Thêm địa chỉ thất bại!");
     }
   };
-
 
   if (!user) {
     return (
@@ -135,14 +129,38 @@ function AddressForm({ userId }) {
       const updatedUser = await updatedUserRes.json();
       setUser(updatedUser);
 
-      alert("✅ Đã xoá địa chỉ!");
+      alert(" Đã xoá địa chỉ!");
     } catch (err) {
-      console.error("❌ Lỗi xoá địa chỉ:", err);
+      console.error(" Lỗi xoá địa chỉ:", err);
       alert("Xoá địa chỉ thất bại!");
     }
   };
 
 
+  const handleSetDefaultAddress = async (addressId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/customer/user/${userId}/address/${addressId}/set-default`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Default" })
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Lỗi đặt địa chỉ mặc định");
+      }
+
+  
+      const updatedUserRes = await fetch(`http://localhost:5000/customer/profile/${userId}`);
+      if (!updatedUserRes.ok) throw new Error("Không thể cập nhật thông tin user");
+      const updatedUser = await updatedUserRes.json();
+      setUser(updatedUser);
+
+      alert("Đã đặt địa chỉ mặc định!");
+    } catch (err) {
+      console.error(" Lỗi đặt địa chỉ mặc định:", err);
+      alert("Đặt địa chỉ mặc định thất bại!");
+    }
+  };
 
   return (
     <Container className="mt-5 d-flex justify-content-center align-items-center" style={{ minHeight: "90vh" }}>
@@ -243,6 +261,18 @@ function AddressForm({ userId }) {
                       style={{ borderRadius: "16px" }}
                     >
                       <i className="bi bi-trash me-1"></i>Delete
+                    </Button>
+                    {/* Nút Set Default */}
+                    <Button
+                      variant="outline-success"
+                      size="sm"
+                      className="px-3"
+                      onClick={() => handleSetDefaultAddress(addr._id)}
+                      disabled={addr.status === "Default"}
+                      style={{ borderRadius: "16px" }}
+                    >
+                      <i className="bi bi-star me-1"></i>
+                      {addr.status === "Default" ? "Default" : "Set Default"}
                     </Button>
                   </div>
                 </div>
