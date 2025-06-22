@@ -1,11 +1,11 @@
-import { ProductPage } from "../pages/product/ProductIndex";
+import  ProductIndex  from "../pages/product/ProductIndex";
 const ProductRoutes = [
   {
     path: "/Ecommerce/product",
     children: [
       {
         path: "product-page",
-        element: <ProductPage />,
+        element: <ProductIndex />,
       },
     ],
   },
