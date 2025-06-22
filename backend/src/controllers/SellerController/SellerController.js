@@ -6,9 +6,10 @@ const cloudinary = require("../../config/cloudinary");
 const { Readable } = require("stream");
 
 const getShopByUserId = async (req, res) => {
-  const { owner } = req.body;
+  const { owner } = req.query;
+  
   try {
-    const shopInformation = await Shop.findOne({ owner }).populate("owner");
+    const shopInformation = await Shop.findOne({ owner: owner }).populate("owner");
     if (!shopInformation) {
       return res.status(404).json({ message: "Shop not found for this user" });
     }
@@ -18,9 +19,9 @@ const getShopByUserId = async (req, res) => {
   }
 };
 const updateShopProfile = async (req, res) => {
-  const { owner, describe, logo, name } = req.body;
+  const { owner, description, shopAvatar, name } = req.body;
   try {
-    const shop = await Shop.findOne({ owner });
+    const shop = await Shop.findOne({ owner: owner });
     if (!shop) {
       return res.status(404).json({ message: "Shop not found for this user" });
     }
@@ -28,8 +29,8 @@ const updateShopProfile = async (req, res) => {
       shop._id,
       {
         name: name !== undefined ? name : shop.name,
-        describe: describe !== undefined ? describe : shop.describe,
-        logo: logo !== undefined ? logo : shop.logo,
+        description: description !== undefined ? description : shop.description,
+        shopAvatar: shopAvatar !== undefined ? shopAvatar : shop.shopAvatar,
       },
       { new: true }
     );
