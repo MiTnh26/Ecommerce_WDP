@@ -24,7 +24,7 @@ const ProfileHeader = () => {
           </div>
 
           <nav className={styles.navigation}>
-            <a href="#" className={styles.navLink}>Home</a>
+            <a href="/Ecommerce/home" className={styles.navLink}>Home</a>
             <a href="#" className={styles.navLink}>Order</a>
             
             <div className={styles.dropdown}>

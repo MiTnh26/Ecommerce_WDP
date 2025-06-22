@@ -31,10 +31,9 @@ export default function ProductSidebar({ active, onSelect }) {
                 active === "list" ? styles.active : ""
               }`}
               onClick={() => {
-                if (active !== "list") {
-                  navigate("/Ecommerce/product/product-page");
-                  onSelect("list");
-                }
+                navigate("/Ecommerce/product/product-page", {
+                  state: { tab: "list" },
+                });
               }}
             >
               View list product
@@ -44,10 +43,9 @@ export default function ProductSidebar({ active, onSelect }) {
                 active === "add" ? styles.active : ""
               }`}
               onClick={() => {
-                if (active !== "add") {
-                  navigate("/Ecommerce/product/product-page");
-                  onSelect("add");
-                }
+                navigate("/Ecommerce/product/product-page", {
+                  state: { tab: "add" },
+                });
               }}
             >
               Add new product
