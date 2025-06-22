@@ -15,8 +15,8 @@ const sidebarConfig = [
     key: "orders",
     title: "Manager Orders",
     items: [
-      { label: "View Orders", to: "/Ecommerce/seller/orders" },
-      { label: "Create Order", to: "/Ecommerce/seller/orders/create" },
+      { label: "View Orders", to: "/Ecommerce/seller/viewlistorder" },
+      
     ],
   },
   {
