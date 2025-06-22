@@ -25,7 +25,7 @@ function AdminSidebar({ currentPage = "", isCollapsed, onToggleCollapse }) {
     {
       id: "categories",
       label: "Categories Management",
-      icon: "ti ti-building-store",
+      icon: "ti ti-category",
       path: "/Ecommerce/admin/categories",
     },
     // {
