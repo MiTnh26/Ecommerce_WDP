@@ -4,6 +4,14 @@ const Orders = require("./Orders");
 const Payment = require("./Payment");
 const Products = require("./Products");
 const Shop = require("./Shops");
-const Category = require('./Categories');
+const Category = require("./Categories");
 
-module.exports = { User, OrderItems, Orders, Payment, Products, Shop , Category};
+module.exports = {
+  User,
+  OrderItems,
+  Orders,
+  Payment,
+  Products,
+  Shop,
+  Category,
+};
