@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "../../style/UserManagement.css";
+import "../../style/admin/a.css";
 import AdminLayout from "../../components/admin/AdminLayout";
 import {
   Eye,
@@ -126,7 +126,9 @@ function UserManagement() {
   return (
     <AdminLayout currentPage="users" pageTitle="Quản lý người dùng">
       {/* Stats Cards */}
-
+      <div>
+        <h1 className="a">a</h1>
+      </div>
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-header">
@@ -259,11 +261,11 @@ function UserManagement() {
                   <td>
                     <div className="action-buttons">
                       <button
+                        className="btn-action btn-view"
                         onClick={() => handleViewUser(user)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                        title="View Details"
+                        title="Xem chi tiết"
                       >
-                        <Eye className="h-4 w-4" />
+                        <i className="ti ti-eye"></i>
                       </button>
                       <button
                         onClick={() => handleToggleUserStatus(user)}

@@ -1,8 +1,8 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import { useNavigate } from 'react-router-dom';
-  // useQuery to state Cart
+import { useNavigate } from "react-router-dom";
+// useQuery to state Cart
 import {
   Col,
   Container,
@@ -25,7 +25,7 @@ const Header = () => {
   const fetchCartData = async () => {
     //const res = null;
     console.log("Fetching cart data...");
-    return [1, 2, 3, 4]
+    return [1, 2, 3, 4];
   };
   const { data: cartData, isLoading: cartLoading } = useQuery({
     queryKey: ["cart"],
@@ -80,14 +80,17 @@ const Header = () => {
               <Col md={6} lg={7}>
                 <Form id="search-form" className="text-center">
                   <Form.Control
-
                     type="text"
                     className="border-0 bg-transparent"
                     placeholder="Search for more than 20,000 products"
                   />
                 </Form>
               </Col>
-              <Col md={1} lg={1} onClick={() => navigate("/Ecommerce/search/hello")}>
+              <Col
+                md={1}
+                lg={1}
+                onClick={() => navigate("/Ecommerce/search/hello")}
+              >
                 <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
               </Col>
               <Col md={1} lg={0} className="d-block d-lg-none"></Col>
@@ -120,7 +123,7 @@ const Header = () => {
               </li>
               <li>
                 <a
-                  href="/"
+                  href="/Ecommerce/seller/seller-register"
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -179,7 +182,11 @@ const Header = () => {
                     />
                   </Form>
                 </Col>
-                <Col xs={1} className=" bg-light p-2" onClick={() => navigate("/Ecommerce/search/hello")}>
+                <Col
+                  xs={1}
+                  className=" bg-light p-2"
+                  onClick={() => navigate("/Ecommerce/search/hello")}
+                >
                   <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
                 </Col>
                 <Col xs={1} className="d-block d-lg-none"></Col>
@@ -202,37 +209,59 @@ const Header = () => {
             <span className="total item text-white p-0">0</span>
           </div>
         </Offcanvas.Header>
-        <Offcanvas.Body className="h-100 d-flex flex-column"  ref={cartRef}>
+        <Offcanvas.Body className="h-100 d-flex flex-column" ref={cartRef}>
           <div className="flex-grow-1 overflow-auto">
-          <ListGroup>
-            {cartLoading ? (
-              <p>Loading Cart Items .. </p>
-            ) : (
-              <>
-                {(cartData || []).map((item, index) => (
-                  <ListGroup.Item className="px-1 border-0 border-bottom" key={index}>
-                    <div className="d-flex gap-3">
-                      <img
-                        src={image}
-                        alt=""
-                        className="p-0 m-0"
-                        style={{ width: "50px", height: "50px", objectFit: "cover" }}
+            <ListGroup>
+              {cartLoading ? (
+                <p>Loading Cart Items .. </p>
+              ) : (
+                <>
+                  {(cartData || []).map((item, index) => (
+                    <ListGroup.Item
+                      className="px-1 border-0 border-bottom"
+                      key={index}
+                    >
+                      <div className="d-flex gap-3">
+                        <img
+                          src={image}
+                          alt=""
+                          className="p-0 m-0"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            objectFit: "cover",
+                          }}
                         />
-                      <div className="overflow-hidden flex-1">
-                        <p className="product-name text-nowrap text-truncate"
-                          style={{ fontSize: "0.8rem" }}>Product Name: Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                        <div className="overflow-hidden flex-1">
+                          <p
+                            className="product-name text-nowrap text-truncate"
+                            style={{ fontSize: "0.8rem" }}
+                          >
+                            Product Name: Lorem ipsum dolor sit amet. Lorem
+                            ipsum dolor sit amet consectetur adipisicing elit.
+                          </p>
+                        </div>
+                        <p
+                          className="product-price"
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          $1290.00
+                        </p>
                       </div>
-                      <p className="product-price" style={{ fontSize: "0.8rem" }}>$1290.00</p>
-                    </div>
-                  </ListGroup.Item>
-                ))}
-              </>
-            )}
-          </ListGroup>
-            </div>
-            <div className="p-3 border-top mb-auto">
-            <button className="btn bg-warning w-100 text-white fw-bold" onClick={() => navigate("/Ecommerce/user/cart")}>XEM GIỎ HÀNG</button>
-            </div>
+                    </ListGroup.Item>
+                  ))}
+                </>
+              )}
+            </ListGroup>
+          </div>
+          <div className="p-3 border-top mb-auto">
+            <button
+              className="btn bg-warning w-100 text-white fw-bold"
+              onClick={() => navigate("/Ecommerce/user/cart")}
+            >
+              XEM GIỎ HÀNG
+            </button>
+          </div>
         </Offcanvas.Body>
       </Offcanvas>
     </>
