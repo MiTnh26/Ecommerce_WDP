@@ -7,6 +7,7 @@
   margin-bottom: 32px;
   margin-top: 0;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 .headerActions {
@@ -220,11 +221,11 @@
       }
       
       &:nth-child(2) {
-        text-align: center;
+        text-align: left;
       }
       
       &:nth-child(5) {
-        text-align: center;
+        text-align: left;
       }
       
       &:last-child {
