@@ -104,7 +104,7 @@ function SellerRegistrationWizard() {
         ward: "",
       });
 
-      navigate("/Ecommerce/seller");
+      navigate("/Ecommerce/product/product-page");
     } catch (err) {
       console.error("Error registering shop:", err);
       alert("Error: " + err.message);

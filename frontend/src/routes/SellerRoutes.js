@@ -1,8 +1,10 @@
 import { SellerRegistrationWizard } from "../pages/sellerRegister/SellerIndex";
-import ShopInformation from "../components/seller/shop-information";
 import HomeSeller from "../components/seller/home";
 import ViewListOrder from "../components/seller/ViewListOrder";
 import ViewOrderDetail from "../components/seller/ViewOrderDetail";
+import ViewOrderIndex from "../components/seller/ListOrderIndex";
+import ShopInformationIndex from "../components/seller/ShopInformationIndex";
+import OrderDetailIndex from "../components/seller/OrderDetailIndex";
 
 const SellerRoutes = [
   {
@@ -11,19 +13,18 @@ const SellerRoutes = [
   },
   {
     path: "/Ecommerce/seller",
-    element: <HomeSeller />,
     children: [
       {
-        path: "shop-profile",
-        element: <ShopInformation />,
-      },
-      {
         path: "viewlistorder",
-        element: <ViewListOrder />,
+        element: <ViewOrderIndex />,
       },
       {
         path: "vieworderdetail",
-        element: <ViewOrderDetail />,
+        element: <OrderDetailIndex />,
+      },
+      {
+        path: "shopinformation",
+        element: <ShopInformationIndex />,
       },
     ],
   },
