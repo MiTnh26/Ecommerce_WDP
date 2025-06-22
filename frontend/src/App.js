@@ -7,71 +7,74 @@ import UserRoutes from "./routes/UserRoutes";
 import AdminRoutes from "./routes/AdminRoutes";
 import SellerRoutes from "./routes/SellerRoutes";
 import { AppProvider } from "./store/Context";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProductRoutes from "./routes/ProductRoutes";
 function App() {
+  const queryClient = new QueryClient();
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <AppProvider>
-        <Router>
-          <Routes>
-            {PublicRoutes.map((route, index) => {
-              const Layout = route.element;
-              return (
-                <Route key={index} path={route.path} element={Layout}>
-                  {route.children &&
-                    route.children.map((childRoute, index) => (
-                      <Route
-                        key={index}
-                        path={childRoute.path}
-                        element={childRoute.element}
-                      />
-                    ))}
-                </Route>
-              );
-            })}
-            {UserRoutes.map((route, index) => {
-              return (
-                <Route key={index} path={route.path} element={route.element}>
-                  {route.children &&
-                    route.children.map((childRoute, idx) => (
-                      <Route
-                        key={idx}
-                        path={childRoute.path}
-                        element={childRoute.element}
-                      />
-                    ))}
-                </Route>
-              );
-            })}
-            {AdminRoutes.map((route, index) => {
-              return (
-                <Route key={index} path={route.path} element={route.element}>
-                  {route.children &&
-                    route.children.map((childRoute, idx) => (
-                      <Route
-                        key={idx}
-                        path={childRoute.path}
-                        element={childRoute.element}
-                      />
-                    ))}
-                </Route>
-              );
-            })}
-            {SellerRoutes.map((route, index) => {
-              return (
-                <Route key={index} path={route.path} element={route.element}>
-                  {route.children &&
-                    route.children.map((childRoute, idx) => (
-                      <Route
-                        key={idx}
-                        path={childRoute.path}
-                        element={childRoute.element}
-                      />
-                    ))}
-                </Route>
-              );
-            })}
-            {ProductRoutes.map((route, index) => {
+    <QueryClientProvider client={queryClient}>
+      <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+        <AppProvider>
+          <Router>
+            <Routes>
+              {PublicRoutes.map((route, index) => {
+                const Layout = route.element;
+                return (
+                  <Route key={index} path={route.path} element={Layout}>
+                    {route.children &&
+                      route.children.map((childRoute, index) => (
+                        <Route
+                          key={index}
+                          path={childRoute.path}
+                          element={childRoute.element}
+                        />
+                      ))}
+                  </Route>
+                );
+              })}
+              {UserRoutes.map((route, index) => {
+                return (
+                  <Route key={index} path={route.path} element={route.element}>
+                    {route.children &&
+                      route.children.map((childRoute, idx) => (
+                        <Route
+                          key={idx}
+                          path={childRoute.path}
+                          element={childRoute.element}
+                        />
+                      ))}
+                  </Route>
+                );
+              })}
+              {AdminRoutes.map((route, index) => {
+                return (
+                  <Route key={index} path={route.path} element={route.element}>
+                    {route.children &&
+                      route.children.map((childRoute, idx) => (
+                        <Route
+                          key={idx}
+                          path={childRoute.path}
+                          element={childRoute.element}
+                        />
+                      ))}
+                  </Route>
+                );
+              })}
+              {SellerRoutes.map((route, index) => {
+                return (
+                  <Route key={index} path={route.path} element={route.element}>
+                    {route.children &&
+                      route.children.map((childRoute, idx) => (
+                        <Route
+                          key={idx}
+                          path={childRoute.path}
+                          element={childRoute.element}
+                        />
+                      ))}
+                  </Route>
+                );
+              })}
+              {ProductRoutes.map((route, index) => {
               return (
                 <Route key={index} path={route.path} element={route.element}>
                   {route.children &&
@@ -86,9 +89,10 @@ function App() {
               );
             })}
           </Routes>
-        </Router>
-      </AppProvider>
-    </GoogleOAuthProvider>
+          </Router>
+        </AppProvider>
+      </GoogleOAuthProvider>
+    </QueryClientProvider>
   );
 }
 

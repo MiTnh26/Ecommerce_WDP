@@ -1,3 +1,4 @@
+
 import {
   AdminDashboard,
   UserManagement,
@@ -5,6 +6,7 @@ import {
   PaymentManagement,
   Analytics,
 } from "../pages/admin/AdminIndex";
+
 const AdminRoutes = [
   {
     path: "/Ecommerce/admin",

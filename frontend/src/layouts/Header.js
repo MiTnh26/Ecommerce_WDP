@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+import  { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+import { useNavigate } from 'react-router-dom';
+  // useQuery to state Cart
 import {
   Col,
   Container,
@@ -11,6 +15,25 @@ import image from "../assets/images/logo_page.jpg";
 const Header = () => {
   const [popUpSearch, setPopUpSearch] = useState(false);
   const [showCanvasCart, setShowCanvasCart] = useState(false);
+  // navigate
+  const navigate = useNavigate();
+
+  //inview hook for cart
+  const { ref: cartRef, inView: cartInView } = useInView({ triggerOnce: true });
+  // useQuery to state Cart
+  //fetch cart data
+  const fetchCartData = async () => {
+    //const res = null;
+    console.log("Fetching cart data...");
+    return [1, 2, 3, 4]
+  };
+  const { data: cartData, isLoading: cartLoading } = useQuery({
+    queryKey: ["cart"],
+    queryFn: fetchCartData,
+    enabled: cartInView,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+  });
 
   const handlePopUpSearch = () => {
     setPopUpSearch(!popUpSearch);
@@ -57,13 +80,14 @@ const Header = () => {
               <Col md={6} lg={7}>
                 <Form id="search-form" className="text-center">
                   <Form.Control
+
                     type="text"
                     className="border-0 bg-transparent"
                     placeholder="Search for more than 20,000 products"
                   />
                 </Form>
               </Col>
-              <Col md={1} lg={1}>
+              <Col md={1} lg={1} onClick={() => navigate("/Ecommerce/search/hello")}>
                 <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
               </Col>
               <Col md={1} lg={0} className="d-block d-lg-none"></Col>
@@ -105,7 +129,7 @@ const Header = () => {
               </li>
               <li className="d-md-none" onClick={handlePopUpSearch}>
                 <a
-                  href="/"
+                  href="/Ecommerce/search/hello"
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -155,7 +179,7 @@ const Header = () => {
                     />
                   </Form>
                 </Col>
-                <Col xs={1} className=" bg-light p-2">
+                <Col xs={1} className=" bg-light p-2" onClick={() => navigate("/Ecommerce/search/hello")}>
                   <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
                 </Col>
                 <Col xs={1} className="d-block d-lg-none"></Col>
@@ -175,27 +199,40 @@ const Header = () => {
             className="bg-warning  d-flex justify-content-center align-items-center rounded-circle"
             style={{ width: "40px", height: "40px" }}
           >
-            <span className="text-white p-0">0</span>
+            <span className="total item text-white p-0">0</span>
           </div>
         </Offcanvas.Header>
-        <Offcanvas.Body>
+        <Offcanvas.Body className="h-100 d-flex flex-column"  ref={cartRef}>
+          <div className="flex-grow-1 overflow-auto">
           <ListGroup>
-            <ListGroup.Item className="px-0">
-              <div className="d-flex gap-2">
-                <img
-                  src={image}
-                  alt=""
-                  className="p-0 m-0"
-                  style={{ width: "80px", height: "80px" }}
-                />
-                <div className="inforItem d-flex">
-                  <div className="">
-                    <p>Product Name</p>
-                  </div>
-                </div>
-              </div>
-            </ListGroup.Item>
+            {cartLoading ? (
+              <p>Loading Cart Items .. </p>
+            ) : (
+              <>
+                {(cartData || []).map((item, index) => (
+                  <ListGroup.Item className="px-1 border-0 border-bottom" key={index}>
+                    <div className="d-flex gap-3">
+                      <img
+                        src={image}
+                        alt=""
+                        className="p-0 m-0"
+                        style={{ width: "50px", height: "50px", objectFit: "cover" }}
+                        />
+                      <div className="overflow-hidden flex-1">
+                        <p className="product-name text-nowrap text-truncate"
+                          style={{ fontSize: "0.8rem" }}>Product Name: Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                      </div>
+                      <p className="product-price" style={{ fontSize: "0.8rem" }}>$1290.00</p>
+                    </div>
+                  </ListGroup.Item>
+                ))}
+              </>
+            )}
           </ListGroup>
+            </div>
+            <div className="p-3 border-top mb-auto">
+            <button className="btn bg-warning w-100 text-white fw-bold" onClick={() => navigate("/Ecommerce/user/cart")}>XEM GIỎ HÀNG</button>
+            </div>
         </Offcanvas.Body>
       </Offcanvas>
     </>
