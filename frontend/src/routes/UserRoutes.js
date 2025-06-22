@@ -1,4 +1,4 @@
-import ProfilePage from "../pages/user/ProfilePage";
+import ProfilePage from "../pages/ProfilePage";
 import Cart from "../pages/customer/Cart";
 import CheckoutPage from "../pages/user/checkout";
 import UserLayout from "../layouts/UserLayout"; // layout vừa tạo
