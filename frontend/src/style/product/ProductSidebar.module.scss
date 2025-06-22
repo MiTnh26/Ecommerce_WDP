@@ -1,15 +1,15 @@
 .sidebar {
   width: 220px;
-  background: #e0f2fe; /* light-blue */
+  background: #e0f2fe;
   padding: 1rem;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0 auto; /* Center the h2 block horizontally */
+  margin: 0 auto;
   width: 100%;
   max-width: 100px;
   text-align: center;
@@ -23,15 +23,31 @@
     display: block;
   }
 }
+
 .section {
   margin-bottom: 2rem;
 }
+
 .sectionTitle {
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: #0f172a;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-button {
+
+.arrow {
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.dropdownContent {
+  padding-left: 0.5rem;
+}
+
+.sidebarButton {
   display: block;
   width: 100%;
   padding: 0.5rem 0.75rem;
@@ -42,8 +58,13 @@ button {
   color: #0f172a;
   margin-bottom: 0.25rem;
   cursor: pointer;
+
+  &:hover {
+    background: #bae6fd;
+  }
 }
+
 .active {
   background: white;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
