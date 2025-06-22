@@ -21,7 +21,7 @@ const dataImageListDefault = [
   { id: 7, image: image_default },
   { id: 8, image: image_default },
 ];
-const rating = 4.5;
+const rating = 3;
 const color = [
   { id: 1, name: "default", color: image_default },
   { id: 2, name: "default1", color: logo },

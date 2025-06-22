@@ -87,7 +87,7 @@ const Header = () => {
                   />
                 </Form>
               </Col>
-              <Col md={1} lg={1}>
+              <Col md={1} lg={1} onClick={() => navigate("/Ecommerce/search/hello")}>
                 <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
               </Col>
               <Col md={1} lg={0} className="d-block d-lg-none"></Col>
@@ -129,7 +129,7 @@ const Header = () => {
               </li>
               <li className="d-md-none" onClick={handlePopUpSearch}>
                 <a
-                  href="/"
+                  href="/Ecommerce/search/hello"
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -179,7 +179,7 @@ const Header = () => {
                     />
                   </Form>
                 </Col>
-                <Col xs={1} className=" bg-light p-2">
+                <Col xs={1} className=" bg-light p-2" onClick={() => navigate("/Ecommerce/search/hello")}>
                   <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
                 </Col>
                 <Col xs={1} className="d-block d-lg-none"></Col>
