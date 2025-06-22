@@ -1,10 +1,8 @@
-"use client";
-
 import { useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminHeader from "./AdminHeader";
 import "./AdminLayout.css";
-
+import "../../style/admin/UserManagement.css";
 function AdminLayout({ children, currentPage, pageTitle, user }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
