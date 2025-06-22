@@ -1,4 +1,5 @@
 import ProfilePage from "../pages/ProfilePage";
+import CheckoutPage from "../pages/user/checkout";
 const UserRoutes = [
   {
     path: "/Ecommerce/user",
@@ -6,6 +7,10 @@ const UserRoutes = [
       {
         path: "profile",
         element: <ProfilePage />,
+      },
+      {
+        path: "checkout",
+        element: <CheckoutPage />,
       },
     ],
   },
