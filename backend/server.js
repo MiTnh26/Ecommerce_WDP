@@ -35,9 +35,11 @@ const userRouter = require("./src/routes/UserRoutes");
 
 const adminRouter = require("./src/routes/AdminRoutes");
 const sellerRouter = require("./src/routes/SellerRoutes");
+const productRouter = require("./src/routes/ProductRoutes")
 app.use("/customer", userRouter);
 app.use("/admin", adminRouter);
 app.use("/seller", sellerRouter);
+app.use("/product", productRouter);
 // //Cho server Khoi dong
 
 const port = process.env.PORT;
