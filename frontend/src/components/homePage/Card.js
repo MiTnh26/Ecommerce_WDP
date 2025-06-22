@@ -1,6 +1,7 @@
 import React from 'react'
 import image from '../../assets/images/thumb-cucumber.png'
-const Cart = (  ) => {
+
+const Cart = ({cardInfo}) => {
   return (
     <div className="card-custom rounded-3 p-3"
     style={{
