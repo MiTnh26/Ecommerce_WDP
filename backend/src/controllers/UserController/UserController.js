@@ -1,9 +1,17 @@
-const { User } = require("../../models");
+const User = require("../../models/Users");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
+
+
+
 const nodemailer = require("nodemailer");
+// const  {Order,OrderItem}  = require("../../models/index");
+const Order = require("../../models/Orders");
+const OrderItem = require("../../models/OrderItems");
+
 const client = new OAuth2Client(process.env.O2Auth_Key);
 
 
@@ -123,13 +131,17 @@ const googleLogin = async (req, res) => {
     res.status(401).json({ message: "Token không hợp lệ hoặc lỗi server" });
   }
 };
+
+
+
+
 const changePassword = async (req, res) => {
-  const {newPassword} = req.body;
+  const { newPassword } = req.body;
   //console.log("hi", newPassword);
-  
-  try{
-    if(!req.session.otp) return res.status(400).json({message: "OTP not found"});
-    const user = await User.findOne({Email: req.session.otp.email});
+
+  try {
+    if (!req.session.otp) return res.status(400).json({ message: "OTP not found" });
+    const user = await User.findOne({ Email: req.session.otp.email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -139,9 +151,9 @@ const changePassword = async (req, res) => {
     // xoa otp
     req.session.otp = null;
     res.json({ message: "Change password successfully" });
-  }catch(error){
+  } catch (error) {
     console.log("Loi change password");
-    res.status(500).json({ message: "Failed to change password"});
+    res.status(500).json({ message: "Failed to change password" });
   }
 }
 const getUserById = async (req, res) => {
@@ -163,5 +175,226 @@ const updateUser = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-module.exports = { getUsers, login, register, googleLogin, changePassword,getUserById,updateUser };
+const addAddress = async (req, res) => {
+  const { id } = req.params; // user id
+  const { address, phoneNumber, receiverName, status } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Nếu chọn là địa chỉ mặc định, gỡ "Default" khỏi các địa chỉ khác
+    if (status === "Default") {
+      user.ShippingAddress.forEach((addr) => {
+        addr.status = "Inactive";
+      });
+    }
+
+    const newAddress = {
+      _id: new mongoose.Types.ObjectId(),
+      address,
+      phoneNumber,
+      receiverName,
+      status: status || "Inactive",
+    };
+
+    user.ShippingAddress.push(newAddress);
+    await user.save();
+
+    res.status(200).json({ message: "Address added successfully", address: newAddress });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to add address", error });
+  }
+};
+const updateAddress = async (req, res) => {
+  const { userId, addressId } = req.params;
+  const { address, phoneNumber, receiverName, status } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const addr = user.ShippingAddress.id(addressId);
+    if (!addr) return res.status(404).json({ message: "Address not found" });
+    if (!address || !phoneNumber || !receiverName) {
+      return res.status(400).json({ message: "Thiếu thông tin địa chỉ" });
+    }
+    // Nếu cập nhật thành mặc định => gỡ mặc định ở các địa chỉ khác
+    if (status === "Default") {
+      user.ShippingAddress.forEach((a) => (a.status = "Inactive"));
+    }
+
+    addr.address = address ?? addr.address;
+    addr.phoneNumber = phoneNumber ?? addr.phoneNumber;
+    addr.receiverName = receiverName ?? addr.receiverName;
+    addr.status = status ?? addr.status;
+
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Address added successfully",
+      shippingAddresses: user.ShippingAddress
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update address", error });
+  }
+};
+const getAddressById = async (req, res) => {
+  const { userId, addressId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const address = user.ShippingAddress.id(addressId);
+    if (!address) return res.status(404).json({ message: "Address not found" });
+
+    res.status(200).json(address);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get address", error });
+  }
+};
+const deleteAddress = async (req, res) => {
+  const { userId, addressId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+
+    // Kiểm tra xem địa chỉ có tồn tại không
+    const addressExists = user.ShippingAddress.some(
+      (addr) => addr._id.toString() === addressId
+    );
+
+    if (!addressExists) {
+      return res.status(404).json({ message: "Không tìm thấy địa chỉ" });
+    }
+
+    // Xoá địa chỉ bằng filter
+    user.ShippingAddress = user.ShippingAddress.filter(
+      (addr) => addr._id.toString() !== addressId
+    );
+
+    await user.save();
+
+    res.status(200).json({ message: "Đã xoá địa chỉ thành công" });
+  } catch (error) {
+    console.error("❌ Lỗi server khi xoá địa chỉ:", error);
+    res.status(500).json({ message: "Lỗi server khi xoá địa chỉ", error });
+  }
+};
+// const getOrderByUserId = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+
+//     // Kiểm tra xem userId có hợp lệ không
+//     if (!mongoose.Types.ObjectId.isValid(userId)) {
+//       return res.status(400).json({ message: "Invalid userId format" });
+//     }
+
+//     // Ép kiểu userId sang ObjectId
+//     const orders = await Order.find({ UserId: mongoose.Types.ObjectId.createFromHexString(userId) });
+
+//     res.status(200).json(orders);
+//   }catch (error) {
+//   console.error("Error when getting orders by user:", error);
+//   res.status(500).json({ message: "Failed to get orders by user", error: error.message || error.toString() });
+// }
+const getOrderByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid userId format" });
+    }
+
+    const orders = await Order.find({ BuyerId: userId })
+      .populate({
+        path: "Items",
+        select: "-__v -createdAt -updatedAt", // bỏ bớt trường phụ nếu cần
+      })
+      .populate({
+        path: "ShopId",
+       
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Error when getting orders by user:", error);
+    res.status(500).json({ message: "Failed to get orders", error: error.message });
+  }
+};
+
+const getOrderDetails = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: "Invalid orderId format" });
+    }
+
+    // Tìm đơn hàng và populate các OrderItem
+    const order = await Order.findById(orderId)
+      .populate({
+        path: "Items", // ref trong Order schema
+        select: "-__v -createdAt -updatedAt"
+      })
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.status(200).json(order);
+  } catch (error) {
+    console.error("Error fetching order details:", error);
+    res.status(500).json({ message: "Error fetching order details", error: error.message });
+  }
+};
+
+const setDefaultAddress = async (req, res) => {
+  const { userId, addressId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const addr = user.ShippingAddress.id(addressId);
+    if (!addr) return res.status(404).json({ message: "Address not found" });
+
+    // Set tất cả địa chỉ về Inactive
+    user.ShippingAddress.forEach((a) => {
+      a.status = "Inactive";
+    });
+
+    // Set địa chỉ này là Default
+    addr.status = "Default";
+
+    await user.save();
+    res.status(200).json({ message: "Set default address successfully" });
+  } catch (error) {
+    console.error("❌ Error setting default address:", error);
+    res.status(500).json({ message: "Failed to set default address", error });
+  }
+};
+
+
+
+
+
+module.exports = {setDefaultAddress ,
+  getOrderDetails, getOrderByUserId,
+  addAddress, updateAddress,
+  getAddressById, deleteAddress,
+  getUsers, login, register,
+  googleLogin, changePassword,
+  getUserById, updateUser
+};
+
 

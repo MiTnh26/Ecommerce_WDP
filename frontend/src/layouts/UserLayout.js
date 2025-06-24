@@ -1,12 +1,12 @@
 import React from "react";
-import Header from "./CheckoutHeader";
+import CheckoutHeader from "./CheckoutHeader";
 import Footer from "./Footer";
 import { Outlet } from "react-router-dom";
 
 const UserLayout = () => {
   return (
     <>
-      <Header />
+      <CheckoutHeader />
       <main>
         <Outlet />
       </main>
