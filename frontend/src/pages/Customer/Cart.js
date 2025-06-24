@@ -114,32 +114,12 @@ const Cart = () => {
           </div>
         </div>
         <div className="cart-body bg-white mt-2">
+
           <div className="cart-item rounded border-bottom mb-2">
-            <div className="chosse-all-in-shop d-flex py-2 px-1 position-relative">
-              <div className="mx-3">
-                <Form.Check type="checkbox" />
-              </div>
-              <div className="flex-grow-1">
-                <p className="mb-0">Name Shop Lorem ipsum dolor sit</p>
-              </div>
-              {/* Đường kẻ 90% nằm dưới */}
-              <div
-                className="position-absolute"
-                style={{
-                  width: "95%",
-                  borderBottom: "1px solid #dee2e6",
-                  bottom: 0,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              ></div>
-            </div>
             <div className="d-flex align-items-center text-muted text-nowrap bg-white mt-2 py-3 px-1  overflow-auto ">
-              <div className="mx-3">
-                <Form.Check type="checkbox" />
-              </div>
+              
               <div className="cart-body bg-white mt-2">
-                <div className="cart-item rounded border-bottom mb-2">
+                <div className="cart-item rounded mb-2">
                       <div className="chosse-all-in-shop d-flex py-2 px-1 position-relative">
                           <div className="mx-3"><Form.Check type="checkbox" /></div>
                           <div className="flex-grow-1"><p className="mb-0">Name Shop Lorem ipsum dolor sit</p></div>
@@ -175,14 +155,6 @@ const Cart = () => {
                       <div className="flex-shrink-0 flex-basic-15 text-center"><p className="total-price p-0 m-0 text-danger">10000</p></div>
                       <div className="flex-shrink-0 flex-basic-10 text-center" ><button className="btn btn-outline-danger"><i className="fa-solid fa-trash"></i></button></div>
                 </div>
-              </div>
-              <div className="flex-shrink-0 flex-basic-15 text-center">
-                <p className="total-price p-0 m-0 text-danger">10000</p>
-              </div>
-              <div className="flex-shrink-0 flex-basic-10 text-center">
-                <Button variant="outline-danger">
-                  <i className="fa-solid fa-trash"></i>
-                </Button>
               </div>
             </div>
           </div>
