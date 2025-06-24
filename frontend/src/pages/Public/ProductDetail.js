@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import image_default from "../../assets/images/img_default.jpg"
 import logo from "../../assets/images/logo_page.jpg"
-import '../../style/ProductDetail.css';
+import styles from '../../style/ProductDetail.module.css';
 import { useState } from 'react';
 import StarVoting from '../../components/public/StarVoting';
 import Pagination from '../../components/public/Pagination';
@@ -21,7 +21,7 @@ const dataImageListDefault = [
   { id: 7, image: image_default },
   { id: 8, image: image_default },
 ];
-const rating = 3;
+const rating = 4.5;
 const color = [
   { id: 1, name: "default", color: image_default },
   { id: 2, name: "default1", color: logo },
@@ -78,7 +78,7 @@ const ProductDetail = () => {
   // fetch data
   const fetchReviews = async () => {
     console.log("Fetching reviews...");
-    return [1, 2, 3];
+    return [1, 2, 3, 4, 5, 6];
   };
   const fetchRelatedProducts = async () => {
     console.log("Fetching related products...");
@@ -127,10 +127,10 @@ const ProductDetail = () => {
       </div>
       <main className="main-product-view">
         {/* view product, article: 1 đơn vị nội dung */}
-        <article className="product-summary-section p-3 bg-white rounded shadow-sm gap-4">
+        <article className={`${styles["product-summary-section"]} p-3 bg-white rounded shadow-sm gap-4`}>
           {/* image main */}
           <section className="product-image-container flex-2">
-            <div className="product-image-main border border-1 d-flex justify-content-center align-items-center">
+            <div className={`${styles["product-image-main"]}  border border-1 d-flex justify-content-center align-items-center`}>
               <img
                 src={dataImageListDefault[currentIndex].image}
                 alt="product main view"
@@ -138,15 +138,15 @@ const ProductDetail = () => {
               />
             </div>
             {/* image thumbnail list  */}
-            <div className="overflow-hidden thumbnail-list-product mt-2 position-relative">
+            <div className={` ${styles["thumbnail-list-product"]} overflow-hidden mt-2 position-relative`}>
               <button
-                className="prev-button border-0 bg-muted opacity-25 py-1"
+                className={`${styles["prev-button"]} border-0 bg-muted opacity-25 py-1`}
                 onClick={() => handleScroll("left")}
                 disabled={currentIndex === 0}>
                 <i className="fa-solid fa-chevron-left fa-xs px-1 text-white"></i>
               </button>
               <button
-                className="next-button border-0 bg-muted opacity-25 py-1"
+                className={`${styles["next-button"]} border-0 bg-muted opacity-25 py-1`}
                 onClick={() => handleScroll("right")}
                 disabled={currentIndex >= dataImageListDefault.length - 1}>
                 <i className="fa-solid fa-chevron-right fa-xs px-1 text-white "></i>
@@ -161,7 +161,7 @@ const ProductDetail = () => {
                 {dataImageListDefault.map((item, index) => (
                   <div
                     key={index}
-                    className={`thumbnail-wrapper ${Number(index) === Number(currentIndex) ? "active" : ""}`}
+                    className={`${styles["thumbnail-wrapper"]} ${Number(index) === Number(currentIndex) ? `${styles["active"]}` : ""}`}
                     onClick={() => setCurrentIndex(index)}>
                     <img src={item.image} alt={`Thumb ${item.id}`} className="img-fluid object-fit-cover" />
                   </div>
@@ -174,26 +174,26 @@ const ProductDetail = () => {
             <p className="product-name text-bold fs-4 p-0 m-0">Lorim ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor</p>
             <div className="d-flex justify-content-between align-items-center">
               <div className="product-rating d-flex align-items-center justify-content-center">
-                <p className="rating-text me-2 p-0 m-0">{rating}</p>
+                <p className={`${styles["rating-text"]} me-2 p-0 m-0`}>{rating}</p>
                 <StarVoting rating={rating} />
                 <p className="p-0 m-0 mx-2">|</p>
-                <p className="feedback-text mx-2 p-0 m-0 text-muted fw-light">Đánh giá</p>
-                <p className="feedback-value p-0 m-0">120</p>
+                <p className={`${styles["feedback-text"]}  mx-2 p-0 m-0 text-muted fw-light`}>Đánh giá</p>
+                <p className={`${styles["feedback-value"]} p-0 m-0`}>120</p>
               </div>
-              <p className="accuse p-0 m-0 text-muted fw-light">Tố cáo</p>
+              <p className={`${styles["accuse"]} p-0 m-0 text-muted fw-light`}>Tố cáo</p>
             </div>
             {/* Price */}
             <div className="product-price d-flex align-items-center gap-2 mt-5 bg-light p-3">
-              <p className="price-value p-0 m-0 text-danger fs-3 ">1.200.000</p>
-              <p className="price-old-value p-0 m-0 text-muted">1.500.000</p>
-              <p className="price-discount  m-0 text-danger">-20%</p>
+              <p className={`${styles["price-value"]} p-0 m-0 text-danger fs-3`}>1.200.000</p>
+              <p className={`${styles["price-old-value"]} p-0 m-0 text-muted`}>1.500.000</p>
+              <p className={`${styles["price-discount"]} m-0 text-danger`}>-20%</p>
             </div>
             {/* Banner */}
             {/* <p className="banner-label p-0 m-0 text-muted ">An Tâm Mua Sắm Cùng EZ ecommerce</p> */}
             {/* Color */}
             <div className="product-color mt-5 d-flex gap-2">
-              <p className="color-label p-0 m-0 text-muted ">Color</p>
-              <div className="list-item-color d-flex gap-2 flex-wrap justify-content-between overflow-y-auto">
+              <p className={`${styles["color-label"]}  p-0 m-0 text-muted`}>Color</p>
+              <div className={`${styles["list-item-color"]} list-item-color d-flex gap-2 flex-wrap justify-content-between overflow-y-auto`}>
                 {color.map((item) => (
                   <button key={item.id} className="color-item border border-muted bg-white p-1 pe-2  " style={{ maxHeight: '38px' }}>
                     <img src={item.color} alt={item.name} className="p-0 m-0 object-fit-cover" width={26} height={"auto"} />
@@ -204,8 +204,8 @@ const ProductDetail = () => {
             </div>
             {/* Size */}
             <div className="product-size mt-3 d-flex gap-2">
-              <p className="size-label p-0 m-0 text-muted ">Size</p>
-              <div className="list-item-size d-flex gap-2 flex-wrap align-items-center justify-content-between overflow-y-auto">
+              <p className={`${styles["size-label"]} p-0 m-0 text-muted `}>Size</p>
+              <div className={`${styles["list-item-size"]} d-flex gap-2 flex-wrap align-items-center justify-content-between overflow-y-auto`}>
                 {size.map((item) => (
                   <button key={item.id} className="color-item border border-muted bg-white p-1 pe-2 " style={{ height: '38px' }}>
                     <span className="text-nowrap">{item.name}</span>
@@ -215,17 +215,17 @@ const ProductDetail = () => {
             </div>
             {/* Quantity */}
             <div className="product-quantity mt-4 d-flex gap-2">
-              <p className="quantity-label p-0 m-0 text-muted ">Số lượng</p>
+              <p className={`${styles["quantity-label"]} p-0 m-0 text-muted `}>Số lượng</p>
               <div className="quantity-input d-flex align-items-center">
                 <button className="border bg-white p-1 px-2 ">-</button>
-                <input type="number" className="border bg-white p-1 px-2 text-center border-start-0 border-end-0 no-spinner" style={{ width: '50px' }} />
+                <input type="number" className={`border bg-white p-1 px-2 text-center border-start-0 border-end-0 ${styles["no-spinner"]}`} style={{ width: '50px' }} />
                 <button className="border bg-white p-1 px-2 text-muted fw-light">+</button>
               </div>
             </div>
             {/* Add to cart */}
             <div className="product-add-to-cart mt-4">
-              <button className="btn-add-cart border border-warning bg-white text-warning p-2 me-2"><i className="fa-solid fa-cart-shopping fs-sx me-1"></i>Thêm vào giỏ hàng</button>
-              <button className="btn-buy-now border border-warning bg-warning text-white p-2">Mua ngay</button>
+              <button className={`${styles["btn-add-cart"]} border border-warning bg-white text-warning p-2 me-2`}><i className="fa-solid fa-cart-shopping fs-sx me-1"></i>Thêm vào giỏ hàng</button>
+              <button className={`${styles["btn-buy-now"]} border border-warning bg-warning text-white p-2`}>Mua ngay</button>
             </div>
           </section>
         </article>
@@ -238,7 +238,7 @@ const ProductDetail = () => {
               <p className="shop-name p-0 m-0 fw-bold mb-2">Tên Shop</p>
               <button className="border border-warning bg-white text-warning pe-1 rounded"><i className="fa-solid fa-shop fs-sx mx-1"></i>Xem Shop </button>
             </div>
-            <div className="vertical-line mx-4"></div>
+            <div className={`${styles["vertical-line"]}  mx-4`}></div>
             <div className="other-content"></div>
           </div>
         </aside>
@@ -246,7 +246,7 @@ const ProductDetail = () => {
         {/* view product description */}
         <section className="product-description-view mt-3 bg-white rounded shadow-sm p-2">
           <p className="product-details-title py-3 px-2 fw-light bg-light">MÔ TẢ SẢN PHẨM</p>
-          <p className='product-details-content m-2 w-75 mx-auto'>Đây là mô tả sản phẩm.
+          <p className='product-details-content m-2 w-100 mx-auto'>Đây là mô tả sản phẩm.
             Lorem ipsum dolor sit amet,
             consectetur adipiscing elit,
             sed do eiusmod tempor incididunt ut
@@ -269,7 +269,9 @@ const ProductDetail = () => {
                     <p className="p-0 m-0 fw-light">ĐÁNH GIÁ SẢN PHẨM</p>
                     <div className="d-flex">
                       <p className="rating-text me-2 p-0 m-0">{rating}</p>
+                      <div className="star-rating">
                       <StarVoting rating={rating} />
+                      </div>
                     </div>
                   </div>
                   <div className="product-reviews-details">
@@ -298,16 +300,15 @@ const ProductDetail = () => {
               </div>
               {/* view product outstanding */}
               <div className="col-md-3">
-                <section className="product-outstanding-container p-1 m-0 bg-white rounded shadow-sm">
-                  
+                <section className="product-outstanding-container p-1 m-0 bg-white rounded shadow-sm">                 
                     <p className="product-outstanding-title p-2 fw-light bg-light text-center">SẢN PHẨM TOP SALE</p>
-                    <div className="product-outstanding p-1 m-0 bg-white rounded shadow-sm">
-                      {Array.from({ length: 2 }).map((_, index) => (
-                        <div className="card-item">
-                          <Card cardInfo={{ id: "1", image: "1" }} />
-                        </div>
+                    <div className={`${styles["product-outstanding"]} m-0 bg-white rounded shadow-sm`}>
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className={styles["card-item-outstanding"]}>                                 
+                          <Card cardInfo={{ id: "1"}}/>
+                          </div>
                       ))}
-                    </div>            
+                    </div>          
                 </section>
               </div>
             </div>
@@ -321,10 +322,8 @@ const ProductDetail = () => {
           <p className="product-outstanding-title p-2 fw-light bg-light ">SẢN PHẨM CÓ LIÊN QUAN</p>
           <div className="related-products d-flex flex-wrap gap-2 justify-content-start">
            {(relatedProductsData || []).map((_, index) => (
-              <div className="" style={{
-                flex: '0 0 calc(20% - 0.4rem)', // 100% chia 5, trừ đi khoảng cách
-
-              }}>
+              <div className={styles["card-item-related"]} 
+               >
                 <Card cardInfo={{ id: "1", image: "1" }} />
               </div>
             ))}

@@ -107,7 +107,7 @@ const Cart = () => {
                           </div>
                       </div>
                       <div className="flex-shrink-0 flex-basic-15 text-center"><p className="total-price p-0 m-0 text-danger">10000</p></div>
-                      <div className="flex-shrink-0 flex-basic-10 text-center" ><Button variant="outline-danger"><i className="fa-solid fa-trash"></i></Button></div>
+                      <div className="flex-shrink-0 flex-basic-10 text-center" ><button className="btn btn-outline-danger"><i className="fa-solid fa-trash"></i></button></div>
                 </div>
                   </div>
               </div>
