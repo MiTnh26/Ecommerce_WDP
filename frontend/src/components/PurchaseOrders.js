@@ -12,8 +12,8 @@ const PurchaseOrders = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-
-  const userId = "68393a96a8b0479a7a0219a9";
+  const user = JSON.parse(localStorage.getItem("user") );
+  const userId = user._id;
   const fallbackImg = "../assets/images/no-image.png";
   const navigate = useNavigate();
 
@@ -63,7 +63,15 @@ const PurchaseOrders = () => {
           )
         );
 
-        return orderId.includes(lower) || hasMatch;
+        return (
+  orderId.includes(lower) ||
+  (order.ShopId?.name || "").toLowerCase().includes(lower) ||
+  (order.ShippingAddress || "").toLowerCase().includes(lower) ||
+  (order.PaymentId || "").toLowerCase().includes(lower) ||
+  (order.Status || "").toLowerCase().includes(lower) ||
+  hasMatch
+);
+
       });
     }
 
