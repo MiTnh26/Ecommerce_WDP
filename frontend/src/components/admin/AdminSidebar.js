@@ -12,13 +12,13 @@ function AdminSidebar({ currentPage = "", isCollapsed, onToggleCollapse }) {
     },
     {
       id: "users",
-      label: "Quản lý người dùng",
+      label: "Users Management",
       icon: "ti ti-users",
       path: "/Ecommerce/admin/userManagement",
     },
     {
       id: "shops",
-      label: "Quản lý gian hàng",
+      label: "Shops Management",
       icon: "ti ti-building-store",
       path: "/Ecommerce/admin/shopManagement",
     },
@@ -42,7 +42,7 @@ function AdminSidebar({ currentPage = "", isCollapsed, onToggleCollapse }) {
     // },
     {
       id: "payments",
-      label: "Phương thức thanh toán",
+      label: "Payment Method Management",
       icon: "ti ti-credit-card",
       path: "/Ecommerce/admin/paymentManagement",
     },
