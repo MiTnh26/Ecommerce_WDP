@@ -1,5 +1,6 @@
 // ✅ Shopee-style Address Form tích hợp với AddressForm chính
 import React, { useEffect, useState } from "react";
+import {BsPencil, BsTrash, BsStar} from "react-icons/bs";
 import PropTypes from "prop-types";
 import {
   Card,
@@ -179,7 +180,7 @@ function AddressForm({ userId }) {
     setIsEditing(true);
     setEditingAddressId(addr._id);
 
-     let phone = addr.phoneNumber?.toString() || "";
+    let phone = addr.phoneNumber?.toString() || "";
     // if (!phone.startsWith("0") && phone.length === 9) {
     //   phone = "0" + phone;
     // }
@@ -280,10 +281,10 @@ function AddressForm({ userId }) {
     setUser(updatedUser);
   };
   useEffect(() => {
-  if (showModal) {
-    setErrors({});
-  }
-}, [showModal]);
+    if (showModal) {
+      setErrors({});
+    }
+  }, [showModal]);
 
   if (!user) return <Container className="text-center mt-5"><Spinner animation="border" /></Container>;
 
@@ -322,11 +323,30 @@ function AddressForm({ userId }) {
                     <div>{addr.phoneNumber}</div>
                     {addr.status === "Default" && <Badge bg="primary">Default</Badge>}
                   </div>
+           
+
                   <div className="text-end d-flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline-primary" onClick={() => handleEdit(addr)}>Edit</Button>
-                    <Button size="sm" variant="outline-danger" disabled={addr.status === "Default"} onClick={() => handleDelete(addr._id)}>Delete</Button>
-                    <Button size="sm" variant="outline-success" disabled={addr.status === "Default"} onClick={() => handleSetDefault(addr._id)}>Set Default</Button>
+                    <Button size="sm" variant="outline-primary" onClick={() => handleEdit(addr)}>
+                      <BsPencil />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      disabled={addr.status === "Default"}
+                      onClick={() => handleDelete(addr._id)}
+                    >
+                      <BsTrash />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-success"
+                      disabled={addr.status === "Default"}
+                      onClick={() => handleSetDefault(addr._id)}
+                    >
+                      <BsStar />
+                    </Button>
                   </div>
+
                 </div>
               </ListGroup.Item>
             ))}
