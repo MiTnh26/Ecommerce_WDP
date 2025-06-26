@@ -1,8 +1,9 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import "../../style/UserManagement.css";
+import "../../style/admin/UserManagement.css";
 import AdminLayout from "../../components/admin/AdminLayout";
 import {
-  Eye,
   Calendar,
   ShoppingCart,
   User,
@@ -31,7 +32,7 @@ function UserManagement() {
         setUserList(data);
       })
       .catch((err) => console.error("❌ Lỗi khi lấy thông tin user:", err));
-  }, []); // ✅ Chạy một lần duy nhất
+  }, []);
 
   const filteredUsers = userList.filter((user) => {
     const matchesSearch =
@@ -47,26 +48,15 @@ function UserManagement() {
   const getStatusBadge = (Status) => {
     switch (Status) {
       case "Active":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-            Active
-          </span>
-        );
+        return <span className="status-badge status-active">Active</span>;
 
       case "Banned":
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-            Banned
-          </span>
-        );
+        return <span className="status-badge status-banned">Banned</span>;
       default:
-        return (
-          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-            {Status}
-          </span>
-        );
+        return <span className="status-badge status-default">{Status}</span>;
     }
   };
+
   const handleToggleUserStatus = async (user) => {
     try {
       const response = await fetch(
@@ -87,8 +77,6 @@ function UserManagement() {
       const result = await response.json();
       console.log("✅ Cập nhật thành công:", result);
 
-      // Sau khi cập nhật thành công, làm mới danh sách người dùng (hoặc cập nhật thủ công nếu cần)
-      // Ví dụ: gọi lại API getUser
       fetch(`http://localhost:5000/admin/getUser`)
         .then((res) => res.json())
         .then((data) => setUserList(data));
@@ -106,16 +94,12 @@ function UserManagement() {
     const roleInfo = roleMap[role] || { text: role, class: "badge-secondary" };
     return <span className={`badge ${roleInfo.class}`}>{roleInfo.text}</span>;
   };
+
   const handleViewUser = (user) => {
     setSelectedUser(user);
     setShowUserModal(true);
   };
 
-  // const handleDeleteUser = (userId) => {
-  //   if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
-  //     console.log("Deleting user:", userId);
-  //   }
-  // };
   const stats = useMemo(() => {
     return {
       total: userList.length,
@@ -123,6 +107,7 @@ function UserManagement() {
       banned: userList.filter((u) => u.Status === "Banned").length,
     };
   }, [userList]);
+
   return (
     <AdminLayout currentPage="users" pageTitle="Quản lý người dùng">
       {/* Stats Cards */}
@@ -169,9 +154,9 @@ function UserManagement() {
         </div>
 
         <div className="table-controls">
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="controls-wrapper">
             {/* Search */}
-            <div className="relative  min-w-64">
+            <div className="search-container">
               <div className="search-box">
                 <i className="ti ti-search"></i>
                 <input
@@ -184,25 +169,24 @@ function UserManagement() {
             </div>
 
             {/* Role Filter */}
-            <div className="min-w-40">
+            <div className="filter-container">
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="filter-select"
               >
                 <option value="">All Role</option>
-
                 <option value="Seller">Seller</option>
                 <option value="Customer">Customer</option>
               </select>
             </div>
 
             {/* Status Filter */}
-            <div className="min-w-40">
+            <div className="filter-container">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="filter-select"
               >
                 <option value="">All Status</option>
                 <option value="Active">Active</option>
@@ -218,7 +202,7 @@ function UserManagement() {
                   setStatusFilter("");
                   setSearchTerm("");
                 }}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="clear-filters-btn"
               >
                 Xóa bộ lọc
               </button>
@@ -233,7 +217,6 @@ function UserManagement() {
                 <th>Account</th>
                 <th>Role</th>
                 <th>Status</th>
-
                 <th>Action</th>
               </tr>
             </thead>
@@ -255,38 +238,30 @@ function UserManagement() {
                   </td>
                   <td>{getRoleBadge(user.UserRole)}</td>
                   <td>{getStatusBadge(user.Status)}</td>
-
                   <td>
                     <div className="action-buttons">
                       <button
+                        className="btn-action btn-view"
                         onClick={() => handleViewUser(user)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                        title="View Details"
+                        title="Xem chi tiết"
                       >
-                        <Eye className="h-4 w-4" />
+                        <i className="ti ti-eye"></i>
                       </button>
                       <button
                         onClick={() => handleToggleUserStatus(user)}
-                        className={`p-1 rounded ${
+                        className={`btn-action ${
                           user.Status === "Banned"
-                            ? "text-green-600 hover:text-green-900"
-                            : "text-orange-600 hover:text-orange-900"
+                            ? "btn-active"
+                            : "btn-suspend"
                         }`}
-                        title={user.Status === "Banned" ? "Active" : "Banned"}
+                        title={user.Status === "Banned" ? "Active" : "Ban"}
                       >
                         {user.Status === "Banned" ? (
-                          <Check className="h-4 w-4" />
+                          <Check className="icon-small" />
                         ) : (
-                          <Ban className="h-4 w-4" />
+                          <Ban className="icon-small" />
                         )}
                       </button>
-                      {/* <button
-                        className="btn-action btn-delete"
-                        onClick={() => handleDeleteUser(user._id)}
-                        title="Delete"
-                      >
-                        <i className="ti ti-trash"></i>
-                      </button> */}
                     </div>
                   </td>
                 </tr>
@@ -297,138 +272,117 @@ function UserManagement() {
       </div>
 
       {/* User Details Modal */}
+
+      {/* User Details Modal */}
       {showUserModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h3 className="text-lg font-semibold">Account Details</h3>
+        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
+          <div
+            className="modal-content user-details-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Chi tiết người dùng</h3>
               <button
+                className="modal-close"
                 onClick={() => setShowUserModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
               >
-                ×
+                <i className="ti ti-x"></i>
               </button>
             </div>
-            <div className="p-6">
-              <div className="space-y-6">
-                {/* User Header */}
-                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center">
-                    <img
-                      src={selectedUser.Image}
-                      alt={selectedUser.Username}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-xl font-semibold text-gray-900">
-                      {selectedUser.Username}
-                    </h4>
-                    <p className="text-gray-600">{selectedUser.Email}</p>
-                    <div className="mt-2">
+            <div className="modal-body">
+              <div className="user-details-content">
+                <div className="user-header">
+                  <img
+                    src={selectedUser.Image || "/placeholder.svg"}
+                    alt={selectedUser.Username}
+                    className="user-avatar-large"
+                  />
+                  <div className="user-info-large">
+                    <h4>{selectedUser.Username}</h4>
+                    <p>{selectedUser.Email}</p>
+                    <div className="user-role-large">
                       {getRoleBadge(selectedUser.UserRole)}
                     </div>
                   </div>
-                  <div>{getStatusBadge(selectedUser.Status)}</div>
+                  <div className="user-status-large">
+                    {getStatusBadge(selectedUser.Status)}
+                  </div>
                 </div>
 
-                {/* User Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                    <Calendar className="h-8 w-8 text-blue-600" />
+                <div className="user-stats">
+                  <div className="stat-item">
+                    <i className="ti ti-calendar"></i>
                     <div>
-                      <div className="text-sm text-gray-600">Joining Date</div>
-                      <div className="text-lg font-semibold">
+                      <span className="stat-label">Ngày tham gia</span>
+                      <span className="stat-value">
                         {new Date(selectedUser.createdAt).toLocaleDateString(
                           "vi-VN"
                         )}
-                      </div>
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                    <ShoppingCart className="h-8 w-8 text-purple-600" />
+                  <div className="stat-item">
+                    <i className="ti ti-shopping-cart"></i>
                     <div>
-                      <div className="text-sm text-gray-600">Total Orders</div>
-                      <div className="text-lg font-semibold">
+                      <span className="stat-label">Tổng đơn hàng</span>
+                      <span className="stat-value">
                         {selectedUser.totalOrders || 0}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contact Information */}
-                <div>
-                  <h5 className="text-lg font-semibold mb-4">
-                    Contact Information
-                  </h5>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
-                      <User className="h-5 w-5 text-gray-400" />
-                      <span>
-                        Full Name: {selectedUser.FirstName || "Not Updated"}{" "}
-                        {selectedUser.LastName}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                      <span>Email: {selectedUser.Email}</span>
-                    </div>
-                    <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
-                      <Phone className="h-5 w-5 text-gray-400" />
-                      <span>
-                        Phone Number:{" "}
-                        {selectedUser.PhoneNumber || "Not Updated"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg">
-                      <Calendar className="h-5 w-5 text-gray-400" />
-                      <span>
-                        {selectedUser && (
-                          <div>
-                            <span>
-                              Date Of Birth:{" "}
-                              {selectedUser.DateOfBirth
-                                ? new Date(
-                                    selectedUser.DateOfBirth
-                                  ).toLocaleDateString("vi-VN")
-                                : "Not Updated"}
-                            </span>
-                          </div>
-                        )}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Recent Activities */}
-                <div>
-                  <h5 className="text-lg font-semibold mb-4">
-                    Recent Activities
-                  </h5>
-                  <div className="space-y-3">
+                <div className="user-contact">
+                  <h5>Thông tin cá nhân</h5>
+                  <div className="contact-item">
+                    <i className="ti ti-user"></i>
+                    <span>
+                      {selectedUser.FirstName} {selectedUser.LastName}
+                    </span>
+                  </div>
+                  <div className="contact-item">
+                    <i className="ti ti-mail"></i>
+                    <span>{selectedUser.Email}</span>
+                  </div>
+                  <div className="contact-item">
+                    <i className="ti ti-phone"></i>
+                    <span>{selectedUser.PhoneNumber || "Chưa cập nhật"}</span>
+                  </div>
+
+                  <div className="contact-item">
+                    <i className="ti ti-calendar"></i>
+                    <span>
+                      Sinh nhật:{" "}
+                      {selectedUser.DateOfBirth
+                        ? new Date(selectedUser.DateOfBirth).toLocaleDateString(
+                            "vi-VN",
+                            {
+                              timeZone: "Asia/Ho_Chi_Minh",
+                            }
+                          )
+                        : "Chưa cập nhật"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="user-activity">
+                  <h5>Hoạt động gần đây</h5>
+                  <div className="activity-list">
                     {selectedUser.recentActivities?.map((activity, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full text-sm">
-                          <Activity className="h-4 w-4" />
+                      <div key={index} className="activity-item">
+                        <div className="activity-icon">
+                          <i className={activity.icon}></i>
                         </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900">
-                            {activity.text}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {activity.time}
-                          </div>
+                        <div className="activity-content">
+                          <span className="activity-text">{activity.text}</span>
+                          <span className="activity-time">{activity.time}</span>
                         </div>
                       </div>
                     )) || (
-                      <div className="flex items-center justify-center gap-2 p-8 text-gray-500">
-                        <Info className="h-6 w-6" />
-                        <span>No activity yet</span>
+                      <div className="no-activity">
+                        <i className="ti ti-info-circle"></i>
+                        <span>Chưa có hoạt động nào</span>
                       </div>
                     )}
                   </div>

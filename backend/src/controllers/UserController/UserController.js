@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
+
+
+
 const nodemailer = require("nodemailer");
 // const  {Order,OrderItem}  = require("../../models/index");
 const Order = require("../../models/Orders");
@@ -128,6 +131,10 @@ const googleLogin = async (req, res) => {
     res.status(401).json({ message: "Token không hợp lệ hoặc lỗi server" });
   }
 };
+
+
+
+
 const changePassword = async (req, res) => {
   const { newPassword } = req.body;
   //console.log("hi", newPassword);
@@ -419,4 +426,5 @@ module.exports = {
   googleLogin, changePassword,
   getUserById, updateUser
 };
+
 
