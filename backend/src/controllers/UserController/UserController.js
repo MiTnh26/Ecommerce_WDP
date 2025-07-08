@@ -177,7 +177,7 @@ const updateUser = async (req, res) => {
 };
 const addAddress = async (req, res) => {
   const { id } = req.params; // user id
-  const { address, phoneNumber, receiverName, status } = req.body;
+  const { phoneNumber, receiverName, status, province, district, ward, detail } = req.body;
 
   try {
     const user = await User.findById(id);
@@ -192,11 +192,15 @@ const addAddress = async (req, res) => {
 
     const newAddress = {
       _id: new mongoose.Types.ObjectId(),
-      address,
       phoneNumber,
       receiverName,
       status: status || "Inactive",
+      province,
+      district,
+      ward,
+      detail,
     };
+
 
     user.ShippingAddress.push(newAddress);
     await user.save();
@@ -208,7 +212,7 @@ const addAddress = async (req, res) => {
 };
 const updateAddress = async (req, res) => {
   const { userId, addressId } = req.params;
-  const { address, phoneNumber, receiverName, status } = req.body;
+  const { phoneNumber, receiverName, status, province, district, ward, detail } = req.body;
 
   try {
     const user = await User.findById(userId);
@@ -216,18 +220,29 @@ const updateAddress = async (req, res) => {
 
     const addr = user.ShippingAddress.id(addressId);
     if (!addr) return res.status(404).json({ message: "Address not found" });
-    if (!address || !phoneNumber || !receiverName) {
+    if (!phoneNumber || !receiverName) {
       return res.status(400).json({ message: "Thiếu thông tin địa chỉ" });
     }
+
     // Nếu cập nhật thành mặc định => gỡ mặc định ở các địa chỉ khác
     if (status === "Default") {
-      user.ShippingAddress.forEach((a) => (a.status = "Inactive"));
+      user.ShippingAddress.forEach((a) => {
+        if (a._id.toString() !== addressId) {
+          a.status = "Inactive";
+        }
+      });
+      addr.status = "Default";
+    } else if (status) {
+      addr.status = status;
     }
 
-    addr.address = address ?? addr.address;
     addr.phoneNumber = phoneNumber ?? addr.phoneNumber;
     addr.receiverName = receiverName ?? addr.receiverName;
     addr.status = status ?? addr.status;
+    addr.province = province ?? addr.province;
+    addr.district = district ?? addr.district;
+    addr.ward = ward ?? addr.ward;
+    addr.detail = detail ?? addr.detail;
 
 
     await user.save();
@@ -251,11 +266,25 @@ const getAddressById = async (req, res) => {
     const address = user.ShippingAddress.id(addressId);
     if (!address) return res.status(404).json({ message: "Address not found" });
 
-    res.status(200).json(address);
+    // Trả về object đầy đủ rõ ràng để tránh mất trường nào
+    const result = {
+      _id: address._id,
+      receiverName: address.receiverName,
+      phoneNumber: address.phoneNumber,
+      
+      status: address.status,
+      province: address.province,
+      district: address.district,
+      ward: address.ward,
+      detail: address.detail,
+    };
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: "Failed to get address", error });
   }
 };
+
 const deleteAddress = async (req, res) => {
   const { userId, addressId } = req.params;
 
@@ -319,7 +348,7 @@ const getOrderByUserId = async (req, res) => {
       })
       .populate({
         path: "ShopId",
-       
+
       })
       .sort({ createdAt: -1 })
       .lean();
@@ -388,7 +417,8 @@ const setDefaultAddress = async (req, res) => {
 
 
 
-module.exports = {setDefaultAddress ,
+module.exports = {
+  setDefaultAddress,
   getOrderDetails, getOrderByUserId,
   addAddress, updateAddress,
   getAddressById, deleteAddress,
