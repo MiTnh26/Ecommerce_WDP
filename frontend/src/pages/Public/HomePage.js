@@ -56,8 +56,8 @@ const HomePage = () => {
               <Carousel.Item style={{backgroundImage: `url(${slide1})`, width: '100%', height: '700px', backgroundPosition: 'right center'}} className=" rounded-3">
               <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
               <div>
-              <p className='title h1'>Fresh Smoothie & Summer Juice</p>
-              <p className="description text-muted">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+              <p className='title h1'>...</p>
+              <p className="description text-muted">...</p>
               </div>
               <Button variant="outline-secondary" className='rounded-0'>SHOP NOW</Button>
               </div>
