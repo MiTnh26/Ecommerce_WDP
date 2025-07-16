@@ -8,6 +8,8 @@ import PurchaseOrders from "../components/PurchaseOrders";
 import AddressForm from "../components/AddressForm";
 import Header from "../layouts/Header";
 import Footer from "../layouts/Footer";
+import { useLocation } from "react-router-dom";
+
 
 import { Outlet } from "react-router-dom";
 
@@ -32,7 +34,10 @@ function ProfilePage() {
   const toggleSubmenu = () => {
     setShowSubmenu(!showSubmenu);
   };
-  const [activeTab, setActiveTab] = useState("view");
+  const location = useLocation();
+const defaultTab = location.state?.tab || "view";
+const [activeTab, setActiveTab] = useState(defaultTab);
+
 
   return (
     <div className="d-flex flex-column min-vh-100 container-fluid p-0 m-0">
@@ -101,7 +106,7 @@ function ProfilePage() {
                 <Nav.Link eventKey="history">Purchase History</Nav.Link>
               </Nav.Item>
               <Nav.Item>
-                <Nav.Link eventKey="puchaseorder">Orders</Nav.Link>
+                <Nav.Link eventKey="purchaseorder">Orders</Nav.Link>
               </Nav.Item>
             </Nav>
           </Col>
@@ -135,8 +140,8 @@ function ProfilePage() {
                     </div>
                   </Tab.Pane>
 
-                  <Tab.Pane eventKey="puchaseorder">
-                    <PurchaseOrders userId={userId} />
+                  <Tab.Pane eventKey="purchaseorder">
+                    <PurchaseOrders userId={userId} setActiveTab={setActiveTab} />
                   </Tab.Pane>
 
                 </Tab.Content>
@@ -146,7 +151,8 @@ function ProfilePage() {
         </Row>
       </Container>
       <main className="flex-fill container-fluid">
-        <Outlet />
+        {/* <Outlet /> */}
+        <Outlet context={{ setActiveTab }} />
       </main>
       <footer>
         <Footer />

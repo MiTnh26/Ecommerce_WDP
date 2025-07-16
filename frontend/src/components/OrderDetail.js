@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Spinner, Alert, Button } from "react-bootstrap";
+import PurchaseOrders from "./PurchaseOrders";
 
 const orange = "#ee4d2d";
 const fallbackImg = "../assets/images/no-image.png";
@@ -11,6 +12,14 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const user = JSON.parse(localStorage.getItem("user"));
+  let userId = "0";
+  try {
+    userId = user._id;
+    console.log("userid", userId);
+  } catch (error) {
+    console.error(error);
+  }
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -50,7 +59,7 @@ const OrderDetail = () => {
 
   return (
     <Container className="mt-4" style={{ maxWidth: 900 }}>
-  
+
       <div
         style={{
           background: "#fff",
@@ -67,58 +76,84 @@ const OrderDetail = () => {
         <i className="bi bi-receipt" style={{ fontSize: 28, color: blue }} />
         <span style={{ fontSize: 22, fontWeight: 700, color: "#222" }}>Chi tiết đơn hàng</span>
         <div style={{ flex: 1 }} />
-        <Button variant="outline-primary" size="sm" onClick={() => navigate(-1)}>
+        {/* <Button variant="outline-primary" size="sm" onClick={() => navigate(-1)}>
+          Quay lại
+        </Button> */}
+        <Button
+          variant="outline-primary"
+          size="sm"
+          onClick={() => navigate("/Ecommerce/user/profile", { state: { tab: "purchaseorder" } })}
+        >
           Quay lại
         </Button>
       </div>
 
-    
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 4,
-          border: "1px solid #f5f5f5",
-          marginBottom: 18,
-          padding: "18px 24px",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 16 }}>
-              Mã đơn hàng: <span style={{ color: blue }}>{order._id}</span>
+
+      {order.Status === "Cancelled" ? (
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: 4,
+            border: "1px solid #f5f5f5",
+            marginBottom: 18,
+            padding: "18px 24px",
+            fontSize: 16,
+            color: "#555",
+          }}
+        >
+          Đã hủy đơn hàng<br />
+          vào {new Date(order.UpdatedAt || order.OrderDate).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}{" "}
+          {new Date(order.UpdatedAt || order.OrderDate).toLocaleDateString("vi-VN")}
+        </div>
+      ) : (
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: 4,
+            border: "1px solid #f5f5f5",
+            marginBottom: 18,
+            padding: "18px 24px",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>
+                Mã đơn hàng: <span style={{ color: blue }}>{order._id}</span>
+              </div>
+              <div style={{ color: "#888", fontSize: 14 }}>
+                Ngày đặt: {new Date(order.OrderDate).toLocaleString()}
+              </div>
             </div>
-            <div style={{ color: "#888", fontSize: 14 }}>
-              Ngày đặt: {new Date(order.OrderDate).toLocaleString()}
+            <div>
+              <span
+                style={{
+                  color: blue,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  textTransform: "capitalize",
+                }}
+              >
+                {order.Status}
+              </span>
             </div>
           </div>
-          <div>
-            <span
-              style={{
-                color: blue,
-                fontWeight: 700,
-                fontSize: 16,
-                textTransform: "capitalize",
-              }}
-            >
-              {order.Status}
-            </span>
+          <div style={{ color: "#555", fontSize: 15 }}>
+            <div>
+              <b>Người nhận:</b> {order.ReceiverName || "N/A"}
+            </div>
+            <div>
+              <b>SĐT:</b> {order.ReceiverPhone || "N/A"}
+            </div>
+            <div>
+              <b>Địa chỉ giao hàng:</b> {order.ShippingAddress}
+            </div>
+            <div>
+              <b>Phương thức thanh toán:</b> {order.PaymentId || "N/A"}
+            </div>
           </div>
         </div>
-        <div style={{ color: "#555", fontSize: 15 }}>
-          <div>
-            <b>Người nhận:</b> {order.ReceiverName || "N/A"}
-          </div>
-          <div>
-            <b>SĐT:</b> {order.ReceiverPhone || "N/A"}
-          </div>
-          <div>
-            <b>Địa chỉ giao hàng:</b> {order.ShippingAddress}
-          </div>
-          <div>
-            <b>Phương thức thanh toán:</b> {order.PaymentId || "N/A"}
-          </div>
-        </div>
-      </div>
+      )}
+
 
 
       <div
@@ -233,7 +268,7 @@ const OrderDetail = () => {
         </div>
       </div>
 
-     
+
       <div
         style={{
           background: "#fff",
