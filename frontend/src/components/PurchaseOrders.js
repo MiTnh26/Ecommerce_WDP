@@ -394,7 +394,7 @@ const PurchaseOrders = () => {
                       navigate(`/orderdetail/${order._id}${order.Status === "Đã hủy" ? "?cancelled=true" : ""}`)
                     }
                   >
-                    {order.Status === "Đã hủy" ? "Cancellation details" : "View details"}
+                    {order.Status === "Cancelled" ? "Cancellation details" : "View details"}
                   </Button>
                   <Button
                     size="sm"
@@ -422,7 +422,8 @@ const PurchaseOrders = () => {
                     }}
                     onClick={() => alert(`View shop reviews: ${order.ShopId?.name}`)}
                   >
-                    Rate shop
+                     {order.Status === "Cancelled" ? "Contact seller" : "Rate shop"}
+                    
                   </Button>
                 </div>
               </div>
