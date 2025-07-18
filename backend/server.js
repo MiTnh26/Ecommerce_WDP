@@ -3,7 +3,7 @@ require("dotenv").config();
 const app = express();
 
 
-// ⚠️ Cấu hình JSON và URL-encoded phải đúng thứ tự, không lặp lại!
+// Cấu hình JSON và URL-encoded phải đúng thứ tự, không lặp lại!
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 

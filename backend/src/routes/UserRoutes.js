@@ -3,12 +3,16 @@ const router = express.Router();
 const UserController = require("../controllers/UserController/UserController");
 const {sendEmailOtp, verifyOtp} = require("../service/sendEmailOtp");
 const verifyOtpMiddleware = require("../middleware/verifyOtpMiddleware")
+const multer = require("multer");
+const { storage } = require("../config/cloudinary"); 
+const upload = multer({ storage });
+
 router.get("/user", UserController.getUsers);
 router.post("/login", UserController.login);
 router.post("/register", UserController.register);
 router.post("/google-login", UserController.googleLogin);
 router.get("/profile/:id", UserController.getUserById);
-router.put("/profile/:id", UserController.updateUser);
+router.put("/profile/:id",upload.single("Image"), UserController.updateUser);
 // ADDRESS 
 router.post("/user/:id/address", UserController.addAddress);
 router.put("/user/:userId/address/:addressId", UserController.updateAddress);

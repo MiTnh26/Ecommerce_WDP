@@ -166,15 +166,33 @@ const getUserById = async (req, res) => {
   }
 };
 
+// const updateUser = async (req, res) => {
+//   try {
+//     const updateData = req.body;
+//     const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+//     res.json(updatedUser);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 const updateUser = async (req, res) => {
   try {
     const updateData = req.body;
+
+    // Nếu có file được upload (ảnh đại diện)
+    if (req.file && req.file.path) {
+      updateData.Image = req.file.path; // Gán link Cloudinary vào trường Image
+    }
+
     const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+
     res.json(updatedUser);
   } catch (err) {
+    console.error("Lỗi khi cập nhật người dùng:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 const addAddress = async (req, res) => {
   const { id } = req.params; // user id
   const { phoneNumber, receiverName, status, province, district, ward, detail } = req.body;

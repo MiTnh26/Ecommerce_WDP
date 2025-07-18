@@ -53,7 +53,8 @@ const [activeTab, setActiveTab] = useState(defaultTab);
         <Row>
           {/* Sidebar */}
           <Col md={3} className="bg-light p-3 rounded shadow-sm">
-            <h5 className="mb-4 text-center">My Account - {user.FirstName}</h5>
+            <h5 className="mb-4 text-center">My Account </h5>
+            <h6 className="mb-4 text-center"> {user.FirstName}{user.LastName} </h6>
             <Nav
               variant="pills"
               className="flex-column"
