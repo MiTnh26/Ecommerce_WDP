@@ -40,4 +40,6 @@ router.patch(
   ctrl.toggleStatus
 );
 
+// 7) GET /products/trending
+router.get("/trending", ctrl.getTrendingProducts);
 module.exports = router;

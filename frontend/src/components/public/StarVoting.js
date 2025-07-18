@@ -2,9 +2,10 @@
 const StarVoting = ({ rating }) => {
   return (
   
-    <div className="star-rating position-relative">
+    <div className="star-rating position-relative" style={{ width: 'max-content' }}>
         {/* Lớp sao màu xám phía sau */}
-        <div className="stars-background text-muted">
+        <div className="stars-background text-muted"
+        style={{pointerEvents: 'none', whiteSpace: 'nowrap' }}>
           {[...Array(5)].map((_, i) => (
             <i key={i} className="fa-solid fa-star fa-xs" style={{ padding: ' 0 2px'}}></i>
           ))}

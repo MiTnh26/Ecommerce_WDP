@@ -1,4 +1,5 @@
 const Product = require("../../models/Products");
+const OrderItem = require("../../models/OrderItems");
 const { Readable } = require("stream");
 
 /**
@@ -117,5 +118,54 @@ exports.toggleStatus = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error toggling status" });
+  }
+};
+/*
+* GET /products/trending
+* Returns top 10 trending products based on sales or views.
+*/ 
+exports.getTrendingProducts = async (req, res) => {
+  const limit = 10, trendingDays = 7, comparisonDays = 14
+  try {
+    console.log("Fetching trending products...");
+    const now = new Date();
+    const currentPeriodStart = new Date(now.getTime() - (trendingDays * 24 * 60 * 60 * 1000));
+    const previousPeriodStart = new Date(now.getTime() - (comparisonDays * 24 * 60 * 60 * 1000));
+
+    // Lấy dữ liệu giai đoạn hiện tại (7 ngày gần đây)
+    const currentPeriodData = await OrderItem.aggregate([
+      {
+        $match: {
+          Status: "Delivered",
+          createdAt: { $gte: currentPeriodStart }
+        }
+      },
+      {
+        $unwind: "$Product"
+      },
+      {
+        $unwind: "$Product.ProductVariant"
+      },
+      {
+        $group: {
+          _id: "$Product._id",
+          ProductName: { $first: "$Product.ProductName" },
+          ProductImage: { $first: "$Product.ProductImage" },
+          currentSold: { $sum: "$Product.ProductVariant.Quantity" },
+          currentRevenue: { 
+            $sum: { 
+              $multiply: ["$Product.ProductVariant.Quantity", "$Product.ProductVariant.Price"] 
+            } 
+          }
+        }
+      }
+    ]);
+    res.status(200).json({ message: "Trending products fetched successfully", currentPeriodData });
+    
+
+    
+  } catch (error) {
+    console.error("Error getting trending products:", error);
+    throw error;
   }
 };

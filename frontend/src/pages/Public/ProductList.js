@@ -25,7 +25,7 @@ const ProductList = () => {
   return (
     <div className="container-fluid py-3">
       <div className="row">
-        <div className="col-2">
+        <div className="col-md-2">
           <aside className="bg-white p-3 rounded shadow-sm">
             <h6 className="text-warning fw-bold mb-3">
               <i className="fa-solid fa-filter me-2"></i>BỘ LỌC TÌM KIẾM
@@ -104,21 +104,22 @@ const ProductList = () => {
         </div>
 
         {/* Main content */}
-              <div className="col-10">
-                  <main className="bg-white p-3 rounded shadow-sm">
-                      <div className="d-flex flex-wrap gap-2 justify-content-start">
-                          {[...Array(20)].map((_, index) => (
-                              <div
-                                  key={index}
-                                  className="product-item bg-white border rounded text-center p-2"
-                                  style={{ width: 'calc(25% - 8px)' }}
-                                  onClick={() => navigate('/Ecommerce/product-detail/1')}
-                              >
-                                  <CardCustom />
-                              </div>
-                          ))}
-                      </div>
-                  </main>
+        <div className="col-md-10">
+          <main className="bg-white p-3 rounded shadow-sm">
+            <div className="row g-2">
+              {[...Array(20)].map((_, index) => (
+                <div
+                  key={index}
+                  className="col-12 col-sm-6 col-md-4 col-lg-3"
+                  onClick={() => navigate('/Ecommerce/product-detail/1')}
+                >
+                  <div className="product-item bg-white border rounded text-center p-2 h-100">
+                    <CardCustom />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </main>
                   <div className="panigation">
                     <Pagination currentPage={currentPage} totalPages={10} onPageChange={(page) => setCurrentPage(page)}/>
                   </div>
