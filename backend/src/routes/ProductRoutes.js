@@ -42,4 +42,13 @@ router.patch(
 
 // 7) GET /products/trending
 router.get("/trending", ctrl.getTrendingProducts);
+
+// 8) GET /products/new
+router.get("/get-new", ctrl.getNewProducts);
+
+// 9) GET /products/best-seller
+router.get("/best-seller", ctrl.getBestSellerProducts);
+
+// 10) GET /products/:id
+router.get("/:id", ctrl.getProductById);
 module.exports = router;

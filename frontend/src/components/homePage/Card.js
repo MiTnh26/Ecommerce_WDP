@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import image from '../../assets/images/thumb-cucumber.png'
+import defaultImage from '../../assets/images/img_default.jpg';
 import "../../style/card.css"
 import { useNavigate } from 'react-router-dom';
-const Cart = ({ cardInfo }) => {
+const Card = ({item}) => {
+  //console.log("cardInfo", item);
   const [animate, setAnimate] = useState(false);
   // navigate
   const navigate = useNavigate();
@@ -27,10 +28,13 @@ const Cart = ({ cardInfo }) => {
         <div className="card-image-container bg-light" onClick={() => navigate("/Ecommerce/product-detail/1")}
           style={{ aspectRatio: '1/1', position: 'relative' }}>
           <img
-            src={image}
+            src={ item?.ProductImage || "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0"} 
             alt=""
             className="w-100 h-100"
             style={{ objectFit: 'cover' }}
+            loading="lazy"
+            onError={(e) => { e.target.src = "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0" }} // Xử lý khi ảnh lỗi
+
           />
           <div className="discord rounded-3"
             style={{
@@ -52,9 +56,9 @@ const Cart = ({ cardInfo }) => {
         </div>
       </div>
       <div className="card-body mt-2">
-        <p className="card-title-custom fw-bold title">Sunstar Fresh Melon Juice</p>
+        <p className="card-title-custom fw-bold title">{item.ProductName ? item.ProductName : "Product Name"}</p>
         <div className="d-flex justify-content-between">
-          <p className="price fw-bold">$18.00</p>
+          <p className="price fw-bold">{item.Price ? item.Price : "0".toLocaleString('vi-VN')} ₫</p>
           <p className="rate text-warning"><i className="fa-solid fa-star"></i> 4.8</p>
         </div>
         {/* control */}
@@ -94,4 +98,4 @@ const Cart = ({ cardInfo }) => {
   )
 }
 
-export default Cart
+export default Card

@@ -5,7 +5,7 @@ import '../../style/category.css'
 const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength, onClickNext }) => {
     const [itemsPerView, setItemsPerView] = useState(2); // default với mobile = 2
     const [currentIndex, setCurrentIndex] = useState(0); // Tinh toan index slide hien tai và gia tri can truot
-    //console.log(dataList)
+    console.log(dataList)
     // update items khi resize
     useEffect(() => {
         // set up 4 3 2
