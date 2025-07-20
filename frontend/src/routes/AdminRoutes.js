@@ -6,6 +6,7 @@ import {
   PaymentManagement,
   Analytics,
 } from "../pages/admin/AdminIndex";
+import AdminManageCategory from "../pages/admin/AdminManageCategory";
 
 const AdminRoutes = [
   {
@@ -31,6 +32,7 @@ const AdminRoutes = [
         path: "analytic",
         element: <Analytics />,
       },
+      { path: "category", element: <AdminManageCategory /> },
     ],
   },
 ];

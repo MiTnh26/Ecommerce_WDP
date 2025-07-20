@@ -13,7 +13,6 @@ const Header = () => {
 
   const shopInfo = data?.data;
 
-
   return (
     <>
       {/* Top Navigation */}
@@ -58,8 +57,10 @@ const Header = () => {
             <Nav.Link href="#" className="text-dark">
               Back to shopping page
             </Nav.Link>
-            <Image 
-              src={user?.Image || "/assets/avatar-default.svg?height=35&width=35"}
+            <Image
+              src={
+                user?.Image || "/assets/avatar-default.svg?height=35&width=35"
+              }
               alt="User"
               className="rounded-circle ms-2"
               width="35"

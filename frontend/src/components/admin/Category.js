@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -18,6 +18,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import axios from "axios";
 
 // Validation schema for the category form
 const validationSchema = Yup.object({
@@ -27,6 +28,9 @@ const validationSchema = Yup.object({
     .required("Status is required."),
 });
 
+// Hàm chuẩn hóa tên để so sánh
+const normalizeName = (name) => name.replace(/\s+/g, '').toLowerCase();
+
 export default function CategoryList() {
   const [activeTab, setActiveTab] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,67 +38,108 @@ export default function CategoryList() {
   const [showModal, setShowModal] = useState(false);
   const [editCategory, setEditCategory] = useState(null); // For editing existing category
   const [isSaving, setIsSaving] = useState(false); // Simulate saving state
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Static categories data
-  const [categories, setCategories] = useState([
-    { _id: 1, name: "Áo", status: "Active" },
-    { _id: 2, name: "Quần", status: "Active" },
-  ]);
+  // Fetch categories from backend
+  useEffect(() => {
+    fetchCategories();
+    // eslint-disable-next-line
+  }, []);
+
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("http://localhost:5000/admin/categories");
+      setCategories(res.data);
+    } catch (err) {
+      setError("Error fetching categories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Formik for category form
   const formik = useFormik({
     initialValues: {
-      name: editCategory?.name || "",
-      status: editCategory?.status || "Active",
+      name: editCategory?.CategoryName || "",
+      status: editCategory?.Status || "Active",
     },
     enableReinitialize: true, // Reinitialize when editCategory changes
     validationSchema,
-    onSubmit: (values) => {
-      setIsSaving(true); // Simulate API call
-      setTimeout(() => { // Simulate async delay
+    onSubmit: async (values, { setFieldError }) => {
+      setIsSaving(true);
+      try {
+        // Kiểm tra trùng tên (không phân biệt hoa thường, dấu cách)
+        const newName = normalizeName(values.name);
+        const isDuplicate = categories.some(cat =>
+          normalizeName(cat.CategoryName) === newName &&
+          (!editCategory || cat._id !== editCategory._id)
+        );
+        if (isDuplicate) {
+          setFieldError("name", "Category name must be unique (case and space insensitive)!");
+          setIsSaving(false);
+          return;
+        }
         if (editCategory) {
           // Update existing category
-          setCategories(
-            categories.map((cat) =>
-              cat._id === editCategory._id ? { ...cat, ...values } : cat
-            )
-          );
+          await axios.put(`http://localhost:5000/admin/categories/${editCategory._id}`, {
+            CategoryName: values.name,
+            Status: values.status,
+          });
         } else {
           // Add new category
-          setCategories([
-            ...categories,
-            { _id: categories.length + 1, ...values },
-          ]);
+          await axios.post("http://localhost:5000/admin/categories", {
+            CategoryName: values.name,
+            Status: values.status,
+          });
         }
-        setIsSaving(false);
+        await fetchCategories();
         setShowModal(false);
         setEditCategory(null);
         formik.resetForm();
-      }, 1000); // 1-second delay to simulate API
+      } catch (err) {
+        setFieldError("name", "Error saving category");
+      } finally {
+        setIsSaving(false);
+      }
     },
   });
 
   // Handle status change
-  const handleStatusChange = (id, newStatus) => {
-    setCategories(
-      categories.map((cat) =>
-        cat._id === id ? { ...cat, status: newStatus } : cat
-      )
-    );
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await axios.put(`http://localhost:5000/admin/categories/${id}`, { Status: newStatus });
+      await fetchCategories();
+    } catch (err) {
+      setError("Error updating status");
+    }
+  };
+
+  // Handle delete category
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    try {
+      await axios.delete(`http://localhost:5000/admin/categories/${id}`);
+      await fetchCategories();
+    } catch (err) {
+      setError("Error deleting category");
+    }
   };
 
   // Filter and sort categories
   const filteredCategories = categories.filter((category) => {
-    const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTab = activeTab === "All" || category.status === activeTab;
+    const matchesSearch = category.CategoryName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === "All" || category.Status === activeTab;
     return matchesSearch && matchesTab;
   });
 
   const sortedCategories = [...filteredCategories].sort((a, b) => {
     if (sortOrder === "A-Z") {
-      return a.name.localeCompare(b.name);
+      return a.CategoryName.localeCompare(b.CategoryName);
     } else {
-      return b.name.localeCompare(a.name);
+      return b.CategoryName.localeCompare(a.CategoryName);
     }
   });
 
@@ -109,6 +154,15 @@ export default function CategoryList() {
     setShowModal(false);
     setEditCategory(null);
     formik.resetForm();
+  };
+
+  // Thêm các hàm xử lý search
+  const handleSearch = () => {
+    setActiveTab("All"); // reset tab khi search
+    setSearchTerm(searchTerm.trim());
+  };
+  const handleClearSearch = () => {
+    setSearchTerm("");
   };
 
   return (
@@ -184,9 +238,15 @@ export default function CategoryList() {
                     placeholder="Search by name"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSearch();
+                    }}
                     style={{ marginRight: "10px" }}
                   />
-                  <Button variant="outline-secondary">Search</Button>
+                  <Button variant="outline-secondary" onClick={handleSearch}>Search</Button>
+                  {searchTerm && (
+                    <Button variant="outline-danger" className="ms-2" onClick={handleClearSearch}>Clear</Button>
+                  )}
                 </div>
               </Col>
               <Col md={6} className="text-end">
@@ -220,64 +280,90 @@ export default function CategoryList() {
             {/* Table */}
             <Row>
               <Col>
-                <Table responsive className="border">
-                  <thead style={{ backgroundColor: "#f8f9fa" }}>
-                    <tr>
-                      <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>No</th>
-                      <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>Name</th>
-                      <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>Change Status</th>
-                      <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedCategories.map((category, index) => (
-                      <tr key={category._id}>
-                        <td style={{ padding: "15px", color: "#007bff", fontWeight: "500" }}>
-                          {index + 1}
-                        </td>
-                        <td style={{ padding: "15px", color: "#333" }}>{category.name}</td>
-                        <td style={{ padding: "15px" }}>
-                          <Dropdown>
-                            <Dropdown.Toggle
-                              variant="outline-secondary"
-                              size="sm"
-                              style={{ minWidth: "100px" }}
-                            >
-                              {category.status}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                              <Dropdown.Item
-                                onClick={() => handleStatusChange(category._id, "Active")}
-                              >
-                                Active
-                              </Dropdown.Item>
-                              <Dropdown.Item
-                                onClick={() => handleStatusChange(category._id, "Inactive")}
-                              >
-                                Inactive
-                              </Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </td>
-                        <td style={{ padding: "15px" }}>
-                          <Button
-                            variant="warning"
-                            size="sm"
-                            style={{
-                              backgroundColor: "#ffc107",
-                              borderColor: "#ffc107",
-                              color: "#000",
-                              fontWeight: "500",
-                            }}
-                            onClick={() => openModal(category)}
-                          >
-                            Update
-                          </Button>
-                        </td>
+                {loading ? (
+                  <div className="text-center py-5">
+                    <Spinner animation="border" />
+                  </div>
+                ) : error ? (
+                  <Alert variant="danger">{error}</Alert>
+                ) : (
+                  <Table responsive className="border">
+                    <thead style={{ backgroundColor: "#f8f9fa" }}>
+                      <tr>
+                        <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>No</th>
+                        <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>Name</th>
+                        <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>Change Status</th>
+                        <th style={{ padding: "15px", fontWeight: "600", color: "#333" }}>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                    </thead>
+                    <tbody>
+                      {sortedCategories.map((category, index) => (
+                        <tr key={category._id}>
+                          <td style={{ padding: "15px", color: "#007bff", fontWeight: "500" }}>
+                            {index + 1}
+                          </td>
+                          <td style={{ padding: "15px", color: "#333" }}>{category.CategoryName}</td>
+                          <td style={{ padding: "15px" }}>
+                            <Dropdown>
+                              <Dropdown.Toggle
+                                variant={category.Status === "Active" ? "success" : "secondary"}
+                                size="sm"
+                                style={{
+                                  minWidth: "110px",
+                                  fontWeight: 500,
+                                  borderRadius: 6,
+                                  backgroundColor: category.Status === "Active" ? "#28a745" : "#6c757d",
+                                  color: "white",
+                                  border: "none",
+                                  boxShadow: "none"
+                                }}
+                              >
+                                {category.Status}
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu>
+                                <Dropdown.Item
+                                  active={category.Status === "Active"}
+                                  onClick={() => handleStatusChange(category._id, "Active")}
+                                >
+                                  Active
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                  active={category.Status === "Inactive"}
+                                  onClick={() => handleStatusChange(category._id, "Inactive")}
+                                >
+                                  Inactive
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </td>
+                          <td style={{ padding: "15px" }}>
+                            <Button
+                              variant="warning"
+                              size="sm"
+                              style={{
+                                backgroundColor: "#ffc107",
+                                borderColor: "#ffc107",
+                                color: "#000",
+                                fontWeight: "500",
+                              }}
+                              onClick={() => openModal(category)}
+                            >
+                              Update
+                            </Button>{' '}
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              style={{ marginLeft: 8 }}
+                              onClick={() => handleDelete(category._id)}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
               </Col>
             </Row>
 

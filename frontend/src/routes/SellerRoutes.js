@@ -3,11 +3,16 @@ import ShopInformation from "../components/seller/shop-information";
 import HomeSeller from "../components/seller/home";
 import ViewListOrder from "../components/seller/ViewListOrder";
 import ViewOrderDetail from "../components/seller/ViewOrderDetail";
+import GetShopInfo from "../components/seller/GetShopInfo";
 
 const SellerRoutes = [
   {
     path: "/Ecommerce/seller/seller-register",
     element: <SellerRegistrationWizard />,
+  },
+  {
+    path: "/Ecommerce/seller/debug",
+    element: <GetShopInfo />,
   },
   {
     path: "/Ecommerce/seller",
@@ -22,8 +27,12 @@ const SellerRoutes = [
         element: <ViewListOrder />,
       },
       {
-        path: "vieworderdetail",
+        path: "vieworderdetail/:orderId",
         element: <ViewOrderDetail />,
+      },
+      {
+        path: "debug",
+        element: <GetShopInfo />,
       },
     ],
   },

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -6,152 +6,251 @@ import {
   Card,
   Table,
   Button,
+  Spinner,
+  Alert,
+  Modal,
 } from "react-bootstrap";
-import { useNavigate } from "react-router-dom"; // Dùng thay cho next/navigation
+import { useNavigate, useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const ViewOrderDetail = () => {
-  const navigate = useNavigate(); // Sử dụng để điều hướng
+  const navigate = useNavigate();
+  const { orderId } = useParams();
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const [productData, setProductData] = useState({
-    _id: 1,
-    name: "Áo Phao Béo",
-    category: "Áo",
-    description: "Áo khoác phao mùa đông very beautiful",
-    status: "Pending",
-    images: ["/placeholder.svg?height=200&width=200"],
-  });
+  console.log(order);
 
-  const [variants] = useState([
-    {
-      _id: 1,
-      image: "/placeholder.svg?height=100&width=100",
-      name: "Áo Phao Nâu",
-      price: 30000.0,
-      stockQuantity: 30,
-    },
-  ]);
+  useEffect(() => {
+    fetchOrderDetail();
+  }, [orderId]);
 
-  const handleStatusChange = (status) => {
-    setProductData({ ...productData, status });
+  const fetchOrderDetail = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/seller/orders/${orderId}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to load order information");
+      }
+
+      setOrder(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleStatusChange = async (newStatus) => {
+    try {
+      const response = await fetch(`http://localhost:5000/seller/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Status: newStatus })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setOrder({ ...order, Status: newStatus });
+        setShowSuccessModal(true);
+        // Modal sẽ tự đóng và chuyển trang sau 1.5 giây
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          navigate("../viewlistorder");
+        }, 1500);
+      } else {
+        throw new Error(data.message || "Unable to update status");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
 
   const handleBackToList = () => {
-    navigate("/viewlistorder");
+    navigate("../viewlistorder");
   };
 
+  if (loading) {
+    return (
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
+        <Spinner animation="border" variant="primary" />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="mt-4">
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
+
+  if (!order) return null;
+
   return (
-    <Container fluid className="py-4" style={{ backgroundColor: "#f8f9fa" }}>
-      <Row>
-        <Col>
-          <div className="bg-white rounded p-4 shadow-sm">
-            <h2 className="text-center mb-4" style={{ fontWeight: "600" }}>
-              View Order Detail
-            </h2>
+    <>
+      <Container fluid className="py-4" style={{ backgroundColor: "#f8f9fa" }}>
+        <Row>
+          <Col>
+            <div className="bg-white rounded p-4 shadow-sm">
+              <h2 className="text-center mb-4" style={{ fontWeight: "600" }}>
+                Order Details
+              </h2>
 
-            <Row>
-              <Col md={6}>
-                <Card className="mb-4">
-                  <Card.Header>
-                    <h5 className="mb-0">Product Images</h5>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="d-flex justify-content-center">
-                      <img
-                        src={productData.images[0] || "/placeholder.svg"}
-                        alt="Product"
-                        style={{
-                          width: "200px",
-                          height: "200px",
-                          objectFit: "cover",
-                          border: "1px solid #dee2e6",
-                          borderRadius: "8px",
-                        }}
-                      />
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
+              <Card className="mb-4">
+                <Card.Header>
+                  <h5 className="mb-0">Order Information</h5>
+                </Card.Header>
+                <Card.Body>
+                  <Row>
+                    <Col md={6}>
+                      <FormField label="Order ID" value={order._id} />
+                      <FormField label="Order Date" value={new Date(order.OrderDate).toLocaleString()} />
+                      <FormField label="Status" value={order.Status} />
+                      <FormField label="Total Amount" value={`$${Number(order.TotalAmount).toLocaleString('vi-VN')}`} />
+                    </Col>
+                    <Col md={6}>
+                      <FormField label="Receiver Name" value={order.ReceiverName} />
+                      <FormField label="Phone Number" value={order.ReceiverPhone} />
+                      <FormField label="Shipping Address" value={order.ShippingAddress} textarea />
+                      <FormField label="Payment Method" value={order.PaymentId} />
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
 
-              <Col md={6}>
-                <div className="mb-4">
-                  <FormField label="Product Name" value={productData.name} />
-                  <FormField label="Category" value={productData.category} />
-                  <FormField label="Description" value={productData.description} textarea />
-                  <FormField label="Status" value={productData.status} />
-                </div>
-              </Col>
-            </Row>
-
-            <Card className="mb-4">
-              <Card.Header>
-                <h5 className="mb-0">Product Variants</h5>
-              </Card.Header>
-              <Card.Body>
-                <Table responsive>
-                  <thead style={{ backgroundColor: "#f8f9fa" }}>
-                    <tr>
-                      <th>Variant Image</th>
-                      <th>Variant Name</th>
-                      <th>Price</th>
-                      <th>Stock Quantity</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {variants.map((variant) => (
-                      <tr key={variant._id}>
-                        <td>
-                          <img
-                            src={variant.image || "/placeholder.svg"}
-                            alt={variant.name}
-                            style={{
-                              width: "80px",
-                              height: "80px",
-                              objectFit: "cover",
-                              border: "1px solid #dee2e6",
-                              borderRadius: "8px",
-                            }}
-                          />
-                        </td>
-                        <td className="align-middle">{variant.name}</td>
-                        <td className="align-middle">{variant.price}</td>
-                        <td className="align-middle">{variant.stockQuantity}</td>
+              <Card className="mb-4">
+                <Card.Header>
+                  <h5 className="mb-0">Product Details</h5>
+                </Card.Header>
+                <Card.Body>
+                  <Table responsive>
+                    <thead style={{ backgroundColor: "#f8f9fa" }}>
+                      <tr>
+                        <th>Image</th>
+                        <th>Product Name</th>
+                        <th>Variant</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </Card.Body>
-            </Card>
+                    </thead>
+                    <tbody>
+                      {order.Items.map((item, itemIndex) => (
+                        <React.Fragment key={`item-${itemIndex}`}>
+                          {item.Product.map((product, productIndex) => (
+                            <tr key={`${product._id}-${productIndex}`}>
+                              <td>
+                                <img
+                                  src={product.ProductImage || "/assets/images/no-image.png"}
+                                  alt={product.ProductName}
+                                  style={{
+                                    width: "80px",
+                                    height: "80px",
+                                    objectFit: "cover",
+                                    border: "1px solid #dee2e6",
+                                    borderRadius: "8px",
+                                  }}
+                                />
+                              </td>
+                              <td className="align-middle">{product.ProductName}</td>
+                              <td className="align-middle">
+                                {product.ProductVariant.map((variant, index) => (
+                                  <>
+                                    <div key={variant._id}>
+                                      {variant.ProductVariantName}
+                                      {index < product.ProductVariant.length - 1 && <br />}
+                                    </div>
+                                    <hr />
+                                  </>
+                                ))}
+                              </td>
+                              <td className="align-middle">
+                                {product.ProductVariant.map((variant, index) => (
+                                  <>
+                                    <div key={variant._id}>
+                                      ₫{Number(variant.Price).toLocaleString('vi-VN')}
+                                      {index < product.ProductVariant.length - 1 && <br />}
+                                    </div>
+                                    <hr />
+                                  </>
 
-            <div className="text-center">
-              <Button
-                variant="success"
-                className="me-3"
-                onClick={() => handleStatusChange("Delivered")}
-                style={{ minWidth: "120px" }}
-              >
-                Delivered
-              </Button>
-              <Button
-                variant="danger"
-                className="me-3"
-                onClick={() => handleStatusChange("Cancelled")}
-                style={{ minWidth: "120px" }}
-              >
-                Cancelled
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleBackToList}
-                style={{ minWidth: "120px" }}
-              >
-                Back to List
-              </Button>
+                                ))}
+                              </td>
+                              <td className="align-middle">
+                                {product.ProductVariant.map((variant, index) => (
+                                  <>
+                                    <div key={variant._id}>
+                                      {variant.Quantity}
+                                      {index < product.ProductVariant.length - 1 && <br />}
+                                    </div>
+                                    <hr />
+                                  </>
+                                ))}
+                              </td>
+                              <td className="align-middle">
+                                {product.ProductVariant.map((variant, index) => (
+                                  <>
+                                    <div key={variant._id}>
+                                      ${Number(variant.Price * variant.Quantity).toLocaleString('vi-VN')}
+                                      {index < product.ProductVariant.length - 1 && <br />}
+                                    </div>
+                                    <hr />
+                                  </>
+                                ))}
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </Table>
+                </Card.Body>
+              </Card>
+
+              <div className="text-center">
+                <Button
+                  variant="success"
+                  className="me-3"
+                  onClick={() => handleStatusChange("Delivered")}
+                  style={{ minWidth: "120px" }}
+                  disabled={order.Status === "Delivered"}
+                >
+                  Mark as Delivered
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  onClick={handleBackToList}
+                  style={{ minWidth: "120px" }}
+                >
+                  Back to List
+                </Button>
+              </div>
             </div>
+          </Col>
+        </Row>
+      </Container>
+
+      <Modal
+        show={showSuccessModal}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Body className="text-center py-4">
+          <div className="mb-3">
+            <i className="fas fa-check-circle text-success" style={{ fontSize: '3rem' }}></i>
           </div>
-        </Col>
-      </Row>
-    </Container>
+          <h5>Order status updated to Delivered successfully!</h5>
+        </Modal.Body>
+      </Modal>
+    </>
   );
 };
 

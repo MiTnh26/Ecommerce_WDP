@@ -46,11 +46,15 @@ export default function ShopInformation() {
   const shopInfo = data?.data;
 
   useEffect(() => {
-    setPreviewImage(shopInfo?.shopAvatar || null);
+    if (shopInfo?._id) {
+      localStorage.setItem("shopId", shopInfo._id);
+      setPreviewImage(shopInfo?.shopAvatar || null);
+    }
   }, [shopInfo]);
 
   const { mutate, isPending, isError } = useMutation({
-    mutationFn: (payload) => axios.put(SHOP_API.UPDATE_SHOP_PROFILE, {
+    mutationFn: (payload) =>
+      axios.put(SHOP_API.UPDATE_SHOP_PROFILE, {
         _id: payload._id,
         name: payload.name,
         description: payload.description,
@@ -203,7 +207,7 @@ export default function ShopInformation() {
                 </Form.Group>
               </Col>
 
-              <Col md={6}>
+              {/* <Col md={6}>
                 <Form.Group>
                   <Form.Label>Status *</Form.Label>
                   <Form.Select
@@ -220,7 +224,7 @@ export default function ShopInformation() {
                     {formik.errors.status}
                   </Form.Control.Feedback>
                 </Form.Group>
-              </Col>
+              </Col> */}
             </Row>
 
             <Form.Group className="mb-3">
