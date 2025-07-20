@@ -19,6 +19,7 @@
     /* đen nhạt */
     flex: 0 0 auto;
     width: 82px;
+    height: 82px;
     aspect-ratio: 1/1;
     display: flex;
     align-items: center;
@@ -91,7 +92,7 @@
 .color-label,
 .size-label,
 .quantity-label {
-    min-width: 80px;
+    width: 80px;
 }
 
 .list-item-color {

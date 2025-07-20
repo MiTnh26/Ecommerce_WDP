@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 // useQuery to state Cart
 import {
   Col,
@@ -12,14 +12,28 @@ import {
   ListGroup,
 } from "react-bootstrap";
 import image from "../assets/images/logo_page.jpg";
+import { AppContext  } from "../store/Context";
+import { useContext } from "react"; 
 const Header = () => {
   const [popUpSearch, setPopUpSearch] = useState(false);
   const [showCanvasCart, setShowCanvasCart] = useState(false);
+  const [category_id, setCategory_id] = useState("");
+  const { search, setSearch, filterData } = useContext(AppContext);
+  const [searchParams] = useSearchParams();
+
   // navigate
   const navigate = useNavigate();
+  
+  //useEffect
+  useEffect(() => {
+     setSearch(searchParams.get("name") || "");
+  setCategory_id(searchParams.get("category") || "");
+  }, [searchParams]);
 
   //inview hook for cart
   const { ref: cartRef, inView: cartInView } = useInView({ triggerOnce: true });
+
+
   // useQuery to state Cart
   //fetch cart data
   const fetchCartData = async () => {
@@ -41,6 +55,12 @@ const Header = () => {
   const handleShowCanvasCart = () => {
     setShowCanvasCart(!showCanvasCart);
   };
+
+ const handleSubmitSearch = () => {
+  filterData();
+  navigate(`/Ecommerce/search?name=${search || ""}&category=${category_id || ""}`);
+}
+  console.log("hello")
   return (
     <>
       <Container fluid>
@@ -63,39 +83,43 @@ const Header = () => {
           </Col>
           {/* Sreach on header , hidden on sm */}
           <Col
-            md={12}
-            lg={6}
-            className="d-none d-md-block d-lg-block order-md-last order-lg-2 "
-          >
-            <div className="row search-bar p-2 my-2 bg-light rounded-4 ">
-              <Col md={1} lg={0} className="d-block d-lg-none"></Col>
-              <Col md={3} lg={4}>
-                <Form.Select className="bg-transparent border-0 ">
-                  <option>All Categories</option>
-                  <option>Groceries</option>
-                  <option>Drinks</option>
-                  <option>Chocolates</option>
-                </Form.Select>
-              </Col>
-              <Col md={6} lg={7}>
-                <Form id="search-form" className="text-center">
-                  <Form.Control
-                    type="text"
-                    className="border-0 bg-transparent"
-                    placeholder="Search for more than 20,000 products"
-                  />
-                </Form>
-              </Col>
-              <Col
-                md={1}
-                lg={1}
-                onClick={() => navigate("/Ecommerce/search/hello")}
-              >
-                <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
-              </Col>
-              <Col md={1} lg={0} className="d-block d-lg-none"></Col>
-            </div>
-          </Col>
+  md={12}
+  lg={6}
+  className="d-none d-md-block d-lg-block order-md-last order-lg-2"
+>
+  <Row className="search-bar p-2 my-2 bg-light rounded-4 align-items-center">
+    {/* Có thể chừa ra 1 khoảng trống nhỏ trái/phải khi ở md */}
+    <Col md={1} className="d-md-block d-lg-none"></Col>
+
+    {/* Ô nhập liệu */}
+    <Col md={10} lg={10}>
+      <Form id="search-form">
+        <Form.Control
+          type="text"
+          className="border-0 bg-transparent"
+          placeholder="Search for more than 20,000 products"
+          value={search || ""}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </Form>
+    </Col>
+
+    {/* Icon tìm kiếm - có thể click */}
+    <Col
+      md={1}
+      lg={2}
+      onClick={() => handleSubmitSearch()}
+      className="text-center"
+      style={{ cursor: "pointer" }}
+    >
+      <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
+    </Col>
+
+    {/* Khoảng trắng phải nếu cần ở md */}
+    <Col md={1} className="d-md-block d-lg-none"></Col>
+  </Row>
+</Col>
+
           {/* Icon right header */}
           <Col
             sm={8}

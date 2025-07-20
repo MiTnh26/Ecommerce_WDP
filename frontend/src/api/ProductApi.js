@@ -15,7 +15,7 @@ export const fetchCategory = async () => {
       ...item,
       icon: getIconForCategory(item.CategoryName),
     }));
-    console.log("fetchCategory data", categoriesWithIcons);
+    //console.log("fetchCategory data", categoriesWithIcons);
     return categoriesWithIcons;
   } catch (err) {
     console.log("fetchCategory err", err);
@@ -74,3 +74,37 @@ export const fetchNewProducts = async () => {
   }
   return;
 };
+
+
+  // fetch data product detail
+
+export const fetchProductDetail = async (product_id) => {
+  try {
+    const res = await axios.get(`${baseURL}/product/${product_id}`, {
+      withCredentials: true,
+    });
+    const data = res.data;
+    console.log("fetchProductDetail data", data);
+    return data;
+  } catch (err) {
+    console.log("fetchProductDetail err", err);
+  }
+  return;
+};
+
+  export const fetchReviews = async () => {
+    console.log("Fetching reviews...");
+    return [1, 2, 3, 4, 5, 6];
+  };
+  export const fetchRelatedProducts = async (category_id) => {
+    try{
+      const res = await axios.get(`${baseURL}/product/related-products/${category_id}`, {
+        withCredentials: true,
+      });
+      const data = res.data;
+      console.log("fetchRelatedProducts data", res.data);
+      return data;
+    } catch (err) {
+      console.log("fetchRelatedProducts err", err);   
+    }
+  };

@@ -12,16 +12,6 @@ import { useInView } from 'react-intersection-observer';
 import axios from 'axios';
 import { getIconForCategory } from '../../store/keywordToIcon';
 import { fetchCategory, fetchCategoryLength, fetchTrendingProducts, fetchBestSellerProducts, fetchNewProducts } from '../../api/ProductApi';
-const dataCategoryTest = [
-  { id: 1, title: "Fruits & Vegetables", icon: "🥕" },
-  { id: 2, title: "Meat & Fish", icon: "🍗" },
-  { id: 3, title: "Beverages", icon: "☕" },
-  { id: 4, title: "Dairy Products", icon: "🧀" },
-  { id: 5, title: "Snacks", icon: "🍪" },
-  { id: 6, title: "Bakery", icon: "🍞" },
-  { id: 7, title: "Frozen Foods", icon: "🧊" },
-  { id: 8, title: "Household", icon: "🧽" },
-]
 
 const HomePage = () => {
   // 1. State declare
@@ -81,8 +71,9 @@ const HomePage = () => {
   // 6. Event handlers
     //6.1 Handle category click next category
   const handleCategoryClickNext = async () => {
+    console.log("handleCategoryClickNext");
     try {
-      const res = await axios.get(`${baseURL}/category/get-all?limit=1&skip=${dataCategory.length}`, {
+      const res = await axios.get(`${baseURL}/category/get-category?limit=1&skip=${dataCategory.length}`, {
         withCredentials: true,
       });
       const data = res.data[0];
@@ -220,7 +211,6 @@ const HomePage = () => {
             <Category dataList={bestSellerData} title="Best Seller Products" Component={Card} dataLength={bestSellerData.length}/>
           </>):(<>
             <p className="title h4">Trending Products</p>
-            {/* <Category dataList={dataTrending} title="Trending Products" Component={Card} dataLength={0}/> */}
             <p>Data is updateing ... </p>
           </>)}
           </>
@@ -240,7 +230,6 @@ const HomePage = () => {
             <Category dataList={newProductData} title="New Products" Component={Card} dataLength={newProductData.length}/>
           </>):(<>
             <p className="title h4">New Products</p>
-            {/* <Category dataList={dataTrending} title="Trending Products" Component={Card} dataLength={0}/> */}
             <p>Data is updateing ... </p>
           </>
         

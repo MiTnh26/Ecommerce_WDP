@@ -51,4 +51,10 @@ router.get("/best-seller", ctrl.getBestSellerProducts);
 
 // 10) GET /products/:id
 router.get("/:id", ctrl.getProductById);
+
+// 11) GET /products/:id/variants
+router.get("/related-products/:category_id", ctrl.fetchProductsRelatedToCategory);
+
+//12) POST /products/filter-product
+router.post("/filter-product", ctrl.filterProduct);
 module.exports = router;

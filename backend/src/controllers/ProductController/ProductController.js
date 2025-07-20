@@ -1,6 +1,7 @@
 const Product = require("../../models/Products");
 const OrderItem = require("../../models/OrderItems");
-const { Readable } = require("stream");
+const mongoose = require("mongoose");
+const { ObjectId } = mongoose.Types;
 
 /**
  * GET /products
@@ -251,7 +252,7 @@ exports.getTrendingProducts = async (req, res) => {
 exports.getNewProducts = async (req, res) => {
   const {limit = 10} = req.query;
   const {page = 0} = req.query;
-  console.log("Fetching new products with limit:", limit, "and page:", page);
+  //console.log("Fetching new products with limit:", limit, "and page:", page);
   try {
     const products = await Product.find()
     .select({
@@ -273,7 +274,7 @@ exports.getNewProducts = async (req, res) => {
   }
 
 exports.getBestSellerProducts = async (req, res) => {
-  console.log("Fetching best selling products...");
+  //console.log("Fetching best selling products...");
   const {limit = 10, page = 0} = req.query;
   try {
     const bestSellingProducts = await OrderItem.aggregate([
@@ -288,7 +289,7 @@ exports.getBestSellerProducts = async (req, res) => {
       },
       {
         $group: {
-          _id: "$Product._id",
+         _id: "$Product._id",
           ProductName: { $first: "$Product.ProductName" },
           ProductImage: { $first: "$Product.ProductImage" },
           Price: { $first: "$Product.ProductVariant.Price" },
@@ -345,18 +346,141 @@ exports.getBestSellerProducts = async (req, res) => {
   }
   };
 
-  exports.getProductById = async (req, res) => {
-    const { id } = req.params;
-    try {
-      const product = await Product.findById(id)
-        .populate("CategoryId")
-        .populate("ShopId");
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-      res.json(product);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error fetching product" });
+exports.getProductById = async (req, res) => {
+  const { id } = req.params;
+  // if (!mongoose.Types.ObjectId.isValid(id)) {
+  //   return res.status(400).json({ message: "Invalid product ID" });
+  // }
+  console.log("Fetching product by ID:", id);
+  try {
+  const product = await Product.findOne({ _id: id.toString() })
+    .select('_id ProductName ProductImage Description ProductVariant') // chỉ gọi 1 lần duy nhất
+    .populate({
+      path: 'CategoryId',
+      select: '_id CategoryName',
+    })
+    .populate({
+      path: 'ShopId',
+      select: '_id name shopAvatar description address',
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
+    res.json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error fetching product" });
   }
+}
+
+exports.fetchProductsRelatedToCategory = async (req, res) => {
+  try {
+    const { category_id } = req.params;
+    console.log("Fetching related products for category ID:", category_id);
+    if (!category_id) {
+      return res.status(400).json({ message: "Category ID is required" });
+    }
+    // const products = await Product.find({CategoryId: category_id})
+    const products = await Product.aggregate([
+  {
+    $match: {
+      CategoryId: new mongoose.Types.ObjectId(category_id)
+    },
+  },
+  {
+    $project: {
+      _id: 1,
+      ProductName: 1,
+      ProductImage: 1,
+      Description: 1,
+      ProductVariant: 1,
+      Price: {
+        $max: "$ProductVariant.Price"
+      }
+    }
+  },
+  { $limit: 10 }
+]);
+   res.json(products);
+  } catch (err) {
+    console.error("Error fetching related products:", err);
+    throw err;
+  }
+};
+exports.filterProduct = async (req, res) => {
+  try {
+    const { name, category, fromPrice, toPrice, whereToBuyFilter } = req.body;
+
+    const matchStage = {};
+
+    if (name) {
+      matchStage.ProductName = { $regex: name, $options: "i" };
+    }
+
+    if (category) {
+      matchStage.CategoryId = category;
+    }
+
+    if (fromPrice !== undefined || toPrice !== undefined) {
+      matchStage["ProductVariant.Price"] = {};
+      if (fromPrice !== undefined) {
+        matchStage["ProductVariant.Price"].$gte = fromPrice;
+      }
+      if (toPrice !== undefined) {
+        matchStage["ProductVariant.Price"].$lte = toPrice;
+      }
+    }
+
+    if (whereToBuyFilter && whereToBuyFilter.length > 0) {
+      // tỉnh thành sẽ được lọc ở bước sau lookup
+    }
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $addFields: {
+          Price: { $ifNull: [{ $first: "$ProductVariant.Price" }, 0] },
+          StockQuantity: { $ifNull: [{ $first: "$ProductVariant.StockQuantity" }, 0] }
+        }
+      },
+      {
+        $lookup: {
+          from: "shops", // 👈 tên collection Shop
+          localField: "ShopId",
+          foreignField: "_id",
+          as: "shopData"
+        }
+      },
+      { $unwind: "$shopData" },
+    ];
+
+    if (whereToBuyFilter && whereToBuyFilter.length > 0) {
+      pipeline.push({
+        $match: {
+          "shopData.address.province": { $in: whereToBuyFilter }
+        }
+      });
+    }
+     // Chỉ lấy các trường cần thiết
+    pipeline.push({
+      $project: {
+        _id: 1,
+        ProductName: 1,
+        Description: 1,
+        CategoryId: 1,
+        Price: 1,
+        StockQuantity: 1,
+        ProductImage: 1
+      }
+    });
+
+    const products = await Product.aggregate(pipeline);
+    console.log("Filtered products:", products);
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error filtering products" });
+  }
+};
+

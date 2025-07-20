@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap';
 import '../../style/category.css'
+import { useNavigate } from 'react-router-dom';
 // default values trong es6 Component = CategoryItemDefault
 const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength, onClickNext }) => {
     const [itemsPerView, setItemsPerView] = useState(2); // default với mobile = 2
     const [currentIndex, setCurrentIndex] = useState(0); // Tinh toan index slide hien tai và gia tri can truot
-    console.log(dataList)
+    //console.log(dataList)
     // update items khi resize
     useEffect(() => {
         // set up 4 3 2
@@ -29,8 +30,8 @@ const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength
     const transformValue = -(currentIndex * (100 / itemsPerView))
     // xu ly next slide
     const handleNext = () => {
-        if(dataList.length < dataLength) {
-        onClickNext();
+        if (typeof onClickNext === 'function' && dataList.length < dataLength) {
+            onClickNext();
         }
         setCurrentIndex((prev) => Math.min(prev + 1, maxSlides));
     }
@@ -61,9 +62,9 @@ const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength
                     }}
                 >
                     {dataList.length > 0 &&
-                        dataList.map((item) => (
+                        dataList.map((item, index) => (
                             <div
-                                key={item.id}
+                                key={index}
                                 className="flex-shrink-0"
                                 style={{
                                     width: `calc(${100 / itemsPerView}% - 1rem)`,
@@ -93,13 +94,20 @@ const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength
 }
 
 export default Category;
-export const CategoryItemDefault = ({ item }) => (
-    <div
-        className="border rounded-3 d-flex flex-column justify-content-center align-items-center"
-        style={{
-            aspectRatio: "5/3"
-        }}>
-        <div className="fs-1 mb-2">{item.icon}</div>
-        <h5 className="fw-semibold mt-2">{item.CategoryName}</h5>
-    </div>
-)
+export const CategoryItemDefault = ({ item }) => {
+    const navigate = useNavigate(); // 👈 gọi tại đây
+    return (
+        <div
+            className="border rounded-3 d-flex flex-column justify-content-center align-items-center"
+            style={{
+                aspectRatio: "5/3"
+            }}
+            onClick={() => {
+                navigate(`/Ecommerce/search?name=&category=${item._id}`);
+                window.location.reload();
+            }}>
+            <div className="fs-1 mb-2">{item.icon}</div>
+            <h5 className="fw-semibold mt-2">{item.CategoryName}</h5>
+        </div>
+    )
+}

@@ -12,5 +12,6 @@ router.post(
   upload.single("shopAvatar"),
   SellerController.registerShop
 );
+router.get("/getShopProvince", SellerController.getProvince);
 
 module.exports = router;
