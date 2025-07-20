@@ -16,7 +16,7 @@ const getSellerStatistics = async (req, res) => {
 
     // Tổng doanh thu đơn Completed
     const totalRevenue = orders
-      .filter((o) => o.Status === "Completed")
+      .filter((o) => o.Status === "Delivered")
       .reduce((acc, order) => acc + order.TotalAmount, 0);
 
     // Tổng đơn theo status
@@ -36,8 +36,8 @@ const getSellerStatistics = async (req, res) => {
     // Biểu đồ doanh thu theo tháng
     const monthlyRevenue = Array(12).fill(0);
     orders.forEach((order) => {
-      if (order.Status === "Completed") {
-        const month = new Date(order.createdAt).getMonth(); // 0-11
+      if (order.Status === "Delivered") {
+        const month = new Date(order.OrderDate).getMonth(); // 0-11
         monthlyRevenue[month] += order.TotalAmount;
       }
     });

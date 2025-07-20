@@ -45,7 +45,7 @@ function StatisticPage({ shopId }) {
       <Row className="mb-4">
         <Col md={3}><StatCard title="Tổng đơn" value={stats.totalOrders} variant="primary" /></Col>
         <Col md={3}><StatCard title="Doanh thu" value={stats.totalRevenue.toLocaleString() + " đ"} variant="success" /></Col>
-        <Col md={3}><StatCard title="Hoàn thành" value={stats.statusCount.Completed} variant="info" /></Col>
+        <Col md={3}><StatCard title="Hoàn thành" value={stats.statusCount.Delivered} variant="info" /></Col>
         <Col md={3}><StatCard title="Đơn huỷ" value={stats.statusCount.Cancelled} variant="danger" /></Col>
       </Row>
 
