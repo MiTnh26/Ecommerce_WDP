@@ -12,7 +12,7 @@ const PurchaseOrders = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const user = JSON.parse(localStorage.getItem("user") );
+  const user = JSON.parse(localStorage.getItem("user"));
   const userId = user._id;
   const fallbackImg = "../assets/images/no-image.png";
   const navigate = useNavigate();
@@ -64,13 +64,13 @@ const PurchaseOrders = () => {
         );
 
         return (
-  orderId.includes(lower) ||
-  (order.ShopId?.name || "").toLowerCase().includes(lower) ||
-  (order.ShippingAddress || "").toLowerCase().includes(lower) ||
-  (order.PaymentId || "").toLowerCase().includes(lower) ||
-  (order.Status || "").toLowerCase().includes(lower) ||
-  hasMatch
-);
+          orderId.includes(lower) ||
+          (order.ShopId?.name || "").toLowerCase().includes(lower) ||
+          (order.ShippingAddress || "").toLowerCase().includes(lower) ||
+          (order.PaymentId || "").toLowerCase().includes(lower) ||
+          (order.Status || "").toLowerCase().includes(lower) ||
+          hasMatch
+        );
 
       });
     }
@@ -106,7 +106,7 @@ const PurchaseOrders = () => {
 
   return (
     <Container className="mt-4" style={{ maxWidth: 950 }}>
-  
+
       <div
         style={{
           background: "#fff",
@@ -183,7 +183,7 @@ const PurchaseOrders = () => {
         ))}
       </div>
 
-    
+
       {filteredOrders.length === 0 ? (
         <div
           style={{
@@ -216,7 +216,7 @@ const PurchaseOrders = () => {
               overflow: "hidden",
             }}
           >
-        
+
             <div
               style={{
                 background: blueLight,
@@ -259,14 +259,14 @@ const PurchaseOrders = () => {
               </span>
             </div>
 
-          
-            { Array.isArray(order.Items) ? order.Items.flatMap((item) => {
 
-            
+            {Array.isArray(order.Items) ? order.Items.flatMap((item) => {
+
+
 
               return (item.Product || []).flatMap((product) => {
                 if (!product.ProductVariant || product.ProductVariant.length === 0) {
-            
+
                   return (
                     <div
                       key={`${item._id}-${product._id}-no-variant`}
@@ -347,9 +347,9 @@ const PurchaseOrders = () => {
                 ));
               })
             })
-            :null}
+              : null}
 
-  
+
             <div
               style={{
                 background: blueLight,
@@ -400,21 +400,23 @@ const PurchaseOrders = () => {
                   >
                     {order.Status === "Cancelled" ? "Cancellation details" : "View details"}
                   </Button>
-                  <Button
-                    size="sm"
-                    style={{
-                      background: blue,
-                      borderColor: blue,
-                      color: "#fff",
-                      fontWeight: 600,
-                      borderRadius: 2,
-                      minWidth: 120,
-                    }}
-                    onClick={() => handleBuyAgain(order)}
-                  >
-                    Buy again
-                  </Button>
-                  <Button
+                  {["Completed", "Cancelled"].includes(order.Status)  && (
+                    <Button
+                      size="sm"
+                      style={{
+                        background: blue,
+                        borderColor: blue,
+                        color: "#fff",
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        minWidth: 120,
+                      }}
+                      onClick={() => handleBuyAgain(order)}
+                    >
+                      Buy again
+                    </Button>
+                  )}
+                  {/* <Button
                     variant="outline-primary"
                     size="sm"
                     style={{
@@ -426,9 +428,9 @@ const PurchaseOrders = () => {
                     }}
                     onClick={() => alert(`View shop reviews: ${order.ShopId?.name}`)}
                   >
-                     {order.Status === "Cancelled" ? "Contact seller" : "Rate shop"}
-                    
-                  </Button>
+                    {order.Status === "Cancelled" ? "Contact seller" : "Rate shop"}
+
+                  </Button> */}
                 </div>
               </div>
             </div>
