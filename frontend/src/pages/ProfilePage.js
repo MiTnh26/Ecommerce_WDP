@@ -9,6 +9,8 @@ import AddressForm from "../components/AddressForm";
 import Header from "../layouts/Header";
 import Footer from "../layouts/Footer";
 import { useLocation } from "react-router-dom";
+import ChangePasswordForm from "../components/ChangePasswordForm";
+
 
 
 import { Outlet } from "react-router-dom";
@@ -35,8 +37,8 @@ function ProfilePage() {
     setShowSubmenu(!showSubmenu);
   };
   const location = useLocation();
-const defaultTab = location.state?.tab || "view";
-const [activeTab, setActiveTab] = useState(defaultTab);
+  const defaultTab = location.state?.tab || "view";
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
 
   return (
@@ -100,9 +102,9 @@ const [activeTab, setActiveTab] = useState(defaultTab);
                 </div>
               )}
               {/* Extended features */}
-              <Nav.Item>
+              {/* <Nav.Item>
                 <Nav.Link eventKey="security">Security</Nav.Link>
-              </Nav.Item>
+              </Nav.Item> */}
               <Nav.Item>
                 <Nav.Link eventKey="history">Purchase History</Nav.Link>
               </Nav.Item>
@@ -128,6 +130,10 @@ const [activeTab, setActiveTab] = useState(defaultTab);
                   <Tab.Pane eventKey="address">
                     <AddressForm userId={userId} />
                   </Tab.Pane>
+                  <Tab.Pane eventKey="changepassword">
+                    <ChangePasswordForm userId={userId} />
+                  </Tab.Pane>
+
 
                   <Tab.Pane eventKey="security">
                     <div className="mt-4">

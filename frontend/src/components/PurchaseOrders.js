@@ -260,8 +260,11 @@ const PurchaseOrders = () => {
             </div>
 
           
-            {(order.Items || []).flatMap((item) =>
-              (item.Product || []).flatMap((product) => {
+            { Array.isArray(order.Items) ? order.Items.flatMap((item) => {
+
+            
+
+              return (item.Product || []).flatMap((product) => {
                 if (!product.ProductVariant || product.ProductVariant.length === 0) {
             
                   return (
@@ -343,7 +346,8 @@ const PurchaseOrders = () => {
                   </div>
                 ));
               })
-            )}
+            })
+            :null}
 
   
             <div

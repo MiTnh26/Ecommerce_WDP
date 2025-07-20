@@ -289,7 +289,7 @@ const getAddressById = async (req, res) => {
       _id: address._id,
       receiverName: address.receiverName,
       phoneNumber: address.phoneNumber,
-      
+
       status: address.status,
       province: address.province,
       district: address.district,
@@ -362,21 +362,26 @@ const getOrderByUserId = async (req, res) => {
     const orders = await Order.find({ BuyerId: userId })
       .populate({
         path: "Items",
-        select: "-__v -createdAt -updatedAt", // bỏ bớt trường phụ nếu cần
+        select: "-__v -createdAt -updatedAt"
       })
       .populate({
-        path: "ShopId",
-
+        path: "ShopId"
       })
       .sort({ createdAt: -1 })
       .lean();
 
-    res.status(200).json(orders);
+    const fixedOrders = orders.map(order => ({
+      ...order,
+      Items: order.Items ? [order.Items] : [],
+    }));
+
+    res.status(200).json(fixedOrders);
   } catch (error) {
     console.error("Error when getting orders by user:", error);
     res.status(500).json({ message: "Failed to get orders", error: error.message });
   }
 };
+
 
 const getOrderDetails = async (req, res) => {
   try {
@@ -386,10 +391,9 @@ const getOrderDetails = async (req, res) => {
       return res.status(400).json({ message: "Invalid orderId format" });
     }
 
-    // Tìm đơn hàng và populate các OrderItem
     const order = await Order.findById(orderId)
       .populate({
-        path: "Items", // ref trong Order schema
+        path: "Items",
         select: "-__v -createdAt -updatedAt"
       })
       .lean();
@@ -398,12 +402,19 @@ const getOrderDetails = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    res.status(200).json(order);
+    // Wrap Items thành mảng nếu cần
+    const fixedOrder = {
+      ...order,
+      Items: order.Items ? [order.Items] : [],
+    };
+
+    res.status(200).json(fixedOrder);
   } catch (error) {
     console.error("Error fetching order details:", error);
     res.status(500).json({ message: "Error fetching order details", error: error.message });
   }
 };
+
 
 const setDefaultAddress = async (req, res) => {
   const { userId, addressId } = req.params;
@@ -430,13 +441,41 @@ const setDefaultAddress = async (req, res) => {
     res.status(500).json({ message: "Failed to set default address", error });
   }
 };
+const changePasswordInUser = async (req, res) => {
+  const { id } = req.params;
+  const { currentPassword, newPassword } = req.body;
+  console.log('id', id);
+  console.log('currentPassword', currentPassword);
 
+  try {
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
+    console.log('user.Password', user.Password);
+    const isMatch = await bcrypt.compare(currentPassword, user.Password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    user.Password = hashedNewPassword;
+    await user.save();
+
+
+    res.json({ message: "Đổi mật khẩu thành công" });
+  } catch (err) {
+    console.error("Error changing password:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 
 
 module.exports = {
-  setDefaultAddress,
+  setDefaultAddress, changePasswordInUser,
   getOrderDetails, getOrderByUserId,
   addAddress, updateAddress,
   getAddressById, deleteAddress,

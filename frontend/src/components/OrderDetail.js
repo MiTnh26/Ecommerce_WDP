@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Spinner, Alert, Button } from "react-bootstrap";
 import PurchaseOrders from "./PurchaseOrders";
+const toArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') return Object.values(data);
+  return [];
+};
+
 
 const orange = "#ee4d2d";
 const fallbackImg = "../assets/images/no-image.png";
@@ -165,9 +171,10 @@ const OrderDetail = () => {
           overflow: "hidden",
         }}
       >
-        {(order.Items || []).flatMap((item) =>
-          (item.Product || []).flatMap((product) => {
-            if (!product.ProductVariant || product.ProductVariant.length === 0) {
+        {toArray(order.Items).flatMap((item) =>
+          toArray(item.Product).flatMap((product) => {
+            const variants = toArray(product.ProductVariant);
+            if (variants.length === 0) {
               return (
                 <div
                   key={`${item._id}-${product._id}-no-variant`}
@@ -206,7 +213,8 @@ const OrderDetail = () => {
                 </div>
               );
             }
-            return product.ProductVariant.map((variant, i) => (
+
+            return variants.map((variant, i) => (
               <div
                 key={`${item._id}-${product._id}-${i}`}
                 style={{
@@ -247,6 +255,7 @@ const OrderDetail = () => {
             ));
           })
         )}
+
       </div>
 
 

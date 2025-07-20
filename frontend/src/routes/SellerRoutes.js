@@ -5,6 +5,7 @@ import ViewOrderDetail from "../components/seller/ViewOrderDetail";
 import ViewOrderIndex from "../components/seller/ListOrderIndex";
 import ShopInformationIndex from "../components/seller/ShopInformationIndex";
 import OrderDetailIndex from "../components/seller/OrderDetailIndex";
+import StatisticPageIndex from "../components/seller/StatisticPageIndex";
 
 const SellerRoutes = [
   {
@@ -25,6 +26,10 @@ const SellerRoutes = [
       {
         path: "shopinformation",
         element: <ShopInformationIndex />,
+      },
+      {
+        path: "statistic",
+        element: <StatisticPageIndex  />,
       },
     ],
   },

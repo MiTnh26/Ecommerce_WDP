@@ -22,6 +22,7 @@ router.delete("/user/:userId/address/:addressId", UserController.deleteAddress);
 router.get("/orders/:userId",UserController.getOrderByUserId)
 router.get("/orderdetail/:orderId", UserController.getOrderDetails);
 router.put('/user/:userId/address/:addressId/set-default', UserController.setDefaultAddress);
+router.put("/change-password/:id",UserController.changePasswordInUser);
 
 // // POST tạo đơn hàng mới
 // router.post("/", createOrder);
