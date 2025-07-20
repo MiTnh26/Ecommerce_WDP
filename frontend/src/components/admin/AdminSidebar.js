@@ -22,12 +22,7 @@ function AdminSidebar({ currentPage = "", isCollapsed, onToggleCollapse }) {
       icon: "ti ti-building-store",
       path: "/Ecommerce/admin/shopManagement",
     },
-    {
-      id: "categories",
-      label: "Categories Management",
-      icon: "ti ti-category",
-      path: "/Ecommerce/admin/categories",
-    },
+
     // {
     //   id: "products",
     //   label: "Quản lý sản phẩm",

@@ -1,156 +1,11 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
 import "../../style/PaymentManagement.css";
 import AdminLayout from "../../components/admin/AdminLayout";
 
-// Mock data for payment methods
-const mockPaymentMethods = [
-  {
-    id: 1,
-    name: "Ví MoMo",
-    type: "e_wallet",
-    provider: "MoMo",
-    status: "active",
-    description: "Thanh toán qua ví điện tử MoMo",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 2.5,
-    minAmount: 10000,
-    maxAmount: 50000000,
-    currency: "VND",
-    isDefault: false,
-    totalTransactions: 15420,
-    totalAmount: 2450000000,
-    successRate: 98.5,
-    createdDate: "2024-01-15",
-    lastUsed: "2024-12-21",
-    config: {
-      apiKey: "momo_api_key_***",
-      secretKey: "momo_secret_***",
-      environment: "production",
-    },
-  },
-  {
-    id: 2,
-    name: "ZaloPay",
-    type: "e_wallet",
-    provider: "ZaloPay",
-    status: "active",
-    description: "Thanh toán qua ví điện tử ZaloPay",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 2.0,
-    minAmount: 10000,
-    maxAmount: 20000000,
-    currency: "VND",
-    isDefault: false,
-    totalTransactions: 8950,
-    totalAmount: 1230000000,
-    successRate: 97.8,
-    createdDate: "2024-02-01",
-    lastUsed: "2024-12-21",
-    config: {
-      apiKey: "zalo_api_key_***",
-      secretKey: "zalo_secret_***",
-      environment: "production",
-    },
-  },
-  {
-    id: 3,
-    name: "Thẻ tín dụng/ghi nợ",
-    type: "card",
-    provider: "Visa/Mastercard",
-    status: "active",
-    description: "Thanh toán bằng thẻ tín dụng hoặc thẻ ghi nợ",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 3.0,
-    minAmount: 50000,
-    maxAmount: 100000000,
-    currency: "VND",
-    isDefault: true,
-    totalTransactions: 25680,
-    totalAmount: 5670000000,
-    successRate: 96.2,
-    createdDate: "2024-01-01",
-    lastUsed: "2024-12-21",
-    config: {
-      merchantId: "merchant_***",
-      publicKey: "public_key_***",
-      environment: "production",
-    },
-  },
-  {
-    id: 4,
-    name: "Chuyển khoản ngân hàng",
-    type: "bank_transfer",
-    provider: "Vietcombank",
-    status: "active",
-    description: "Chuyển khoản trực tiếp qua ngân hàng",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 0,
-    minAmount: 100000,
-    maxAmount: 500000000,
-    currency: "VND",
-    isDefault: false,
-    totalTransactions: 3420,
-    totalAmount: 1890000000,
-    successRate: 99.1,
-    createdDate: "2024-01-10",
-    lastUsed: "2024-12-20",
-    config: {
-      bankCode: "VCB",
-      accountNumber: "1234567890",
-      accountName: "CONG TY ABC",
-    },
-  },
-  {
-    id: 5,
-    name: "Thanh toán khi nhận hàng",
-    type: "cod",
-    provider: "COD",
-    status: "active",
-    description: "Thanh toán tiền mặt khi nhận hàng",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 1.5,
-    minAmount: 0,
-    maxAmount: 5000000,
-    currency: "VND",
-    isDefault: false,
-    totalTransactions: 12340,
-    totalAmount: 890000000,
-    successRate: 94.5,
-    createdDate: "2024-01-01",
-    lastUsed: "2024-12-21",
-    config: {
-      maxDistance: 50,
-      supportedAreas: ["TP.HCM", "Hà Nội", "Đà Nẵng"],
-    },
-  },
-  {
-    id: 6,
-    name: "VNPay",
-    type: "gateway",
-    provider: "VNPay",
-    status: "maintenance",
-    description: "Cổng thanh toán VNPay",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 2.2,
-    minAmount: 10000,
-    maxAmount: 100000000,
-    currency: "VND",
-    isDefault: false,
-    totalTransactions: 18750,
-    totalAmount: 3450000000,
-    successRate: 97.5,
-    createdDate: "2024-01-20",
-    lastUsed: "2024-12-19",
-    config: {
-      tmnCode: "vnpay_tmn_***",
-      hashSecret: "vnpay_hash_***",
-      environment: "production",
-    },
-  },
-];
-
 const paymentTypes = [
-  "Tất cả",
+  "All Method",
   "e_wallet",
   "card",
   "bank_transfer",
@@ -158,41 +13,98 @@ const paymentTypes = [
   "gateway",
 ];
 const paymentTypeLabels = {
-  "Tất cả": "Tất cả",
-  e_wallet: "Ví điện tử",
-  card: "Thẻ tín dụng",
-  bank_transfer: "Chuyển khoản",
+  "All Method": "All Method",
+  e_wallet: "E Wallet",
+  card: "Card",
+  bank_transfer: "Bank Transfer",
   cod: "COD",
-  gateway: "Cổng thanh toán",
+  gateway: "Gate Way",
 };
 
 function PaymentManagement() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState("Tất cả");
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedType, setSelectedType] = useState("All Method");
+  const [selectedStatus, setSelectedStatus] = useState("All");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredPayments = mockPaymentMethods.filter((payment) => {
+  // Fetch payment methods from API
+  useEffect(() => {
+    fetchPaymentMethods();
+    fetchOrder();
+  }, []);
+
+  const fetchPaymentMethods = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        "http://localhost:5000/admin/getPaymentMethod"
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ Payment methods fetched successfully:", data);
+      setPaymentMethods(data);
+      setError(null);
+    } catch (err) {
+      console.error("❌ Error fetching payment methods:", err);
+      setError("Không thể tải danh sách phương thức thanh toán");
+      setPaymentMethods([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchOrder = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("http://localhost:5000/admin/getOrder");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ Order fetched successfully:", data);
+      setOrders(data);
+      setError(null);
+    } catch (err) {
+      console.error("❌ Error fetching payment methods:", err);
+      setError("Không thể tải danh sách phương thức thanh toán");
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPayments = paymentMethods.filter((payment) => {
     const matchesSearch =
-      payment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.description.toLowerCase().includes(searchTerm.toLowerCase());
+      payment.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.Type?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType =
-      selectedType === "Tất cả" || payment.type === selectedType;
+      selectedType === "All Method" || payment.Type === selectedType;
 
     const matchesStatus =
-      selectedStatus === "all" || payment.status === selectedStatus;
+      selectedStatus === "All" || payment.Status === selectedStatus;
+
+    // return matchesSearch && matchesType && matchesStatus;
+    console.log(matchesSearch);
 
     return matchesSearch && matchesType && matchesStatus;
   });
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "VND",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -214,11 +126,11 @@ function PaymentManagement() {
 
   const getTypeBadge = (type) => {
     const typeMap = {
-      e_wallet: { text: "Ví điện tử", class: "badge-primary" },
-      card: { text: "Thẻ tín dụng", class: "badge-info" },
-      bank_transfer: { text: "Chuyển khoản", class: "badge-success" },
+      e_wallet: { text: "E Wallet", class: "badge-primary" },
+      card: { text: "Card", class: "badge-info" },
+      bank_transfer: { text: "Bank Transfer", class: "badge-success" },
       cod: { text: "COD", class: "badge-warning" },
-      gateway: { text: "Cổng thanh toán", class: "badge-secondary" },
+      gateway: { text: "Gate Way", class: "badge-secondary" },
     };
     const typeInfo = typeMap[type] || { text: type, class: "badge-light" };
     return <span className={`badge ${typeInfo.class}`}>{typeInfo.text}</span>;
@@ -234,45 +146,128 @@ function PaymentManagement() {
     setShowPaymentDetails(true);
   };
 
-  const handleToggleStatus = (paymentId, currentStatus) => {
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
-    const action = newStatus === "active" ? "kích hoạt" : "tạm dừng";
-    if (
-      window.confirm(
-        `Bạn có chắc chắn muốn ${action} phương thức thanh toán này?`
-      )
-    ) {
-      console.log(`Toggling payment ${paymentId} to ${newStatus}`);
-    }
-  };
-
-  const handleSetDefault = (paymentId) => {
+  const handleSetDefault = async (paymentId) => {
     if (window.confirm("Bạn có chắc chắn muốn đặt làm phương thức mặc định?")) {
-      console.log("Setting default payment:", paymentId);
+      try {
+        const response = await fetch(
+          `http://localhost:5000/admin/setDefaultPaymentMethod/${paymentId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Cập nhật phương thức mặc định thất bại");
+        }
+
+        // Refresh data after successful update
+        await fetchPaymentMethods();
+        console.log(`✅ Payment method ${paymentId} set as default`);
+      } catch (err) {
+        console.error("❌ Error setting default payment:", err);
+        alert("Có lỗi xảy ra khi đặt phương thức mặc định");
+      }
     }
   };
 
-  const handleDeletePayment = (paymentId) => {
+  const handleDeletePayment = async (paymentId) => {
     if (
       window.confirm(
         "Bạn có chắc chắn muốn xóa phương thức thanh toán này? Hành động này không thể hoàn tác."
       )
     ) {
-      console.log("Deleting payment:", paymentId);
+      try {
+        const response = await fetch(
+          `http://localhost:5000/admin/deletePaymentMethod/${paymentId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Xóa phương thức thanh toán thất bại");
+        }
+
+        // Refresh data after successful deletion
+        await fetchPaymentMethods();
+        console.log(`✅ Payment method ${paymentId} deleted`);
+      } catch (err) {
+        console.error("❌ Error deleting payment method:", err);
+        alert("Có lỗi xảy ra khi xóa phương thức thanh toán");
+      }
     }
   };
 
-  const totalTransactions = mockPaymentMethods.reduce(
-    (sum, p) => sum + p.totalTransactions,
-    0
-  );
-  const totalAmount = mockPaymentMethods.reduce(
-    (sum, p) => sum + p.totalAmount,
-    0
-  );
-  const averageSuccessRate =
-    mockPaymentMethods.reduce((sum, p) => sum + p.successRate, 0) /
-    mockPaymentMethods.length;
+  const handleSavePayment = async (paymentData) => {
+    try {
+      const url = selectedPayment
+        ? `http://localhost:5000/admin/updatePaymentMethod/${selectedPayment._id}`
+        : "http://localhost:5000/admin/addPaymentMethod";
+
+      const method = selectedPayment ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Lưu phương thức thanh toán thất bại");
+      }
+
+      // Refresh data after successful save
+      await fetchPaymentMethods();
+      setShowPaymentModal(false);
+      setSelectedPayment(null);
+      console.log(
+        `✅ Payment method ${
+          selectedPayment ? "updated" : "created"
+        } successfully`
+      );
+    } catch (err) {
+      console.error("❌ Error saving payment method:", err);
+      alert("Có lỗi xảy ra khi lưu phương thức thanh toán");
+    }
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout
+        currentPage="payments"
+        pageTitle="Quản lý phương thức thanh toán"
+      >
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Đang tải dữ liệu...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout
+        currentPage="payments"
+        pageTitle="Quản lý phương thức thanh toán"
+      >
+        <div className="error-container">
+          <div className="error-message">
+            <i className="ti ti-alert-circle"></i>
+            <p>{error}</p>
+            <button className="btn btn-primary" onClick={fetchPaymentMethods}>
+              Thử lại
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout
@@ -287,10 +282,10 @@ function PaymentManagement() {
             <i className="ti ti-credit-card stat-icon"></i>
           </div>
           <div className="stat-content">
-            <div className="stat-number">{mockPaymentMethods.length}</div>
+            <div className="stat-number">{paymentMethods.length}</div>
             <div className="stat-change positive">
-              {mockPaymentMethods.filter((p) => p.status === "active").length}{" "}
-              đang hoạt động
+              {paymentMethods.filter((p) => p.Status === "Active").length} đang
+              hoạt động
             </div>
           </div>
         </div>
@@ -301,10 +296,7 @@ function PaymentManagement() {
             <i className="ti ti-receipt stat-icon"></i>
           </div>
           <div className="stat-content">
-            <div className="stat-number">
-              {totalTransactions.toLocaleString()}
-            </div>
-            <div className="stat-change positive">+12% so với tháng trước</div>
+            <div className="stat-number">{orders.totalTransactions}</div>
           </div>
         </div>
 
@@ -314,19 +306,9 @@ function PaymentManagement() {
             <i className="ti ti-currency-dollar stat-icon"></i>
           </div>
           <div className="stat-content">
-            <div className="stat-number">{formatCurrency(totalAmount)}</div>
-            <div className="stat-change positive">+18% so với tháng trước</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <span className="stat-title">Tỷ lệ thành công</span>
-            <i className="ti ti-check stat-icon"></i>
-          </div>
-          <div className="stat-content">
-            <div className="stat-number">{averageSuccessRate.toFixed(1)}%</div>
-            <div className="stat-change positive">Trung bình tất cả</div>
+            <div className="stat-number">
+              {formatCurrency(orders.totalAmount)}
+            </div>
           </div>
         </div>
       </div>
@@ -377,11 +359,11 @@ function PaymentManagement() {
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
             >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Tạm dừng</option>
-              <option value="maintenance">Bảo trì</option>
-              <option value="disabled">Vô hiệu hóa</option>
+              <option value="All">Tất cả trạng thái</option>
+              <option value="Active">Hoạt động</option>
+              <option value="Inactive">Tạm dừng</option>
+              <option value="Maintenance">Bảo trì</option>
+              <option value="Disabled">Vô hiệu hóa</option>
             </select>
           </div>
         </div>
@@ -393,129 +375,84 @@ function PaymentManagement() {
                 <th>Phương thức</th>
                 <th>Loại</th>
                 <th>Trạng thái</th>
-                <th>Phí (%)</th>
-                <th>Giới hạn</th>
-                <th>Giao dịch</th>
-                <th>Tỷ lệ thành công</th>
+
                 <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPayments.map((payment) => (
-                <tr key={payment.id}>
-                  <td>
-                    <div className="payment-info">
-                      <img
-                        src={payment.icon || "/placeholder.svg"}
-                        alt={payment.name}
-                        className="payment-icon"
-                      />
-                      <div className="payment-details">
-                        <div className="payment-name">
-                          {payment.name}
-                          {payment.isDefault && (
-                            <span className="default-badge">Mặc định</span>
-                          )}
-                        </div>
-                        <div className="payment-provider">
-                          {payment.provider}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{getTypeBadge(payment.type)}</td>
-                  <td>{getStatusBadge(payment.status)}</td>
-                  <td>
-                    <span className="fee-amount">{payment.fee}%</span>
-                  </td>
-                  <td>
-                    <div className="limit-info">
-                      <div className="min-amount">
-                        Min: {formatCurrency(payment.minAmount)}
-                      </div>
-                      <div className="max-amount">
-                        Max: {formatCurrency(payment.maxAmount)}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="transaction-info">
-                      <div className="transaction-count">
-                        {payment.totalTransactions.toLocaleString()}
-                      </div>
-                      <div className="transaction-amount">
-                        {formatCurrency(payment.totalAmount)}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="success-rate">
-                      <span
-                        className={`rate-value ${
-                          payment.successRate >= 95
-                            ? "high"
-                            : payment.successRate >= 90
-                            ? "medium"
-                            : "low"
-                        }`}
-                      >
-                        {payment.successRate}%
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        className="btn-action btn-view"
-                        onClick={() => handleViewPayment(payment)}
-                        title="Xem chi tiết"
-                      >
-                        <i className="ti ti-eye"></i>
-                      </button>
-                      <button
-                        className="btn-action btn-edit"
-                        onClick={() => handleEditPayment(payment)}
-                        title="Chỉnh sửa"
-                      >
-                        <i className="ti ti-edit"></i>
-                      </button>
-                      <button
-                        className={`btn-action ${
-                          payment.status === "active" ? "btn-pause" : "btn-play"
-                        }`}
-                        onClick={() =>
-                          handleToggleStatus(payment.id, payment.status)
-                        }
-                        title={
-                          payment.status === "active" ? "Tạm dừng" : "Kích hoạt"
-                        }
-                      >
-                        <i
-                          className={`ti ${
-                            payment.status === "active" ? "ti-pause" : "ti-play"
-                          }`}
-                        ></i>
-                      </button>
-                      {!payment.isDefault && (
-                        <button
-                          className="btn-action btn-star"
-                          onClick={() => handleSetDefault(payment.id)}
-                          title="Đặt làm mặc định"
-                        >
-                          <i className="ti ti-star"></i>
-                        </button>
-                      )}
-                      <button
-                        className="btn-action btn-delete"
-                        onClick={() => handleDeletePayment(payment.id)}
-                        title="Xóa"
-                      >
-                        <i className="ti ti-trash"></i>
-                      </button>
+              {filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-8">
+                    <div className="empty-state">
+                      <i className="ti ti-credit-card-off"></i>
+                      <p>Không tìm thấy phương thức thanh toán nào</p>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredPayments.map((payment) => (
+                  <tr key={payment.id || payment._id}>
+                    <td>
+                      <div className="payment-info">
+                        <div className="payment-details">
+                          <div className="payment-name">{payment.Name}</div>
+                          <div className="payment-provider">
+                            {payment.Provider}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {getTypeBadge(payment.Type)}{" "}
+                      {payment.Default && (
+                        <span className="default-badge">Mặc định</span>
+                      )}
+                    </td>
+
+                    <td>{getStatusBadge(payment.Status)}</td>
+
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="btn-action btn-view"
+                          onClick={() => handleViewPayment(payment)}
+                          title="Xem chi tiết"
+                        >
+                          <i className="ti ti-eye"></i>
+                        </button>
+                        <button
+                          className="btn-action btn-edit"
+                          onClick={() => handleEditPayment(payment)}
+                          title="Chỉnh sửa"
+                        >
+                          <i className="ti ti-edit"></i>
+                        </button>
+
+                        {!payment.isDefault && (
+                          <button
+                            className="btn-action btn-star"
+                            onClick={() =>
+                              handleSetDefault(payment.id || payment._id)
+                            }
+                            title="Đặt làm mặc định"
+                          >
+                            <i className="ti ti-star"></i>
+                          </button>
+                        )}
+                        <button
+                          className="btn-action btn-delete"
+                          onClick={() =>
+                            handleDeletePayment(payment.id || payment._id)
+                          }
+                          title="Xóa"
+                        >
+                          <i className="ti ti-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -542,21 +479,40 @@ function PaymentManagement() {
               </button>
             </div>
             <div className="modal-body">
-              <form>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target);
+                  const paymentData = {
+                    name: formData.get("name"),
+                    type: formData.get("type"),
+                    provider: formData.get("provider"),
+
+                    status: formData.get("status"),
+                    default: formData.get("isDefault") === "on",
+                  };
+                  console.log(formData);
+                  handleSavePayment(paymentData);
+                }}
+              >
                 <div className="form-row">
                   <div className="form-group">
                     <label>Tên phương thức</label>
                     <input
                       type="text"
+                      name="name"
                       className="form-control"
-                      defaultValue={selectedPayment?.name || ""}
+                      defaultValue={selectedPayment?.Name || ""}
+                      required
                     />
                   </div>
                   <div className="form-group">
                     <label>Loại</label>
                     <select
+                      name="type"
                       className="form-control"
-                      defaultValue={selectedPayment?.type || ""}
+                      defaultValue={selectedPayment?.Type || ""}
+                      required
                     >
                       <option value="">Chọn loại</option>
                       <option value="e_wallet">Ví điện tử</option>
@@ -572,63 +528,34 @@ function PaymentManagement() {
                     <label>Nhà cung cấp</label>
                     <input
                       type="text"
+                      name="provider"
                       className="form-control"
-                      defaultValue={selectedPayment?.provider || ""}
+                      defaultValue={selectedPayment?.Provider || ""}
+                      required
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Phí giao dịch (%)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      className="form-control"
-                      defaultValue={selectedPayment?.fee || ""}
-                    />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Mô tả</label>
-                  <textarea
-                    className="form-control"
-                    rows="3"
-                    defaultValue={selectedPayment?.description || ""}
-                  ></textarea>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Số tiền tối thiểu</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      defaultValue={selectedPayment?.minAmount || ""}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Số tiền tối đa</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      defaultValue={selectedPayment?.maxAmount || ""}
-                    />
-                  </div>
-                </div>
-                <div className="form-row">
+
                   <div className="form-group">
                     <label>Trạng thái</label>
                     <select
+                      name="status"
                       className="form-control"
-                      defaultValue={selectedPayment?.status || "active"}
+                      defaultValue={selectedPayment?.Status || "active"}
                     >
-                      <option value="active">Hoạt động</option>
-                      <option value="inactive">Tạm dừng</option>
-                      <option value="maintenance">Bảo trì</option>
-                      <option value="disabled">Vô hiệu hóa</option>
+                      <option value="Active">Hoạt động</option>
+                      <option value="Inactive">Tạm dừng</option>
+                      <option value="Maintenance">Bảo trì</option>
+                      <option value="Disabled">Vô hiệu hóa</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="form-row">
                   <div className="form-group">
                     <label>
                       <input
                         type="checkbox"
+                        name="isDefault"
                         defaultChecked={selectedPayment?.isDefault || false}
                         style={{ marginRight: "0.5rem" }}
                       />
@@ -636,18 +563,19 @@ function PaymentManagement() {
                     </label>
                   </div>
                 </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowPaymentModal(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {selectedPayment ? "Cập nhật" : "Thêm mới"}
+                  </button>
+                </div>
               </form>
-            </div>
-            <div className="modal-footer">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowPaymentModal(false)}
-              >
-                Hủy
-              </button>
-              <button className="btn btn-primary">
-                {selectedPayment ? "Cập nhật" : "Thêm mới"}
-              </button>
             </div>
           </div>
         </div>
@@ -674,25 +602,20 @@ function PaymentManagement() {
             <div className="modal-body">
               <div className="payment-details-content">
                 <div className="payment-header">
-                  <img
-                    src={selectedPayment.icon || "/placeholder.svg"}
-                    alt={selectedPayment.name}
-                    className="payment-icon-large"
-                  />
                   <div className="payment-info-large">
                     <h4>
-                      {selectedPayment.name}
-                      {selectedPayment.isDefault && (
+                      {selectedPayment.Name}
+                      {selectedPayment.Default && (
                         <span className="default-badge">Mặc định</span>
                       )}
                     </h4>
-                    <p>{selectedPayment.provider}</p>
+                    <p>{selectedPayment.Provider}</p>
                     <div className="payment-type-large">
-                      {getTypeBadge(selectedPayment.type)}
+                      {getTypeBadge(selectedPayment.Type)}
                     </div>
                   </div>
                   <div className="payment-status-large">
-                    {getStatusBadge(selectedPayment.status)}
+                    {getStatusBadge(selectedPayment.Status)}
                   </div>
                 </div>
 
@@ -700,75 +623,67 @@ function PaymentManagement() {
                   <div className="stat-item">
                     <i className="ti ti-receipt"></i>
                     <div>
-                      <span className="stat-value">
-                        {selectedPayment.totalTransactions.toLocaleString()}
-                      </span>
                       <span className="stat-label">Giao dịch</span>
+                      <span className="stat-value">
+                        {(
+                          selectedPayment.totalTransactions || 0
+                        ).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                   <div className="stat-item">
                     <i className="ti ti-currency-dollar"></i>
                     <div>
-                      <span className="stat-value">
-                        {formatCurrency(selectedPayment.totalAmount)}
-                      </span>
                       <span className="stat-label">Tổng giá trị</span>
-                    </div>
-                  </div>
-                  <div className="stat-item">
-                    <i className="ti ti-percentage"></i>
-                    <div>
                       <span className="stat-value">
-                        {selectedPayment.successRate}%
+                        {formatCurrency(selectedPayment.totalAmount || 0)}
                       </span>
-                      <span className="stat-label">Tỷ lệ thành công</span>
-                    </div>
-                  </div>
-                  <div className="stat-item">
-                    <i className="ti ti-coins"></i>
-                    <div>
-                      <span className="stat-value">{selectedPayment.fee}%</span>
-                      <span className="stat-label">Phí giao dịch</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="payment-config">
                   <h5>Thông tin cấu hình</h5>
+
                   <div className="config-item">
-                    <i className="ti ti-info-circle"></i>
-                    <span>{selectedPayment.description}</span>
-                  </div>
-                  <div className="config-item">
-                    <i className="ti ti-currency-dollar"></i>
+                    <i className="ti ti-calendar"></i>
                     <span>
-                      Giới hạn: {formatCurrency(selectedPayment.minAmount)} -{" "}
-                      {formatCurrency(selectedPayment.maxAmount)}
+                      Create At:{" "}
+                      {selectedPayment.createdAt
+                        ? new Date(
+                            selectedPayment.createdAt
+                          ).toLocaleDateString("vi-VN")
+                        : "No Information..."}
                     </span>
                   </div>
                   <div className="config-item">
-                    <i className="ti ti-calendar"></i>
-                    <span>Tạo: {selectedPayment.createdDate}</span>
-                  </div>
-                  <div className="config-item">
                     <i className="ti ti-clock"></i>
-                    <span>Sử dụng cuối: {selectedPayment.lastUsed}</span>
+                    <span>
+                      Last Update:{" "}
+                      {selectedPayment.updatedAt
+                        ? new Date(
+                            selectedPayment.updatedAt
+                          ).toLocaleDateString("vi-VN")
+                        : "No update yet..."}
+                    </span>
                   </div>
                 </div>
 
-                <div className="payment-technical">
-                  <h5>Thông tin kỹ thuật</h5>
-                  <div className="technical-info">
-                    {Object.entries(selectedPayment.config).map(
-                      ([key, value]) => (
-                        <div key={key} className="tech-item">
-                          <span className="tech-key">{key}:</span>
-                          <span className="tech-value">{value}</span>
-                        </div>
-                      )
-                    )}
+                {selectedPayment.config && (
+                  <div className="payment-technical">
+                    <h5>Thông tin kỹ thuật</h5>
+                    <div className="technical-info">
+                      {Object.entries(selectedPayment.config).map(
+                        ([key, value]) => (
+                          <div key={key} className="tech-item">
+                            <span className="tech-key">{key}:</span>
+                            <span className="tech-value">{value}</span>
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

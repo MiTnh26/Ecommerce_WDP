@@ -1,11 +1,9 @@
-const User = require("../../models/Users");
+const { User, Payment } = require("../../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const JWT_SECRET = process.env.SECRET_KEY; // nên để trong .env
 const { OAuth2Client } = require("google-auth-library");
-
-
 
 const nodemailer = require("nodemailer");
 // const  {Order,OrderItem}  = require("../../models/index");
@@ -14,13 +12,20 @@ const OrderItem = require("../../models/OrderItems");
 
 const client = new OAuth2Client(process.env.O2Auth_Key);
 
-
 const getUsers = async (req, res) => {
   try {
     const users = await User.find();
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch users", error });
+  }
+};
+const getPaymentForCheckout = async (req, res) => {
+  try {
+    const paymentMethod = await Payment.find();
+    res.status(200).json(paymentMethod);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch payment method", error });
   }
 };
 const login = async (req, res) => {
@@ -132,15 +137,13 @@ const googleLogin = async (req, res) => {
   }
 };
 
-
-
-
 const changePassword = async (req, res) => {
   const { newPassword } = req.body;
   //console.log("hi", newPassword);
 
   try {
-    if (!req.session.otp) return res.status(400).json({ message: "OTP not found" });
+    if (!req.session.otp)
+      return res.status(400).json({ message: "OTP not found" });
     const user = await User.findOne({ Email: req.session.otp.email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -155,7 +158,7 @@ const changePassword = async (req, res) => {
     console.log("Loi change password");
     res.status(500).json({ message: "Failed to change password" });
   }
-}
+};
 const getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -169,7 +172,11 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const updateData = req.body;
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
     res.json(updatedUser);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -201,7 +208,9 @@ const addAddress = async (req, res) => {
     user.ShippingAddress.push(newAddress);
     await user.save();
 
-    res.status(200).json({ message: "Address added successfully", address: newAddress });
+    res
+      .status(200)
+      .json({ message: "Address added successfully", address: newAddress });
   } catch (error) {
     res.status(500).json({ message: "Failed to add address", error });
   }
@@ -229,14 +238,12 @@ const updateAddress = async (req, res) => {
     addr.receiverName = receiverName ?? addr.receiverName;
     addr.status = status ?? addr.status;
 
-
     await user.save();
 
     res.status(200).json({
       message: "Address added successfully",
-      shippingAddresses: user.ShippingAddress
+      shippingAddresses: user.ShippingAddress,
     });
-
   } catch (error) {
     res.status(500).json({ message: "Failed to update address", error });
   }
@@ -319,7 +326,6 @@ const getOrderByUserId = async (req, res) => {
       })
       .populate({
         path: "ShopId",
-       
       })
       .sort({ createdAt: -1 })
       .lean();
@@ -327,7 +333,9 @@ const getOrderByUserId = async (req, res) => {
     res.status(200).json(orders);
   } catch (error) {
     console.error("Error when getting orders by user:", error);
-    res.status(500).json({ message: "Failed to get orders", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to get orders", error: error.message });
   }
 };
 
@@ -343,7 +351,7 @@ const getOrderDetails = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate({
         path: "Items", // ref trong Order schema
-        select: "-__v -createdAt -updatedAt"
+        select: "-__v -createdAt -updatedAt",
       })
       .lean();
 
@@ -354,7 +362,9 @@ const getOrderDetails = async (req, res) => {
     res.status(200).json(order);
   } catch (error) {
     console.error("Error fetching order details:", error);
-    res.status(500).json({ message: "Error fetching order details", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching order details", error: error.message });
   }
 };
 
@@ -384,17 +394,20 @@ const setDefaultAddress = async (req, res) => {
   }
 };
 
-
-
-
-
-module.exports = {setDefaultAddress ,
-  getOrderDetails, getOrderByUserId,
-  addAddress, updateAddress,
-  getAddressById, deleteAddress,
-  getUsers, login, register,
-  googleLogin, changePassword,
-  getUserById, updateUser
+module.exports = {
+  setDefaultAddress,
+  getOrderDetails,
+  getOrderByUserId,
+  addAddress,
+  updateAddress,
+  getAddressById,
+  deleteAddress,
+  getUsers,
+  login,
+  register,
+  googleLogin,
+  changePassword,
+  getUserById,
+  updateUser,
+  getPaymentForCheckout,
 };
-
-
