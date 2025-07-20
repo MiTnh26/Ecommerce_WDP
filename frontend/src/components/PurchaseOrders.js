@@ -373,7 +373,7 @@ const PurchaseOrders = () => {
                 </div>
                 <div>
                   <span>Payment: </span>
-                  <span style={{ color: blueText }}>{order.PaymentId || "N/A"}</span>
+                  <span style={{ color: blueText }}>{order.PaymentId?.PaymentMethod || "unknow"}</span>
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>

@@ -154,7 +154,8 @@ const OrderDetail = () => {
               <b>Địa chỉ giao hàng:</b> {order.ShippingAddress}
             </div>
             <div>
-              <b>Phương thức thanh toán:</b> {order.PaymentId || "N/A"}
+             
+              <b>Phương thức thanh toán:</b> {order.PaymentId?.PaymentMethod || "unknow"}
             </div>
           </div>
         </div>

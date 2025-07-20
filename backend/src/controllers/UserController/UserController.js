@@ -367,6 +367,10 @@ const getOrderByUserId = async (req, res) => {
       .populate({
         path: "ShopId"
       })
+      .populate({
+        path: "PaymentId",
+        select: "PaymentMethod" 
+      })
       .sort({ createdAt: -1 })
       .lean();
 
