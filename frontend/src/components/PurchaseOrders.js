@@ -400,7 +400,7 @@ const PurchaseOrders = () => {
                   >
                     {order.Status === "Cancelled" ? "Cancellation details" : "View details"}
                   </Button>
-                  {["Completed", "Cancelled"].includes(order.Status)  && (
+                  {["Delivered", "Cancelled"].includes(order.Status)  && (
                     <Button
                       size="sm"
                       style={{
