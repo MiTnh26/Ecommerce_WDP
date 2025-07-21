@@ -7,8 +7,10 @@ const multer = require("multer");
 const { storage } = require("../config/cloudinary"); 
 const upload = multer({ storage });
 
-const { sendEmailOtp, verifyOtp } = require("../service/sendEmailOtp");
-const verifyOtpMiddleware = require("../middleware/verifyOtpMiddleware");
+
+
+
+
 router.get("/user", UserController.getUsers);
 router.post("/login", UserController.login);
 router.post("/register", UserController.register);

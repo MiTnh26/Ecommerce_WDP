@@ -493,5 +493,5 @@ module.exports = {
   getAddressById, deleteAddress,
   getUsers, login, register,
   googleLogin, changePassword,
-  getUserById, updateUser
+  getUserById, updateUser,getPaymentForCheckout
 };
