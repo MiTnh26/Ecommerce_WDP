@@ -79,9 +79,37 @@ function ShopManagement() {
     setShowShopDetails(true);
   };
 
-  const handleApproveShop = (shopId) => {
-    if (window.confirm("Bạn có chắc chắn muốn duyệt gian hàng này?")) {
-      console.log("Approving shop:", shopId);
+  const handleApproveShop = async (shopId) => {
+    const confirmAction = window.confirm(
+      "Are You Sure To Update This Shop Status ?"
+    );
+    if (confirmAction) {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/admin/acceptShop/${shopId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Cập nhật trạng thái thất bại");
+        }
+
+        const result = await response.json();
+        console.log("✅ Cập nhật thành công:", result);
+
+        // Làm mới danh sách shop
+        fetch(`http://localhost:5000/admin/getShop`)
+          .then((res) => res.json())
+          .then((data) => setShopList(data));
+      } catch (error) {
+        console.error("❌ Lỗi cập nhật trạng thái shop:", error);
+        alert("Có lỗi xảy ra khi cập nhật trạng thái shop.");
+      }
     }
   };
 

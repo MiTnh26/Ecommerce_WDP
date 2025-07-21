@@ -4,7 +4,6 @@ import {
   ShopManagement,
   PaymentManagement,
   Analytics,
-  Categories,
 } from "../pages/admin/AdminIndex";
 
 const AdminRoutes = [
@@ -30,10 +29,6 @@ const AdminRoutes = [
       {
         path: "analytic",
         element: <Analytics />,
-      },
-      {
-        path: "categories",
-        element: <Categories />,
       },
     ],
   },
