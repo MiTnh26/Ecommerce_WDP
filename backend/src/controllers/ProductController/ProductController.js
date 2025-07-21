@@ -1,4 +1,5 @@
 const Product = require("../../models/Products");
+const Category = require("../../models/Categories");
 const { Readable } = require("stream");
 
 /**
@@ -23,8 +24,12 @@ exports.getAllProducts = async (req, res) => {
  */
 exports.saveProduct = async (req, res) => {
   try {
-    // If multipart, express.json won't parse; use multer in route
-    let {
+    // ─── DEBUG ───
+    // console.log(">>> req.body:", req.body);
+    // console.log(">>> req.files:", req.files);
+
+    // ─── 1) Pull out core fields ───
+    const {
       id,
       CategoryId,
       ShopId,
@@ -33,37 +38,90 @@ exports.saveProduct = async (req, res) => {
       Status = "Active",
     } = req.body;
 
-    // Handle ProductImage file if present
-    let imageUrl = "";
-    if (req.file) {
-      // convert to Base64 Data URL
-      const mime = req.file.mimetype;
-      const b64  = req.file.buffer.toString("base64");
-      imageUrl    = `data:${mime};base64,${b64}`;
+    // If you still depend on session for ShopId, you can fall back here:
+    // const finalShopId = ShopId || req.session?.shopId;
+    if (!ShopId) {
+      return res.status(400).json({ message: "ShopId is required" });
+    }
+
+    // ─── 2) Handle the main product image ───
+    let productImageUrl = "";
+    const mainFiles = req.files?.ProductImage || [];
+    if (mainFiles.length > 0) {
+      const file = mainFiles[0];
+      const b64 = file.buffer.toString("base64");
+      productImageUrl = `data:${file.mimetype};base64,${b64}`;
+    }
+
+    // ─── 3) Parse your variants ───
+    // multer with upload.fields gives you:
+    //   req.files.VariantImage = [File, File, ...]
+    // and text fields like ProductVariant[0][ProductVariantName] end up
+    // in req.body.ProductVariant as an array of objects.
+    let rawVariants = req.body.ProductVariant || [];
+    if (!Array.isArray(rawVariants)) {
+      rawVariants = [rawVariants];
+    }
+    const variantFiles = req.files?.VariantImage || [];
+
+    const variantDocs = rawVariants.map((v, idx) => {
+      // v = { ProductVariantName, Price, StockQuantity, Image (the URL) }
+      let imageUrl = v.Image || "";
+      const file = variantFiles[idx];
+      if (file) {
+        const b64 = file.buffer.toString("base64");
+        imageUrl = `data:${file.mimetype};base64,${b64}`;
+      }
+      return {
+        ProductVariantName: v.ProductVariantName,
+        Price: Number(v.Price) || 0,
+        StockQuantity: Number(v.StockQuantity) || 0,
+        Status: v.Status || "Active",
+        Image: imageUrl,
+      };
+    });
+
+    // On create, require ≥1 variant
+    if (!id && variantDocs.length < 1) {
+      return res
+        .status(400)
+        .json({ message: "You must supply at least one variant." });
     }
 
     let product;
     if (id) {
-      // update existing
-      const updates = { CategoryId, ShopId, ProductName, Description, Status };
-      if (imageUrl) updates.ProductImage = imageUrl;
+      // ─── UPDATE ───
+      const updates = {
+        CategoryId,
+        ShopId,
+        ProductName,
+        Description,
+        Status,
+      };
+      if (productImageUrl) updates.ProductImage = productImageUrl;
+      if (variantDocs.length) updates.ProductVariant = variantDocs;
+
       product = await Product.findByIdAndUpdate(id, updates, { new: true });
     } else {
-      // create new
+      // ─── CREATE ───
       product = new Product({
         CategoryId,
         ShopId,
         ProductName,
         Description,
         Status,
-        ProductImage: imageUrl,
+        ProductImage: productImageUrl,
+        ProductVariant: variantDocs,
       });
       await product.save();
     }
-    res.json(product);
+
+    return res.json(product);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error saving product" });
+    console.error("Error in saveProduct:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error saving product", error: err.message });
   }
 };
 
@@ -84,16 +142,16 @@ exports.addVariant = async (req, res) => {
     let imageUrl = req.body.Image || "";
     if (req.file) {
       const mime = req.file.mimetype;
-      const b64  = req.file.buffer.toString("base64");
-      imageUrl    = `data:${mime};base64,${b64}`;
+      const b64 = req.file.buffer.toString("base64");
+      imageUrl = `data:${mime};base64,${b64}`;
     }
 
     const product = await Product.findById(id);
     product.ProductVariant.push({
       ProductVariantName,
-      Image:          imageUrl,
-      Price:          Number(Price),
-      StockQuantity:  Number(StockQuantity),
+      Image: imageUrl,
+      Price: Number(Price),
+      StockQuantity: Number(StockQuantity),
       Status,
     });
     await product.save();
@@ -117,5 +175,30 @@ exports.toggleStatus = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error toggling status" });
+  }
+};
+
+// DELETE /product/:id
+exports.deleteProduct = async (req, res) => {
+  await Product.findByIdAndDelete(req.params.id);
+  res.sendStatus(204);
+};
+
+// DELETE /product/:prodId/variants/:variantId
+exports.removeVariant = async (req, res) => {
+  const { prodId, variantId } = req.params;
+  const product = await Product.findById(prodId);
+  product.ProductVariant.id(variantId).remove();
+  await product.save();
+  res.json(product);
+};
+
+exports.getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find();
+    res.json(categories);
+  } catch (err) {
+    console.error("Server error fetching categories:", err);
+    res.status(500).json({ message: "Server error fetching categories" });
   }
 };
