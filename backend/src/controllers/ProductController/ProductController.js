@@ -420,7 +420,7 @@ exports.filterProduct = async (req, res) => {
     }
 
     if (category) {
-      console.log("category", category);
+      //console.log("category", category);
       matchStage.CategoryId = new ObjectId(category);
     }
 

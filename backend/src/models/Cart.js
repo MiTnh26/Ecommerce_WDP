@@ -22,7 +22,7 @@ const productVariantSchema = new Schema({
     required: true,
     min: 1,
   },
-}, { _id: true }); // bật _id cho từng variant nếu bạn cần
+}); // bật _id cho từng variant nếu bạn cần
 
 // Schema cho từng Item trong giỏ
 const itemSchema = new Schema({

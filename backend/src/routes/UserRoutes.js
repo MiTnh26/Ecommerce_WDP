@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const UserController = require("../controllers/UserController/UserController");
+const CartController = require("../controllers/UserController/CartController");
 const { sendEmailOtp, verifyOtp } = require("../service/sendEmailOtp");
 const verifyOtpMiddleware = require("../middleware/verifyOtpMiddleware");
 router.get("/user", UserController.getUsers);
@@ -39,4 +40,9 @@ router.put(
   verifyOtpMiddleware,
   UserController.changePassword
 );
+
+router.post("/add-to-cart", CartController.addToCart);
+router.post("/change-quantity", CartController.changeQuantity);
+router.delete("/remove-p-variant-cart", CartController.deleteProductVariantInCart);
+router.post("/get-cart", CartController.getCartByUserId);
 module.exports = router;

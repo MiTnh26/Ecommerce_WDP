@@ -13,7 +13,6 @@ const Card = ({item}) => {
     // TODO: xử lý thêm vào cart ở đây
 
     setAnimate(true);
-
     // Tự động ẩn animation sau 1 giây
     setTimeout(() => {
       setAnimate(false);
@@ -30,6 +29,9 @@ const Card = ({item}) => {
         )
       );
     }
+  }
+  const handleBuyNow = () => {
+    // lưu data vào localstorage
   }
 
   return (
