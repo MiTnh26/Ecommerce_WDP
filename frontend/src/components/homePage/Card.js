@@ -3,7 +3,7 @@ import defaultImage from '../../assets/images/img_default.jpg';
 import "../../style/card.css"
 import { useNavigate } from 'react-router-dom';
 const Card = ({item}) => {
-  console.log("cardInfo", item);
+  // console.log("cardInfo", item);
   const [animate, setAnimate] = useState(false);
   const [quantity, setQuantity] = useState(0);
   // navigate
@@ -41,7 +41,8 @@ const Card = ({item}) => {
         <div className="card-image-container bg-light"
           onClick={() => {
             navigate(`/Ecommerce/product-detail/${item._id}`);
-            window.location.reload();
+            // window.location.reload();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           style={{ aspectRatio: '1/1', position: 'relative' }}>
           <img

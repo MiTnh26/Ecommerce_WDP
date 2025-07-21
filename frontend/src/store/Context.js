@@ -35,7 +35,12 @@ export function AppProvider({ children }) {
         loadData();
     }, []);
 
+    useEffect(() => {
+        filterData()
+    }, [category]);
+
     const filterData = async () => {
+        console.log("filterData", "1", search, "2",category, "3",fromPrice, toPrice, "4",whereToBuyFilter);
         try {
             const res = await axios.post(
                 `${baseURL}/product/filter-product`,

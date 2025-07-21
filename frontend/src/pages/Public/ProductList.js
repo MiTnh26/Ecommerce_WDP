@@ -11,13 +11,16 @@ import { useContext } from "react";
 const ProductList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams] = useSearchParams();
-  const {whereToBuy, fromPrice, toPrice, whereToBuyFilter, setWhereToBuyFilter, setFromPrice, setToPrice, filterData, dataProductFilter} = useContext(AppContext);
+  const {whereToBuy, fromPrice, toPrice, whereToBuyFilter, setWhereToBuyFilter, setFromPrice, setToPrice, filterData, dataProductFilter, setCategory} = useContext(AppContext);
+  console.log("data", "1",whereToBuy,  "2", fromPrice, toPrice, "3", whereToBuyFilter, "4", dataProductFilter);
   // navigate
   const navigate = useNavigate();
-  // useEffect(()=> {
-  //   console.log("category", searchParams.get("category"));
-  //   setCategory(searchParams.get("category"));
-  // }, [])
+  useEffect(() => {
+  setCategory(searchParams.get("category") || "");
+  console.log("category", searchParams.get("category")|| "");
+  filterData();
+  // }
+  }, []);
   //handle change where to buy
   const handleWhereToBuyChange = (event) => {
     if(event.target.checked){

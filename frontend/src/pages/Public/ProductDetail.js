@@ -14,6 +14,8 @@ import {
 } from "../../api/ProductApi";
 import { useEffect } from "react";
 import { data, useParams } from "react-router-dom";
+
+import LazyLoad from 'react-lazyload';
 const visibleCount = 5;
 const imageWidth = 82;
 const imageGap = 10;
@@ -38,6 +40,7 @@ const ProductDetail = () => {
 
   // 3. Data fetching useEffect
   useEffect(() => {
+     window.scrollTo({ top: 0, behavior: 'smooth' });
     const loadData = async () => {
       const productDetail = await fetchProductDetail(product_id);
       const testdata = await fetchRelatedProducts(productDetail?.CategoryId?._id)
@@ -128,7 +131,7 @@ const ProductDetail = () => {
           Ecommerce
         </a>
         <i class="fa-solid fa-chevron-right fa-xs"></i>
-        <a className="navigate-item text-decoration-none" href={`/Ecommerce/search?name=&category=${dataProduct?.CategoryId}`}>
+        <a className="navigate-item text-decoration-none" href={`/Ecommerce/search?name=&category=${dataProduct?.CategoryId._id}`}>
           {dataProduct?.CategoryId?.CategoryName?.trim()
             ? dataProduct.CategoryId.CategoryName
             : ""}
@@ -148,6 +151,7 @@ const ProductDetail = () => {
             <div
               className={`${styles["product-image-main"]}  border border-1 d-flex justify-content-center align-items-center`}
             >
+              <LazyLoad>
               <img
                 src={dataProduct?.ProductVariant[currentIndex].Image}
                 alt="product main view"
@@ -155,9 +159,10 @@ const ProductDetail = () => {
                 loading="lazy"
                 onError={(e) => {
                   e.target.src =
-                    "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0";
+                  "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0";
                 }}
-              />
+                />
+                </LazyLoad>
             </div>
             {/* image thumbnail list  */}
             <div

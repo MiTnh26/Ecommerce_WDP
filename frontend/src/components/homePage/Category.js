@@ -104,7 +104,6 @@ export const CategoryItemDefault = ({ item }) => {
             }}
             onClick={() => {
                 navigate(`/Ecommerce/search?name=&category=${item._id}`);
-                window.location.reload();
             }}>
             <div className="fs-1 mb-2">{item.icon}</div>
             <h5 className="fw-semibold mt-2">{item.CategoryName}</h5>

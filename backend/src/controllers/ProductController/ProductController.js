@@ -410,8 +410,9 @@ exports.fetchProductsRelatedToCategory = async (req, res) => {
 };
 exports.filterProduct = async (req, res) => {
   try {
-    const { name, category, fromPrice, toPrice, whereToBuyFilter } = req.body;
-
+    let { name, category, fromPrice, toPrice, whereToBuyFilter } = req.body;
+    //category = "687904f506b1b9b68ea90144";
+    console.log("Filtering products with name:", name, "category:", category, "fromPrice:", fromPrice, "toPrice:", toPrice, "whereToBuyFilter:", whereToBuyFilter);
     const matchStage = {};
 
     if (name) {
@@ -419,7 +420,8 @@ exports.filterProduct = async (req, res) => {
     }
 
     if (category) {
-      matchStage.CategoryId = category;
+      console.log("category", category);
+      matchStage.CategoryId = new ObjectId(category);
     }
 
     if (fromPrice !== undefined || toPrice !== undefined) {
