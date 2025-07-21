@@ -1,11 +1,10 @@
 import ProfilePage from "../pages/ProfilePage";
-import Cart from "../pages/customer/Cart";
+import Cart from "../pages/Customer/Cart";
 import CheckoutPage from "../pages/user/checkout";
 import UserLayout from "../layouts/UserLayout";
 import OrderDetail from "../components/OrderDetail";  // layout vừa tạo
 import PurchaseOrders from "../components/PurchaseOrders";
 const UserRoutes = [
-
   {
     path: "/Ecommerce/user",
     element: <UserLayout />,
@@ -21,6 +20,11 @@ const UserRoutes = [
     path: "/Ecommerce/user/cart",
     element: <Cart />,
   },
+  {
+    path: "/Ecommerce/user/profile",
+    element: <ProfilePage />,
+  },
+  {
   {
     path: "/Ecommerce/user/profile",
     element: <ProfilePage />,
