@@ -5,6 +5,7 @@ import ViewOrderDetail from "../components/seller/ViewOrderDetail";
 import ViewOrderIndex from "../components/seller/ListOrderIndex";
 import ShopInformationIndex from "../components/seller/ShopInformationIndex";
 import OrderDetailIndex from "../components/seller/OrderDetailIndex";
+import CategoryList from "../components/seller/Category";
 
 const SellerRoutes = [
   {
@@ -13,14 +14,19 @@ const SellerRoutes = [
   },
   {
     path: "/Ecommerce/seller",
+    element: <HomeSeller />,
     children: [
       {
         path: "viewlistorder",
         element: <ViewOrderIndex />,
       },
+     {
+        path: "vieworderdetail/:orderId",
+        element: <ViewOrderDetail />,
+      },
       {
-        path: "vieworderdetail",
-        element: <OrderDetailIndex />,
+        path: "category",
+        element: <CategoryList />,
       },
       {
         path: "shopinformation",
