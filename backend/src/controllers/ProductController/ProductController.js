@@ -412,7 +412,7 @@ exports.filterProduct = async (req, res) => {
   try {
     let { name, category, fromPrice, toPrice, whereToBuyFilter } = req.body;
     //category = "687904f506b1b9b68ea90144";
-    console.log("Filtering products with name:", name, "category:", category, "fromPrice:", fromPrice, "toPrice:", toPrice, "whereToBuyFilter:", whereToBuyFilter);
+    //console.log("Filtering products with name:", name, "category:", category, "fromPrice:", fromPrice, "toPrice:", toPrice, "whereToBuyFilter:", whereToBuyFilter);
     const matchStage = {};
 
     if (name) {
@@ -478,7 +478,7 @@ exports.filterProduct = async (req, res) => {
     });
 
     const products = await Product.aggregate(pipeline);
-    console.log("Filtered products:", products);
+    //console.log("Filtered products:", products);
     res.json(products);
   } catch (err) {
     console.error(err);

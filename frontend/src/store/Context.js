@@ -15,7 +15,7 @@ export function AppProvider({ children }) {
     const [fromPrice, setFromPrice] = useState();
     const [toPrice, setToPrice] = useState();
     const [category, setCategory] = useState("");
-
+    const [checkOut, setCheckOut] = useState();
     const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
     //fetch data
@@ -73,7 +73,8 @@ export function AppProvider({ children }) {
             toPrice, setToPrice,
             whereToBuyFilter, setWhereToBuyFilter,
             category, setCategory,
-            filterData
+            filterData,
+            checkOut, setCheckOut
             }}>
             {children}
         </AppContext.Provider>

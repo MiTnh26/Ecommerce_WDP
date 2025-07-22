@@ -13,9 +13,10 @@ import {
   fetchProductDetail,
 } from "../../api/ProductApi";
 import { useEffect } from "react";
-import { data, useParams } from "react-router-dom";
+import { data, useNavigate, useParams } from "react-router-dom";
 
 import LazyLoad from 'react-lazyload';
+import axios from "axios";
 const visibleCount = 5;
 const imageWidth = 82;
 const imageGap = 10;
@@ -28,7 +29,7 @@ const ProductDetail = () => {
   const [currentPageFeedback, setCurrentPageFeedback] = useState(1); // current page for feedback section
   const [dataProduct, setDataProduct] = useState();
   const product_id = useParams().id;
-  const [quantity, setQuantity] = useState(0); // quantity of product
+  const [quantity, setQuantity] = useState(1); // quantity of product
 
   // 2. inView hook for product feedback section and product related section
   const { ref: reviewRef, inView: reviewInView } = useInView({
@@ -37,6 +38,9 @@ const ProductDetail = () => {
   const { ref: relatedRef, inView: relatedInView } = useInView({
     triggerOnce: true,
   });
+   // config
+  const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const navigate = useNavigate();
 
   // 3. Data fetching useEffect
   useEffect(() => {
@@ -108,6 +112,75 @@ const ProductDetail = () => {
       );
     }
   }
+
+  const handleAddToCart = () => {
+    console.log("quantity");
+    const addToCart = async () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user._id) {
+        navigate("/Ecommerce/login");
+      }
+      if (quantity === 0) {
+        alert("Please select quantity");
+        return;
+      }
+      const data = {
+        UserId: user._id,
+        Product_id: product_id,
+        ProductName: dataProduct.ProductName,
+        ProductImage: dataProduct.ProductImage,
+        ShopID: dataProduct.ShopId._id,
+        ProductVariant: [
+          {
+            _id: dataProduct.ProductVariant[currentIndex]._id,
+            Image: dataProduct.ProductVariant[currentIndex].Image,
+            Price: dataProduct.ProductVariant[currentIndex].Price,
+            ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
+            Quantity: quantity
+          }
+        ],
+      };
+      //       const data = { 
+      //         UserId: user._id,
+      //         Product_id: product_id,
+      //         ProductName: dataProduct.ProductName,
+      //         ProductImage: dataProduct.ProductImage,
+      //         ShopID: dataProduct.ShopId._id,
+      //         ProductVariant: [
+      //         {
+      //           _id: dataProduct.ProductVariant[currentIndex]._id,
+      //           Image: dataProduct.ProductVariant[currentIndex].Image,
+      //           Price: dataProduct.ProductVariant[currentIndex].Price,
+      //           ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
+      //           Quantity: quantity
+      //         }
+      // ],
+      //        };
+      console.log("data add to cart", data);
+      const res = await axios.post(`${URL}/customer/add-to-cart`, {
+        UserId: user._id,
+        Product_id: product_id,
+        ProductName: dataProduct.ProductName,
+        ProductImage: dataProduct.ProductImage,
+        ShopID: dataProduct.ShopId._id,
+        ProductVariant: [
+          {
+            _id: dataProduct.ProductVariant[currentIndex]._id,
+            Image: dataProduct.ProductVariant[currentIndex].Image,
+            Price: dataProduct.ProductVariant[currentIndex].Price,
+            ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
+            Quantity: quantity
+          }
+        ],
+      }, { withCredentials: true });
+      if (res.status === 200) {
+        alert("Add to cart successfully");
+      }
+    }
+    addToCart();
+  }
+  
+
 
   return (
     <>
@@ -315,14 +388,15 @@ const ProductDetail = () => {
             <div className="product-add-to-cart mt-4">
               <button
                 className={`${styles["btn-add-cart"]} border border-warning bg-white text-warning p-2 me-2`}
+                onClick={handleAddToCart}
               >
-                <i className="fa-solid fa-cart-shopping fs-sx me-1"></i>Thêm vào
-                giỏ hàng
+                <i className="fa-solid fa-cart-shopping fs-sx me-1"></i>ADD TO CART
               </button>
               <button
                 className={`${styles["btn-buy-now"]} border border-warning bg-warning text-white p-2`}
+                //onClick={handleAddToCart}
               >
-                Mua ngay
+                BUY NOW
               </button>
             </div>
           </section>

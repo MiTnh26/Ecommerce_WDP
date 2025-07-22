@@ -1,27 +1,57 @@
 import logo from "../../assets/images/logo_page.jpg";
-import image_default from "../../assets/images/img_default.jpg";
-import { Button, Form, Modal } from "react-bootstrap";
+import cartList from "../../style/product/cartList.css";
+import { Alert, Button, Form, Modal } from "react-bootstrap";
 import "../../style/CartDetail.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import axios from "axios";
+import { AppContext } from "../../store/Context";
+import { useContext } from "react";
 const color = [
-  { id: 1, name: "default", color: image_default },
-  { id: 2, name: "default1", color: logo },
-  { id: 3, name: "default2", color: image_default },
-  { id: 4, name: "default3", color: image_default },
 ];
 const size = [
-  { id: 1, name: "default", color: image_default },
-  { id: 2, name: "default1", color: logo },
-  { id: 3, name: "default2", color: image_default },
-  { id: 4, name: "default3", color: image_default },
-  { id: 5, name: "default4", color: image_default },
-  { id: 6, name: "default5", color: image_default },
-  { id: 7, name: "default6", color: image_default },
 ];
 const count = 5;
 
 const Cart = () => {
+  const [checkedItems, setCheckedItems] = useState([]); // chứa id của các variant được chọn
+  const [data, setData] = useState([]);
+  const [totalCart, setTotalCart] = useState(0);
+  const { checkOut, setCheckOut } = useContext(AppContext);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user._id) {
+          navigate("/Ecommerce/login");
+        }
+        const res = await axios.post("http://localhost:5000/customer/get-cart",
+          {
+            UserId: user._id
+          },
+          { withCredentials: true },
+        );
+        const data = res.data;
+        console.log("data", data);
+        setData(data);
+        // Tính tổng số item trong ProductVariant
+        const total = data.Items.reduce((sum, item) => {
+          if (Array.isArray(item.ProductVariant)) {
+            return sum + item.ProductVariant.length;
+          }
+          return sum;
+        }, 0);
+
+        setTotalCart(total);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchData();
+  }, [])
+
   const [showClassification, setShowClassification] = useState(false);
   const navigate = useNavigate();
 
@@ -32,8 +62,140 @@ const Cart = () => {
     setShowClassification(false);
   };
 
+  // handle delete
+  const handleDeleteProduct = async (Product_id, ProductVariant) => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      console.log("Data Test", Product_id, ProductVariant, user._id);
+      if (!Product_id || !ProductVariant) {
+        Alert("Delete fail by invalid data");
+      }
+      if (!user._id) {
+        navigate("/Ecommerce/login");
+      }
+      const res = await axios.delete("http://localhost:5000/customer/remove-p-variant-cart", {
+        data: {
+          UserId: user._id,
+          Product_id: Product_id,
+          ProductVariant: { _id: ProductVariant }
+        },
+        withCredentials: true,
+      });
+      if (res.status === 200) {
+        window.alert("Delete success");
+        // Tạo object mới hoàn toàn
+        const filteredItems = data.Items
+          .map((item) => ({
+            ...item,
+            ProductVariant: item.ProductVariant.filter(
+              (variant) => variant._id !== ProductVariant
+            ),
+          }))
+          .filter((item) => item.ProductVariant.length > 0);
+
+        setData({
+          ...data,
+          Items: filteredItems,
+        });
+        console.log({
+          ...data,
+          Items: filteredItems,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  // handle click check box
+const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Price }) => {
+  if (name === "all") {
+    const allVariants = data.Items.flatMap(item =>
+      item.ProductVariant.map(variant => ({
+        ShopId: item.ShopID._id,
+        Product_Id: item._id,
+        ProductVariant_id: variant._id,
+        Quantity: variant.Quantity,
+        Price: variant.Price
+      }))
+    );
+
+    const allSelected = allVariants.every(variant =>
+      checkedItems.some(checked => checked.ProductVariant_id === variant.ProductVariant_id)
+    );
+
+    setCheckedItems(allSelected ? [] : allVariants);
+  }
+
+  if (name === "shop") {
+    const shopItem = data.Items.find(item => item.ShopID._id === ShopId);
+    if (!shopItem) return;
+
+    const shopVariants = shopItem.ProductVariant.map(variant => ({
+      ShopId,
+      Product_Id: shopItem._id,
+      ProductVariant_id: variant._id,
+      Quantity: variant.Quantity,
+      Price: variant.Price
+    }));
+
+    const allSelected = shopVariants.every(variant =>
+      checkedItems.some(checked => checked.ProductVariant_id === variant.ProductVariant_id)
+    );
+
+    if (allSelected) {
+      // Bỏ hết các variant thuộc shop này
+      setCheckedItems(prev =>
+        prev.filter(item => item.ShopId !== ShopId)
+      );
+    } else {
+      // Thêm vào (loại bỏ duplicate)
+      setCheckedItems(prev => {
+        const existingIds = new Set(prev.map(i => i.ProductVariant_id));
+        const newItems = shopVariants.filter(v => !existingIds.has(v.ProductVariant_id));
+        return [...prev, ...newItems];
+      });
+    }
+  }
+
+  if (name === "productVariant") {
+    const exists = checkedItems.some(item => item.ProductVariant_id === ProductVariant_id);
+
+    if (exists) {
+      setCheckedItems(prev =>
+        prev.filter(item => item.ProductVariant_id !== ProductVariant_id)
+      );
+    } else {
+      setCheckedItems(prev => [
+        ...prev,
+        { ShopId, Product_Id, ProductVariant_id, Quantity, Price }
+      ]);
+    }
+  }
+};
+  const calculateTotalPriceChecked = () => {
+    const totalPrice = checkedItems.reduce(
+      (sum, item) => sum + (item.Quantity * item.Price),
+      0
+    );
+    return totalPrice;
+  }
+    
+  //handle checkout
+  const handlecheckOut = () => {
+    const dataCheckOut = {
+      UserId: JSON.parse(localStorage.getItem("user"))._id,
+      Items: checkedItems,
+      TotalPrice: calculateTotalPriceChecked()
+    }
+    console.log("dataCheckOut", dataCheckOut);
+    navigate("/Ecommerce/user/checkout")
+  }
+
+
+  console.log("checkedItems", checkedItems);
   return (
-    <div className="w-100 bg-light vh-100">
+    <div className="w-100 bg-light vh-100 overflow-auto">
       <header className="">
         <div className="header-top bg-warning">
           <div className="container d-flex justify-content-between py-1 align-items-center">
@@ -92,94 +254,124 @@ const Cart = () => {
           </div>
         </div>
       </header>
-      <main className="container-sm">
+      <main className="container-sm" style={{ paddingBottom: "80px" }}>
         <div className="cart-header d-flex align-items-center text-muted text-nowrap bg-white mt-2 py-3 px-1 rounder overflow-auto  rounded">
           <div className="mx-3">
-            <Form.Check type="checkbox" />
+            <Form.Check
+              type="checkbox"
+              onChange={() => handleCheck({ name: "all" })}
+              checked={
+                data.Items?.flatMap(item => item.ProductVariant).every(v =>
+                  checkedItems.some(c => c.ProductVariant_id === v._id)
+                )
+              }
+            />
+
           </div>
           <div className="flex-grow-1">
-            <p className="mb-0">Sản phẩm</p>
+            <p className="mb-0">Product</p>
           </div>
           <div className="flex-shrink-0 flex-basic-15 text-center">
-            <p className="mb-0">Đơn giá</p>
+            <p className="mb-0">Price</p>
           </div>
           <div className="flex-shrink-0 flex-basic-15 text-center">
-            <p className="mb-0">Số lượng</p>
+            <p className="mb-0">Quantity</p>
           </div>
           <div className="flex-shrink-0 flex-basic-15 text-center">
-            <p className="mb-0">Số tiền</p>
+            <p className="mb-0">Total Price</p>
           </div>
           <div className="flex-shrink-0 flex-basic-10 text-center">
-            <p className="mb-0">Thao tác</p>
+            <p className="mb-0">Action</p>
           </div>
         </div>
-        <div className="cart-body bg-white mt-2">
+        <div className="cart-body bg-white mt-2 overflow-auto">
+          {data.Items?.map((item, index) => (
+            <div className="cart-item rounded mb-2" key={item._id}>
+              <div className="chosse-all-in-shop d-flex py-2 px-1 position-relative">
+                <Form.Check
+                  type="checkbox"
+                  onChange={() => handleCheck({ name: "shop", ShopId: item.ShopID._id })}
+                  checked={
+                    item.ProductVariant.every(v =>
+                      checkedItems.some(c => c.ProductVariant_id === v._id)
+                    )
+                  }
+                />
 
-          <div className="cart-item rounded border-bottom mb-2">
-            <div className="d-flex align-items-center text-muted text-nowrap bg-white mt-2 py-3 px-1  overflow-auto ">
-              
-              <div className="cart-body bg-white mt-2">
-                <div className="cart-item rounded mb-2">
-                      <div className="chosse-all-in-shop d-flex py-2 px-1 position-relative">
-                          <div className="mx-3"><Form.Check type="checkbox" /></div>
-                          <div className="flex-grow-1"><p className="mb-0">Name Shop Lorem ipsum dolor sit</p></div>
-                          {/* Đường kẻ 90% nằm dưới */}
-                          <div
-                              className="position-absolute"
-                              style={{
-                                  width: '95%',
-                                  borderBottom: '1px solid #dee2e6',
-                                  bottom: 0,
-                                  left: '50%',
-                                  transform: 'translateX(-50%)',                           
-                              }}
-                          ></div>
-                      </div>
-                  <div className="d-flex align-items-center text-muted text-nowrap bg-white mt-2 py-3 px-1  overflow-auto ">
-                      <div className="mx-3"><Form.Check type="checkbox" /></div>
-                      <div className="flex-grow-1 d-flex gap-3">
-                          <img src={logo} alt="img product" width={"80px"} height={"80px"} />
-                          <p className="product-name text-wrap p-0 m-0">Sản phẩm: Lorem ipsum dolor sit amet consectetur adipisicing elit. Soluta voluptatibus Soll</p>
-                          <p className="classification text-muted p-0 m-0" onClick={() => handleOpenClassification(true)}>Color, size</p>
-                      </div>
-                      <div className="flex-shrink-0 flex-basic-15 text-center">
-                          <span className="original-price text-muted text-decoration-line-through">15000</span>
-                          <p className="discount-price">10000</p></div>
-                      <div className="flex-shrink-0 flex-basic-15 text-center">
-                          <div className="quantity-inputt d-flex justify-content-center">
-                              <button className="border bg-white p-1 px-2 ">-</button>
-                              <input type="number" className="border bg-white py-1 px-2 text-center border-start-0 border-end-0 no-spinner" style={{ width: '40px' }} />
-                              <button className="border bg-white p-1 px-2 text-muted fw-light">+</button>
-                          </div>
-                      </div>
-                      <div className="flex-shrink-0 flex-basic-15 text-center"><p className="total-price p-0 m-0 text-danger">10000</p></div>
-                      <div className="flex-shrink-0 flex-basic-10 text-center" ><button className="btn btn-outline-danger"><i className="fa-solid fa-trash"></i></button></div>
-                </div>
+
+                <div className="flex-grow-1"><p className="mb-0">Shop : {item.ShopID?.name}</p></div>
+                {/* Đường kẻ 90% nằm dưới */}
+                <div
+                  className="position-absolute"
+                  style={{
+                    width: '95%',
+                    borderBottom: '1px solid #dee2e6',
+                    bottom: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                  }}
+                ></div>
               </div>
+              {item?.ProductVariant?.map((variant, index) => (
+                <div className="d-flex align-items-center text-muted text-nowrap bg-white mt-2 py-3 px-1  overflow-auto " key={index}>
+                  <Form.Check
+                    type="checkbox"
+                    onChange={() =>
+                      handleCheck({
+                        name: "productVariant",
+                        ShopId: item.ShopID._id,
+                        Product_Id: item._id,
+                        ProductVariant_id: variant._id,
+                        Quantity: variant.Quantity,
+                        Price: variant.Price
+                      })
+                    }
+                    checked={checkedItems.some(v => v.ProductVariant_id === variant._id)}
+                  />
+
+
+                  <div className="flex-grow-1 d-flex gap-3">
+                    <img src={variant.Image} alt="img product" width={"80px"} height={"80px"} />
+                    <p className="product-name text-wrap p-0 m-0" style={{ flexBasis: '50%', flexShrink: 0 }}>{item.ProductName}</p>
+                    <p className="classification text-muted p-0 m-0 " style={{ flexBasis: '20%', flexShrink: 0 }} onClick={() => handleOpenClassification(true)}>{variant.ProductVariantName}</p>
+                  </div>
+                  <div className="flex-shrink-0 flex-basic-15 text-center">
+                    <p className="discount-price align-self-center p-0 m-0">{variant.Price.toLocaleString("vi-VN")}</p></div>
+                  <div className="flex-shrink-0 flex-basic-15 text-center">
+                    <div className="quantity-inputt d-flex justify-content-center">
+                      <button className="border bg-white p-1 px-2 ">-</button>
+                      <input type="number" className="border bg-white py-1 px-2 text-center border-start-0 border-end-0 input-no-spinner" style={{ width: '40px' }} value={variant.Quantity} />
+                      <button className="border bg-white p-1 px-2 text-muted fw-light">+</button>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 flex-basic-15 text-center"><p className="total-price p-0 m-0 text-danger">{(variant.Price * variant.Quantity).toLocaleString("vi-VN")}</p></div>
+                  <div className="flex-shrink-0 flex-basic-10 text-center" >
+                    <button className="btn btn-outline-danger" onClick={() => handleDeleteProduct(item._id, variant._id)}>
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-          </div>
+          ))}
+
         </div>
       </main>
-      <footer className="container-sm bg-white fixed-bottom shadow">
-        {/* <div className="d-flex gap-5 justify-content-end align-items-center py-3 border-bottom">
-                <p className="ez-voucher text-warning p-0 m-0"><i className="fa-solid fa-ticket "></i> EZ Voucher</p>
-                <p className="option-choose-voucher text-primary p-0 m-0">Chọn hoặc nhập mã</p>
-            </div> */}
+      <footer className="container-sm bg-white fixed-bottom shadow ">
         <div className="d-flex gap-5 justify-content-between align-items-center py-3">
           <div className="mx-3">
-            <Form.Check type="checkbox" label={`Chọn tất cả (${count})`} />
+            <Form.Check type="checkbox" label={`Chosse all (${totalCart})`} />
           </div>
           <div className="d-flex gap-3 align-items-center">
             <p className="total-price p-0 m-0">
-              Tổng cộng({count} Sản Phẩm):{" "}
-              <span className="text-danger">0</span>
+              Total Price:
+              <span className="text-danger">{ }</span>
             </p>
             <Button
               variant="outline-warning px-5 rounded-0"
-              onClick={() => navigate("/Ecommerce/user/checkout")}
+              onClick={() => handlecheckOut()}
             >
-              Mua hàng
+              BUY NOW
             </Button>
           </div>
         </div>
@@ -209,18 +401,6 @@ const Cart = () => {
                   width={26}
                   height="auto"
                 />
-                <span className="text-nowrap">{item.name}</span>
-              </button>
-            ))}
-          </div>
-          <p className="fw-bold p-0 m-0 mt-3">Size</p>
-          <div className="list-item-size d-flex gap-2 flex-wrap overflow-y-auto h-auto">
-            {size.map((item) => (
-              <button
-                key={item.id}
-                className="color-item border border-muted bg-white p-1"
-                style={{ height: "38px" }}
-              >
                 <span className="text-nowrap">{item.name}</span>
               </button>
             ))}

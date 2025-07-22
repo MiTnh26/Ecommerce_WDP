@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const Cart = require("../../models/Cart");
 const User = require("../../models/Users");
+const { Shop } = require("../../models");
 
 // helper to calculate total quantity in cart
 const calculateTotalQuantity = (items) => {
@@ -223,6 +224,10 @@ exports.deleteProductVariantInCart = async (req, res) => {
         product.ProductVariant = product.ProductVariant.filter(
           (variant) => variant._id != ProductVariant._id
         );
+        // Nếu sau khi xóa variant mà mảng rỗng, xóa luôn item khỏi cart.Items
+        if (product.ProductVariant.length === 0) {
+        cart.Items = cart.Items.filter((item) => item._id != Product_id);
+        }
         // calculate total quantity
         const items = cart.Items;
         const totalQuantity = calculateTotalQuantity(items);
@@ -245,7 +250,12 @@ exports.getCartByUserId = async (req, res) => {
       return res.status(400).json({ message: "All fields are requiredc" });
     }
     console.log("userId",UserId);
-     const cart = await Cart.findOne({ UserId: new mongoose.Types.ObjectId(UserId) });
+    const cart = await Cart.findOne({ UserId: new mongoose.Types.ObjectId(UserId) })
+                            .populate({
+                                path: "Items.ShopID",
+                                select: "_id name"
+                            });
+
     console.log("cart",cart);
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
@@ -259,3 +269,36 @@ exports.getCartByUserId = async (req, res) => {
     });
   }
 }
+exports.getToTalItemInCart = async (req, res) => {
+  try {
+    const { UserId } = req.body;
+
+    if (!UserId) {
+      return res.status(400).json({ message: "UserId is required" });
+    }
+
+    const objectUserId = new mongoose.Types.ObjectId(UserId);
+
+    const result = await Cart.aggregate([
+      { $match: { UserId: objectUserId } },
+      { $unwind: "$Items" },
+      { $unwind: "$Items.ProductVariant" },
+      {
+        $group: {
+          _id: null,
+          totalProductVariantCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const total = result[0]?.totalProductVariantCount || 0;
+
+    return res.status(200).json({totalProductVariantCount: total});
+  } catch (error) {
+    console.error("Get total product variant error:", error);
+    return res.status(500).json({
+      message: "Failed to get total product variant count",
+      error: error.message || error,
+    });
+  }
+};
