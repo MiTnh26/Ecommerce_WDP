@@ -1,6 +1,5 @@
-const Product = require("../../models/Products");
+const Product  = require("../../models/Products");
 const Category = require("../../models/Categories");
-const { Readable } = require("stream");
 
 /**
  * GET /products
@@ -18,46 +17,35 @@ exports.getAllProducts = async (req, res) => {
 };
 
 /**
- * POST /products      (create)
- * PUT  /products      (update)
- * Expects multipart/form-data for ProductImage file.
+ * POST /products   (create)
+ * PUT  /products   (update)
+ * Expects multipart/form-data
  */
 exports.saveProduct = async (req, res) => {
   try {
-    // ─── DEBUG ───
-    // console.log(">>> req.body:", req.body);
-    // console.log(">>> req.files:", req.files);
-
-    // ─── 1) Pull out core fields ───
+    // ─── 1) Core fields ───
     const {
       id,
       CategoryId,
       ShopId,
       ProductName,
       Description = "",
-      Status = "Active",
+      Status      = "Active",
     } = req.body;
 
-    // If you still depend on session for ShopId, you can fall back here:
-    // const finalShopId = ShopId || req.session?.shopId;
     if (!ShopId) {
       return res.status(400).json({ message: "ShopId is required" });
     }
 
-    // ─── 2) Handle the main product image ───
+    // ─── 2) Main image (Cloudinary) ───
     let productImageUrl = "";
     const mainFiles = req.files?.ProductImage || [];
     if (mainFiles.length > 0) {
-      const file = mainFiles[0];
-      const b64 = file.buffer.toString("base64");
-      productImageUrl = `data:${file.mimetype};base64,${b64}`;
+      // multer-storage-cloudinary puts the uploaded URL in .path
+      productImageUrl = mainFiles[0].path;
     }
 
-    // ─── 3) Parse your variants ───
-    // multer with upload.fields gives you:
-    //   req.files.VariantImage = [File, File, ...]
-    // and text fields like ProductVariant[0][ProductVariantName] end up
-    // in req.body.ProductVariant as an array of objects.
+    // ─── 3) Variants ───
     let rawVariants = req.body.ProductVariant || [];
     if (!Array.isArray(rawVariants)) {
       rawVariants = [rawVariants];
@@ -65,23 +53,20 @@ exports.saveProduct = async (req, res) => {
     const variantFiles = req.files?.VariantImage || [];
 
     const variantDocs = rawVariants.map((v, idx) => {
-      // v = { ProductVariantName, Price, StockQuantity, Image (the URL) }
       let imageUrl = v.Image || "";
       const file = variantFiles[idx];
       if (file) {
-        const b64 = file.buffer.toString("base64");
-        imageUrl = `data:${file.mimetype};base64,${b64}`;
+        imageUrl = file.path;
       }
       return {
         ProductVariantName: v.ProductVariantName,
-        Price: Number(v.Price) || 0,
-        StockQuantity: Number(v.StockQuantity) || 0,
-        Status: v.Status || "Active",
-        Image: imageUrl,
+        Price:              Number(v.Price)        || 0,
+        StockQuantity:      Number(v.StockQuantity)|| 0,
+        Status:             v.Status              || "Active",
+        Image:              imageUrl,
       };
     });
 
-    // On create, require ≥1 variant
     if (!id && variantDocs.length < 1) {
       return res
         .status(400)
@@ -110,7 +95,7 @@ exports.saveProduct = async (req, res) => {
         ProductName,
         Description,
         Status,
-        ProductImage: productImageUrl,
+        ProductImage:   productImageUrl,
         ProductVariant: variantDocs,
       });
       await product.save();
@@ -138,20 +123,18 @@ exports.addVariant = async (req, res) => {
       Status = "Active",
     } = req.body;
 
-    // Determine image URL: uploaded file → Base64, else use body.Image
+    // Image URL from Cloudinary or fallback
     let imageUrl = req.body.Image || "";
     if (req.file) {
-      const mime = req.file.mimetype;
-      const b64 = req.file.buffer.toString("base64");
-      imageUrl = `data:${mime};base64,${b64}`;
+      imageUrl = req.file.path;
     }
 
     const product = await Product.findById(id);
     product.ProductVariant.push({
       ProductVariantName,
-      Image: imageUrl,
-      Price: Number(Price),
-      StockQuantity: Number(StockQuantity),
+      Image:          imageUrl,
+      Price:          Number(Price),
+      StockQuantity:  Number(StockQuantity),
       Status,
     });
     await product.save();
@@ -178,21 +161,28 @@ exports.toggleStatus = async (req, res) => {
   }
 };
 
-// DELETE /product/:id
+/**
+ * DELETE /products/:id
+ */
 exports.deleteProduct = async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
   res.sendStatus(204);
 };
 
-// DELETE /product/:prodId/variants/:variantId
+/**
+ * DELETE /products/:id/variants/:variantId
+ */
 exports.removeVariant = async (req, res) => {
-  const { prodId, variantId } = req.params;
-  const product = await Product.findById(prodId);
+  const { id, variantId } = req.params;
+  const product = await Product.findById(id);
   product.ProductVariant.id(variantId).remove();
   await product.save();
   res.json(product);
 };
 
+/**
+ * GET /category
+ */
 exports.getCategories = async (req, res) => {
   try {
     const categories = await Category.find();
