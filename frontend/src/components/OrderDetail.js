@@ -12,20 +12,14 @@ const toArray = (data) => {
 const orange = "#ee4d2d";
 const fallbackImg = "../assets/images/no-image.png";
 
-const OrderDetail = () => {
-  const { orderId } = useParams();
+
+const OrderDetail = ({ orderId, setActiveTab  }) => {
+  // const { orderId } = useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const user = JSON.parse(localStorage.getItem("user"));
-  let userId = "0";
-  try {
-    userId = user._id;
-    console.log("userid", userId);
-  } catch (error) {
-    console.error(error);
-  }
+  
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -61,7 +55,7 @@ const OrderDetail = () => {
 
   if (!order) return null;
 
-  const blue = "#007bff";
+  const blue = "#ee4d2d";
 
   return (
     <Container className="mt-4" style={{ maxWidth: 900 }}>
@@ -85,13 +79,20 @@ const OrderDetail = () => {
         {/* <Button variant="outline-primary" size="sm" onClick={() => navigate(-1)}>
           Quay lại
         </Button> */}
-        <Button
+        {/* <Button
           variant="outline-primary"
           size="sm"
           onClick={() => navigate("/Ecommerce/user/profile", { state: { tab: "purchaseorder" } })}
         >
           Quay lại
-        </Button>
+        </Button> */}
+        <Button
+  variant="outline-primary"
+  size="sm"
+  onClick={() => setActiveTab("purchaseorder")}
+>
+  Quay lại
+</Button>
       </div>
 
 

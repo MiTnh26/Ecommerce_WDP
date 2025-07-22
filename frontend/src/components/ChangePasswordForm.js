@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
+import '../style/customer/ChangePasswordForm.css'
 const user = JSON.parse(localStorage.getItem("user"));
 
 let userId = "0";
@@ -76,7 +77,9 @@ function ChangePasswordForm({ userId }) {
     };
 
     return (
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit}  className="change-password-form">
+             <h5 className="mb-3"> </h5>
+           
             <h5 className="mb-3">Change Password</h5>
 
             {message && <Alert variant={variant}>{message}</Alert>}

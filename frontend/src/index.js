@@ -4,6 +4,8 @@ import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "bootstrap-icons/font/bootstrap-icons.css";
+
 
 // import './index.css';
 

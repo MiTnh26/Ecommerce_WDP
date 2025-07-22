@@ -28,6 +28,7 @@ router.get("/orders/:userId", UserController.getOrderByUserId);
 router.get("/orderdetail/:orderId", UserController.getOrderDetails);
 router.put('/user/:userId/address/:addressId/set-default', UserController.setDefaultAddress);
 router.put("/change-password/:id",UserController.changePasswordInUser);
+router.put("/orders/cancel/:orderId", UserController.cancelOrder);
 
 
 // // POST tạo đơn hàng mới

@@ -15,7 +15,7 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
-
+import  '../style/customer/AddressForm.css'
 function AddressForm({ userId }) {
   const [user, setUser] = useState(null);
   const [showModal, setShowModal] = useState(false);

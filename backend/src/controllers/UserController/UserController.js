@@ -482,7 +482,33 @@ const changePasswordInUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+const cancelOrder = async (req, res) => {
+  const { orderId } = req.params;
 
+  try {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: "Invalid orderId" });
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.Status === "Cancelled") {
+      return res.status(400).json({ message: "Order is already cancelled" });
+    }
+
+    order.Status = "Cancelled";
+    await order.save();
+
+    res.status(200).json({ message: "Order cancelled successfully", order });
+  } catch (error) {
+    console.error("❌ Error cancelling order:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 
 
 
@@ -493,5 +519,5 @@ module.exports = {
   getAddressById, deleteAddress,
   getUsers, login, register,
   googleLogin, changePassword,
-  getUserById, updateUser,getPaymentForCheckout
+  getUserById, updateUser,getPaymentForCheckout,cancelOrder
 };
