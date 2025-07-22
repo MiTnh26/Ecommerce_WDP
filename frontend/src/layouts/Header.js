@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 // useQuery to state Cart
 import {
   Col,
@@ -12,20 +12,57 @@ import {
   ListGroup,
 } from "react-bootstrap";
 import image from "../assets/images/logo_page.jpg";
+import { AppContext } from "../store/Context";
+import { useContext } from "react";
+import axios from "axios";
 const Header = () => {
   const [popUpSearch, setPopUpSearch] = useState(false);
   const [showCanvasCart, setShowCanvasCart] = useState(false);
   // navigate
   const navigate = useNavigate();
 
+  const { filterData } = useContext(AppContext);
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState("");
+  const [UserId, setUserId] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [category_id, setCategoryId] = useState("");
+
+  useEffect(() => {
+    const category = searchParams.get("category") || "";
+    setCategoryId(category);
+  }, [searchParams]); // Thêm searchParams vào dependency array
+
+
+  // config
+  const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
+
   //inview hook for cart
   const { ref: cartRef, inView: cartInView } = useInView({ triggerOnce: true });
+
+
   // useQuery to state Cart
   //fetch cart data
   const fetchCartData = async () => {
-    //const res = null;
-    console.log("Fetching cart data...");
-    return [1, 2, 3, 4];
+    try {
+      if (!UserId._id) {
+        return;
+      }
+      const res = await axios.post(`${URL}/customer/get-cart`,
+        {
+          UserId: UserId._id
+        },
+        { withCredentials: true },
+      );
+      const data = res.data;
+      //console.log("data", data);
+      return data;
+    } catch (err) {
+      console.log(err);
+    }
   };
   const { data: cartData, isLoading: cartLoading } = useQuery({
     queryKey: ["cart"],
@@ -39,8 +76,17 @@ const Header = () => {
     setPopUpSearch(!popUpSearch);
   };
   const handleShowCanvasCart = () => {
-    setShowCanvasCart(!showCanvasCart);
+    if (UserId._id) {
+      setShowCanvasCart(!showCanvasCart);
+    }
   };
+
+  const handleSubmitSearch = () => {
+    console.log("search", category_id);
+    filterData(search, category_id);
+    navigate(`/Ecommerce/search?name=${search || ""}&category=${category_id || ""}`);
+  }
+  //console.log("hello")
   return (
     <>
       <Container fluid>
@@ -65,37 +111,41 @@ const Header = () => {
           <Col
             md={12}
             lg={6}
-            className="d-none d-md-block d-lg-block order-md-last order-lg-2 "
+            className="d-none d-md-block d-lg-block order-md-last order-lg-2"
           >
-            <div className="row search-bar p-2 my-2 bg-light rounded-4 ">
-              <Col md={1} lg={0} className="d-block d-lg-none"></Col>
-              <Col md={3} lg={4}>
-                <Form.Select className="bg-transparent border-0 ">
-                  <option>All Categories</option>
-                  <option>Groceries</option>
-                  <option>Drinks</option>
-                  <option>Chocolates</option>
-                </Form.Select>
-              </Col>
-              <Col md={6} lg={7}>
-                <Form id="search-form" className="text-center">
+            <Row className="search-bar p-2 my-2 bg-light rounded-4 align-items-center">
+              {/* Có thể chừa ra 1 khoảng trống nhỏ trái/phải khi ở md */}
+              <Col md={1} className="d-md-block d-lg-none"></Col>
+
+              {/* Ô nhập liệu */}
+              <Col md={10} lg={10}>
+                <Form id="search-form">
                   <Form.Control
                     type="text"
                     className="border-0 bg-transparent"
                     placeholder="Search for more than 20,000 products"
+                    value={search || ""}
+                    onChange={(e) => setSearch(e.target.value)}
                   />
                 </Form>
               </Col>
+
+              {/* Icon tìm kiếm - có thể click */}
               <Col
                 md={1}
-                lg={1}
-                onClick={() => navigate("/Ecommerce/search/hello")}
+                lg={2}
+                onClick={() => handleSubmitSearch()}
+                className="text-center"
+                style={{ cursor: "pointer" }}
               >
                 <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
               </Col>
-              <Col md={1} lg={0} className="d-block d-lg-none"></Col>
-            </div>
+
+              {/* Khoảng trắng phải nếu cần ở md */}
+              <Col md={1} className="d-md-block d-lg-none"></Col>
+            </Row>
           </Col>
+
           {/* Icon right header */}
           <Col
             sm={8}
@@ -141,7 +191,7 @@ const Header = () => {
               </li>
               <li className="d-lg-none" onClick={handleShowCanvasCart}>
                 <a
-                  href="/"
+                  onClick={handleShowCanvasCart}
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -154,8 +204,8 @@ const Header = () => {
               className="d-none d-lg-flex flex-column gap-2 lh-1 border-0 p-0 ms-5"
               onClick={handleShowCanvasCart}
             >
-              <span className="fs-6 text-muted">Your Cart</span>
-              <span className="cart-total fs-5 fw-bold">$1290.00</span>
+              <span className="cart-total fs-5 fw-bold">Your Cart</span>
+              <span className="fs-6 text-muted text-center"><i className="fa-solid fa-cart-shopping"></i></span>
             </div>
           </Col>
         </Row>
@@ -166,12 +216,12 @@ const Header = () => {
               <div className=" row search-bar p-2 my-2 rounded-3">
                 <Col xs={1} className="d-block d-lg-none"></Col>
                 <Col xs={3} className=" bg-light p-2">
-                  <Form.Select className="bg-transparent border-0 ">
+                  {/* <Form.Select className="bg-transparent border-0 ">
                     <option>All Categories</option>
                     <option>Groceries</option>
                     <option>Drinks</option>
                     <option>Chocolates</option>
-                  </Form.Select>
+                  </Form.Select> */}
                 </Col>
                 <Col xs={6} className=" bg-light p-2">
                   <Form id="search-form" className="text-center">
@@ -206,7 +256,7 @@ const Header = () => {
             className="bg-warning  d-flex justify-content-center align-items-center rounded-circle"
             style={{ width: "40px", height: "40px" }}
           >
-            <span className="total item text-white p-0">0</span>
+            <span className="total item text-white p-0">{cartData?.Quantity}</span>
           </div>
         </Offcanvas.Header>
         <Offcanvas.Body className="h-100 d-flex flex-column" ref={cartRef}>
@@ -216,14 +266,15 @@ const Header = () => {
                 <p>Loading Cart Items .. </p>
               ) : (
                 <>
-                  {(cartData || []).map((item, index) => (
-                    <ListGroup.Item
-                      className="px-1 border-0 border-bottom"
-                      key={index}
-                    >
+                 {(cartData?.Items || []).map((item, itemIndex) => (
+                    (item.ProductVariant || []).map((variant, variantIndex) => (
+                      <ListGroup.Item
+                        className="px-1 border-0 border-bottom"
+                        key={`${itemIndex}-${variantIndex}`}
+                      >
                       <div className="d-flex gap-3">
                         <img
-                          src={image}
+                          src={variant.Image}
                           alt=""
                           className="p-0 m-0"
                           style={{
@@ -237,19 +288,21 @@ const Header = () => {
                             className="product-name text-nowrap text-truncate"
                             style={{ fontSize: "0.8rem" }}
                           >
-                            Product Name: Lorem ipsum dolor sit amet. Lorem
-                            ipsum dolor sit amet consectetur adipisicing elit.
+                            {item.ProductName} : <span className="fw-light text-muted">{variant.ProductVariantName}</span>
                           </p>
                         </div>
                         <p
                           className="product-price"
                           style={{ fontSize: "0.8rem" }}
                         >
-                          $1290.00
+                          {variant.Price? variant.Price.toLocaleString("vi-VN") : "0".toLocaleString("vi-VN")}
                         </p>
-                      </div>
-                    </ListGroup.Item>
+                        </div>
+                      </ListGroup.Item>
+                    )
+                    )
                   ))}
+
                 </>
               )}
             </ListGroup>

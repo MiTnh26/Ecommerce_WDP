@@ -19,6 +19,7 @@
     /* đen nhạt */
     flex: 0 0 auto;
     width: 82px;
+    height: 82px;
     aspect-ratio: 1/1;
     display: flex;
     align-items: center;
@@ -27,6 +28,7 @@
 
 .thumbnail-wrapper.active {
     border-color: rgb(241, 208, 97);
+    border-width: 3px;
     /* đen đậm hơn */
 }
 
@@ -53,14 +55,6 @@
     text-underline-offset: 6px;
 }
 
-.stars-background,
-.stars-overlay {
-    white-space: nowrap;
-    /* the i la inline => list item se chay theo chieu ngang */
-    /* => khi set up width theo % rating se bị loi xuống dòng "****"
-                                                              "*   " 
-       => white-space: nowrap; de khong bi xuong dong                                                      */
-}
 
 .feedback-text,
 .accuse {
@@ -99,7 +93,7 @@
 .color-label,
 .size-label,
 .quantity-label {
-    min-width: 80px;
+    width: 80px;
 }
 
 .list-item-color {
@@ -164,16 +158,11 @@
     background-color: #00000027;
 }
 
-/* description */
-.product-details-content {
-    text-align: justify;
-}
-
 /* outstanding */
 .product-outstanding {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
 }
 
 @media (max-width: 1026px) {
@@ -182,6 +171,9 @@
         flex-direction: column;
         align-items: center;
     }
+}
+.card-item-related{
+    flex: 0 0 calc(20% - 0.4rem), 
 }
 
 /* Khi dưới 768px: đổi sang ngang, chia 3 */
@@ -193,10 +185,12 @@
         /* Cho phép xuống hàng */
         gap: 10px;
     }
-
-    .product-outstanding .card-item {
-        flex: 0 0 calc(33.333% - 10px);
+     .card-item-outstanding,
+     .card-item-related {
+        flex: 0 0 calc(33.333% - 14px);
         /* Chia 3 cột và trừ gap */
         box-sizing: border-box;
+        min-width: 0;
     }
+
 }

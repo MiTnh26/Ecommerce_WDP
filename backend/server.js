@@ -41,16 +41,16 @@ mongoose
 
 // API routes
 const userRouter = require("./src/routes/UserRoutes");
-
 const adminRouter = require("./src/routes/AdminRoutes");
 const sellerRouter = require("./src/routes/SellerRoutes");
-
+const categoryRouter = require("./src/routes/CategoryRouter");
 
 const productRouter = require("./src/routes/ProductRoutes")
 app.use("/customer", userRouter);
 app.use("/admin", adminRouter);
 app.use("/seller", sellerRouter);
 app.use("/product", productRouter);
+app.use("/category", categoryRouter);
 // //Cho server Khoi dong
 
 
