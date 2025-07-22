@@ -40,4 +40,21 @@ router.patch(
   ctrl.toggleStatus
 );
 
+// 7) GET /products/trending
+router.get("/trending", ctrl.getTrendingProducts);
+
+// 8) GET /products/new
+router.get("/get-new", ctrl.getNewProducts);
+
+// 9) GET /products/best-seller
+router.get("/best-seller", ctrl.getBestSellerProducts);
+
+// 10) GET /products/:id
+router.get("/:id", ctrl.getProductById);
+
+// 11) GET /products/:id/variants
+router.get("/related-products/:category_id", ctrl.fetchProductsRelatedToCategory);
+
+//12) POST /products/filter-product
+router.post("/filter-product", ctrl.filterProduct);
 module.exports = router;
