@@ -29,10 +29,10 @@ const UserRoutes = [
     path: "/Ecommerce/user/profile",
     element: <ProfilePage />,
   },
-  {
-    path: "/orderdetail/:orderId",
-    element: <OrderDetail />,
-  },
+  // {
+  //   path: "/orderdetail/:orderId",
+  //   element: <OrderDetail />,
+  // },
   {
     path: "/Ecommerce/user/profile/puchaseorder",
     element: <PurchaseOrders />,

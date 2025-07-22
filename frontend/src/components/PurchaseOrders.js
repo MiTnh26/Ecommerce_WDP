@@ -298,12 +298,14 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                 </div>
                 <div className="purchaseorders-order-footer-btns">
                   <Button
-                    variant="outline-secondary"
+                    
                     size="sm"
                     className="purchaseorders-detail-btn"
                     onClick={() => {
                       setSelectedOrderId(order._id)
                       setActiveTab("orderdetail");
+                      
+                      
                     }}
                   >
                     {order.Status === "Cancelled" ? "Cancellation details" : "View details"}

@@ -394,17 +394,28 @@ const getOrderByUserId = async (req, res) => {
 
 
 const getOrderDetails = async (req, res) => {
+ const rawOrderId = req.params.orderId;
+const orderId = rawOrderId?.trim();
+ console.log("Raw orderId param:", orderId);
   try {
-    const { orderId } = req.params;
+    // const { orderId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({ message: "Invalid orderId format" });
     }
-
+   
     const order = await Order.findById(orderId)
       .populate({
         path: "Items",
         select: "-__v -createdAt -updatedAt"
+      })
+      .populate({
+        path: "PaymentId",
+        select: "PaymentMethod" 
+      })
+      .populate({
+        path: "BuyerId",
+        select: "PhoneNumber" 
       })
       .lean();
 

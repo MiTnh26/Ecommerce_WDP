@@ -11,6 +11,7 @@ import {
 } from "react-bootstrap";
 import UpdateProfileForm from "../components/UpdateProfileForm";
 import '../App.css';
+import '../style/customer/ProfilePage.css';
 
 
 function ProfileView({ userId }) {
@@ -80,7 +81,7 @@ function ProfileView({ userId }) {
                 border: "4px solid #0d6efd",
                 borderRadius: "50%",
                 padding: "6px",
-                background: "linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)",
+                // background: "linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)",
                 marginBottom: "12px",
               }}
             >
@@ -141,7 +142,7 @@ function ProfileView({ userId }) {
               className="rounded-pill fw-semibold"
               onClick={handleShowModal}
               style={{
-                background: "linear-gradient(90deg, #0d6efd 60%, #4f8cff 100%)",
+                // background: "linear-gradient(90deg, #0d6efd 60%, #4f8cff 100%)",
                 border: "none",
                 boxShadow: "0 2px 12px rgba(13,110,253,0.10)",
               }}

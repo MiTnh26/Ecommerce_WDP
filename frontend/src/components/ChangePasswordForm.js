@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
 import '../style/customer/ChangePasswordForm.css'
+import { BsEye, BsEyeSlash } from "react-icons/bs";
 const user = JSON.parse(localStorage.getItem("user"));
+
+
 
 let userId = "0";
 try {
@@ -24,10 +27,18 @@ function ChangePasswordForm({ userId }) {
 
     const [message, setMessage] = useState(null);
     const [variant, setVariant] = useState("danger");
+    const [showPassword, setShowPassword] = useState({
+        current: false,
+        new: false,
+        confirm: false
+    });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+    const togglePassword = (field) => {
+        setShowPassword(prev => ({ ...prev, [field]: !prev[field] }));
     };
 
     const handleSubmit = async (e) => {
@@ -43,6 +54,11 @@ function ChangePasswordForm({ userId }) {
 
         if (formData.newPassword !== formData.confirmPassword) {
             setMessage("New password does not match!");
+            setVariant("danger");
+            return;
+        }
+        if (formData.newPassword === formData.currentPassword) {
+            setMessage("New password must be different from the current password.");
             setVariant("danger");
             return;
         }
@@ -77,45 +93,75 @@ function ChangePasswordForm({ userId }) {
     };
 
     return (
-        <Form onSubmit={handleSubmit}  className="change-password-form">
-             <h5 className="mb-3"> </h5>
-           
+        <Form onSubmit={handleSubmit} className="change-password-form">
+            <h5 className="mb-3"> </h5>
+
             <h5 className="mb-3">Change Password</h5>
 
             {message && <Alert variant={variant}>{message}</Alert>}
 
             <Form.Group className="mb-3">
                 <Form.Label>Current Password</Form.Label>
-                <Form.Control
-                    type="password"
-                    name="currentPassword"
-                    value={formData.currentPassword}
-                    onChange={handleChange}
-                    required
-                />
+                <div className="position-relative">
+                    <Form.Control
+                        type={showPassword.current ? "text" : "password"}
+                        name="currentPassword"
+                        value={formData.currentPassword}
+                        onChange={handleChange}
+                        required
+                    />
+                    <span
+                        className="position-absolute top-50 end-0 translate-middle-y me-3"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => togglePassword("current")}
+                    >
+                        {showPassword.current ? <BsEyeSlash /> : <BsEye />}
+                    </span>
+                </div>
             </Form.Group>
+
 
             <Form.Group className="mb-3">
                 <Form.Label>New Password</Form.Label>
-                <Form.Control
-                    type="password"
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    required
-                />
+                <div className="position-relative">
+                    <Form.Control
+                        type={showPassword.new ? "text" : "password"}
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleChange}
+                        required
+                    />
+                    <span
+                        className="position-absolute top-50 end-0 translate-middle-y me-3"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => togglePassword("new")}
+                    >
+                        {showPassword.new ? <BsEyeSlash /> : <BsEye />}
+                    </span>
+                </div>
             </Form.Group>
+
 
             <Form.Group className="mb-3">
                 <Form.Label>Confirm New Password</Form.Label>
-                <Form.Control
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                />
+                <div className="position-relative">
+                    <Form.Control
+                        type={showPassword.confirm ? "text" : "password"}
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                    />
+                    <span
+                        className="position-absolute top-50 end-0 translate-middle-y me-3"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => togglePassword("confirm")}
+                    >
+                        {showPassword.confirm ? <BsEyeSlash /> : <BsEye />}
+                    </span>
+                </div>
             </Form.Group>
+
 
             <Button type="submit" variant="primary">
                 Confirm

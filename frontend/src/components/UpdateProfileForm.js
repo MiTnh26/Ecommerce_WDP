@@ -299,16 +299,16 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
             </Form.Group>
 
             <Button
-              variant="primary"
+              variant="warning"
               type="submit"
               className="w-100 fw-bold"
               size="lg"
               style={{
                 fontSize: "1.1rem",
-                background: "#1877f2",
+                background: "#ffc107",
                 border: "none",
                 borderRadius: 8,
-                boxShadow: "0 2px 8px rgba(24,119,242,0.15)"
+                boxShadow: "0 2px 8px rgba(255,193,7,0.15)"
               }}
             >
               Update Profile

@@ -1,8 +1,8 @@
 /* ==== Color Variables ==== */
 :root {
-  --primary: #f57c00;         /* cam đậm */
+  --primary: #df5418;         /* cam đậm */
   --primary-light: #ffe0b2;   /* cam nhạt */
-  --primary-dark: #e65100;
+  --primary-dark: #d54c03;
 
   --secondary: #6d4c41;       /* nâu */
   --secondary-light: #d7ccc8;
