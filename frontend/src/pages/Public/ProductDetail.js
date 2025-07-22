@@ -88,6 +88,10 @@ const ProductDetail = () => {
 
   // handle change quantity
   const handleChangeQuantity = (e) => {
+    if(currentIndex === -1){
+      alert("Please select variant");
+      return;
+    }
     const value = e.target.value;
     if (value < 0) {
       setQuantity(0);
@@ -100,6 +104,10 @@ const ProductDetail = () => {
     }
   };
   const handleClickQuantity = (direction) => {
+    if(currentIndex === -1){
+      alert("Please select variant");
+      return;
+    }
     if (direction === "decrease") {
       setQuantity((prev) => Math.max(prev - 1, 0));
     } else if (direction === "increase") {
