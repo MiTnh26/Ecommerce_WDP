@@ -28,6 +28,7 @@
 
 .thumbnail-wrapper.active {
     border-color: rgb(241, 208, 97);
+    border-width: 3px;
     /* đen đậm hơn */
 }
 

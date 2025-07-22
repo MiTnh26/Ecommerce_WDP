@@ -18,26 +18,27 @@ import axios from "axios";
 const Header = () => {
   const [popUpSearch, setPopUpSearch] = useState(false);
   const [showCanvasCart, setShowCanvasCart] = useState(false);
-  const [category_id, setCategory_id] = useState("");
-  const { search, setSearch, filterData } = useContext(AppContext);
+  // navigate
+  const navigate = useNavigate();
+
+  const { filterData } = useContext(AppContext);
   const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState("");
   const [UserId, setUserId] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
-  //console.log("UserId", UserId._id);
+  const [category_id, setCategoryId] = useState("");
 
-  // navigate
-  const navigate = useNavigate();
+  useEffect(() => {
+    const category = searchParams.get("category") || "";
+    setCategoryId(category);
+  }, [searchParams]); // Thêm searchParams vào dependency array
+
 
   // config
   const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  //useEffect
-  useEffect(() => {
-    setSearch(searchParams.get("name") || "");
-    setCategory_id(searchParams.get("category") || "");
-  }, [searchParams]);
 
   //inview hook for cart
   const { ref: cartRef, inView: cartInView } = useInView({ triggerOnce: true });
@@ -57,7 +58,7 @@ const Header = () => {
         { withCredentials: true },
       );
       const data = res.data;
-      console.log("data", data);
+      //console.log("data", data);
       return data;
     } catch (err) {
       console.log(err);
@@ -81,7 +82,8 @@ const Header = () => {
   };
 
   const handleSubmitSearch = () => {
-    filterData();
+    console.log("search", category_id);
+    filterData(search, category_id);
     navigate(`/Ecommerce/search?name=${search || ""}&category=${category_id || ""}`);
   }
   //console.log("hello")
@@ -189,7 +191,7 @@ const Header = () => {
               </li>
               <li className="d-lg-none" onClick={handleShowCanvasCart}>
                 <a
-                  href="/"
+                  onClick={handleShowCanvasCart}
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -202,8 +204,8 @@ const Header = () => {
               className="d-none d-lg-flex flex-column gap-2 lh-1 border-0 p-0 ms-5"
               onClick={handleShowCanvasCart}
             >
-              <span className="fs-6 text-muted">Your Cart</span>
-              <span className="cart-total fs-5 fw-bold">$1290.00</span>
+              <span className="cart-total fs-5 fw-bold">Your Cart</span>
+              <span className="fs-6 text-muted text-center"><i className="fa-solid fa-cart-shopping"></i></span>
             </div>
           </Col>
         </Row>
@@ -254,7 +256,7 @@ const Header = () => {
             className="bg-warning  d-flex justify-content-center align-items-center rounded-circle"
             style={{ width: "40px", height: "40px" }}
           >
-            <span className="total item text-white p-0">0</span>
+            <span className="total item text-white p-0">{cartData?.Quantity}</span>
           </div>
         </Offcanvas.Header>
         <Offcanvas.Body className="h-100 d-flex flex-column" ref={cartRef}>

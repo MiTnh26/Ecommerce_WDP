@@ -11,22 +11,45 @@ import { useContext } from "react";
 const ProductList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams] = useSearchParams();
-  const {whereToBuy, fromPrice, toPrice, whereToBuyFilter, setWhereToBuyFilter, setFromPrice, setToPrice, filterData, dataProductFilter, setCategory} = useContext(AppContext);
-  console.log("data", "1",whereToBuy,  "2", fromPrice, toPrice, "3", whereToBuyFilter, "4", dataProductFilter);
-  // navigate
+  const {dataProductFilter, filterData} = useContext(AppContext);
+  //console.log("dataProductFilter", dataProductFilter);
   const navigate = useNavigate();
+  const [category, setCategory] = useState(searchParams.get("category") || "");
+  const [nameSearch, setNameSearch] = useState(searchParams.get("name") || "");
+  const [whereToBuy, setWhereToBuy] = useState([]);
+  const [whereToBuyFilter, setWhereToBuyFilter] = useState([]);
+  const [fromPrice, setFromPrice] = useState();
+  const [toPrice, setToPrice] = useState();
+
+  const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
   useEffect(() => {
-  setCategory(searchParams.get("category") || "");
-  console.log("category", searchParams.get("category")|| "");
-  filterData();
-  // }
-  }, []);
+    // fetch data
+    setCategory(searchParams.get("category") || "");
+    //console.log("category", searchParams.get("category") || "");
+    filterData(nameSearch, category);
+
+    // fetch data where to buy
+    const loadData = async () => {
+            try {
+                const res = await axios.get(`${baseURL}/seller/getShopProvince`, {
+                    withCredentials: true,
+                });
+                //console.log(res.data)
+                setWhereToBuy(res.data);
+            } catch (error) {
+                console.error("Lỗi khi load province:", error);
+            }
+        };
+        loadData();
+}, [searchParams]);
+
   //handle change where to buy
   const handleWhereToBuyChange = (event) => {
     if(event.target.checked){
-      const datacheck = [...whereToBuyFilter, event.target.value];
-      console.log("datacheck", datacheck);
-      setWhereToBuyFilter([...whereToBuyFilter, event.target.value]);
+    const datacheck = [...whereToBuyFilter, event.target.value];
+    console.log("datacheck", datacheck);
+    setWhereToBuyFilter([...whereToBuyFilter, event.target.value]);
     }else{
       const datacheck = whereToBuyFilter.filter(item => item !== event.target.value)
       console.log("datacheck", datacheck);
@@ -44,9 +67,17 @@ const ProductList = () => {
     setToPrice(event.target.value);
   };
   //handle submit form
+
+ // search, category, fromPrice, toPrice, whereToBuyFilter
     const handleSubmitSearch = () => {
-      filterData();
-  }
+  filterData(
+    nameSearch,
+    category,
+    fromPrice || undefined,  // Nếu fromPrice là "" hoặc null/undefined → truyền undefined
+    toPrice || undefined,    // Tương tự với toPrice
+    whereToBuyFilter
+  );
+};
 
   return (
     <div className="container-fluid py-3">
@@ -106,7 +137,7 @@ const ProductList = () => {
         <div className="col-md-10">
           <main className="bg-white p-3 rounded shadow-sm">
             <div className="row g-2">
-              {dataProductFilter.map((item, index) => (
+              {dataProductFilter?.map((item, index) => (
                 <div
                   key={index}
                   className="col-12 col-sm-6 col-md-4 col-lg-3"
@@ -119,10 +150,27 @@ const ProductList = () => {
               ))}
             </div>
           </main>
-                  <div className="panigation">
-                    <Pagination currentPage={currentPage} totalPages={dataProductFilter.length ? dataProductFilter.length : 1} onPageChange={(page) => setCurrentPage(page)}/>
-                  </div>
-              </div>
+          <div className="panigation">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={
+                dataProductFilter && dataProductFilter.length > 0
+                  ? Math.ceil(dataProductFilter.length / 20)
+                  : 1
+              }
+              onPageChange={(page) => {
+                filterData(
+                  nameSearch,
+                  category,
+                  fromPrice || undefined,  
+                  toPrice || undefined,
+                  whereToBuyFilter
+                );
+                setCurrentPage(page)
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

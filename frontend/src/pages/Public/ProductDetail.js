@@ -24,9 +24,8 @@ const rating = 4.5;
 
 const ProductDetail = () => {
   // 1. State declare
-  const [currentIndex, setCurrentIndex] = useState(0); // index of current image
+  const [currentIndex, setCurrentIndex] = useState(-1); // index of current image
   const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0); // index of thumbnail start
-  const [currentPageFeedback, setCurrentPageFeedback] = useState(1); // current page for feedback section
   const [dataProduct, setDataProduct] = useState();
   const product_id = useParams().id;
   const [quantity, setQuantity] = useState(1); // quantity of product
@@ -48,7 +47,7 @@ const ProductDetail = () => {
     const loadData = async () => {
       const productDetail = await fetchProductDetail(product_id);
       const testdata = await fetchRelatedProducts(productDetail?.CategoryId?._id)
-      console.log("testdata", testdata);
+      //console.log("testdata", testdata);
       console.log("productDetail", productDetail);
       setDataProduct(productDetail);
     };
@@ -114,7 +113,11 @@ const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
-    console.log("quantity");
+    //console.log("quantity");
+    if(currentIndex === -1){
+      alert("Please select variant");
+      return;
+    }
     const addToCart = async () => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user._id) {
@@ -140,22 +143,7 @@ const ProductDetail = () => {
           }
         ],
       };
-      //       const data = { 
-      //         UserId: user._id,
-      //         Product_id: product_id,
-      //         ProductName: dataProduct.ProductName,
-      //         ProductImage: dataProduct.ProductImage,
-      //         ShopID: dataProduct.ShopId._id,
-      //         ProductVariant: [
-      //         {
-      //           _id: dataProduct.ProductVariant[currentIndex]._id,
-      //           Image: dataProduct.ProductVariant[currentIndex].Image,
-      //           Price: dataProduct.ProductVariant[currentIndex].Price,
-      //           ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
-      //           Quantity: quantity
-      //         }
-      // ],
-      //        };
+
       console.log("data add to cart", data);
       const res = await axios.post(`${URL}/customer/add-to-cart`, {
         UserId: user._id,
@@ -203,13 +191,13 @@ const ProductDetail = () => {
         >
           Ecommerce
         </a>
-        <i class="fa-solid fa-chevron-right fa-xs"></i>
+        <i className="fa-solid fa-chevron-right fa-xs"></i>
         <a className="navigate-item text-decoration-none" href={`/Ecommerce/search?name=&category=${dataProduct?.CategoryId._id}`}>
           {dataProduct?.CategoryId?.CategoryName?.trim()
             ? dataProduct.CategoryId.CategoryName
             : ""}
         </a>
-        <i class="fa-solid fa-chevron-right fa-xs"></i>
+        <i className="fa-solid fa-chevron-right fa-xs"></i>
         <span className="navigate-item-name">
           {dataProduct?.ProductName || "Loading..."}
         </span>
@@ -226,7 +214,7 @@ const ProductDetail = () => {
             >
               <LazyLoad>
               <img
-                src={dataProduct?.ProductVariant[currentIndex].Image}
+                src={ currentIndex === -1 ? dataProduct?.ProductImage :  dataProduct?.ProductVariant[currentIndex].Image}
                 alt="product main view"
                 className="img-fluid object-fit-cover"
                 loading="lazy"
@@ -268,6 +256,31 @@ const ProductDetail = () => {
                   position: "relative",
                 }}
               >
+                {dataProduct?.ProductImage && (
+                  <div
+                    key={"img-default"}
+                    className={`${styles["thumbnail-wrapper"]} ${
+                      Number(-1) === Number(currentIndex)
+                        ? `${styles["active"]}`
+                        : ""
+                    }`}                
+                    onClick={() => {
+                      setCurrentIndex(-1);
+                      setQuantity(0); 
+                    }}
+                  >
+                    <img
+                      src={dataProduct?.ProductImage}
+                      alt={`Thumb default`}
+                      className="img-fluid object-fit-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0";
+                      }}
+                    />
+                  </div>
+                )}
                 {dataProduct?.ProductVariant?.map((item, index) => (
                   <div
                     key={index}
@@ -301,22 +314,14 @@ const ProductDetail = () => {
             <p className="product-name text-bold fs-4 p-0 m-0">
               {dataProduct?.ProductName || "Loading..."}
             </p>
-            {/* <div className="d-flex justify-content-between align-items-center">
-              <div className="product-rating d-flex align-items-center justify-content-center">
-                <p className={`${styles["rating-text"]} me-2 p-0 m-0`}>{rating}</p>
-                <StarVoting rating={rating} />
-                <p className="p-0 m-0 mx-2">|</p>
-                <p className={`${styles["feedback-text"]}  mx-2 p-0 m-0 text-muted fw-light`}>Đánh giá</p>
-                <p className={`${styles["feedback-value"]} p-0 m-0`}>120</p>
-              </div>
-              <p className={`${styles["accuse"]} p-0 m-0 text-muted fw-light`}>Tố cáo</p>
-            </div> */}
             {/* Price */}
             <div className="product-price d-flex align-items-center gap-2 mt-5 bg-light p-3">
               <p
                 className={`${styles["price-value"]} p-0 m-0 text-danger fs-3`}
               >
-                {dataProduct?.ProductVariant[currentIndex].Price?.toLocaleString(
+                { currentIndex >= 0 ?   dataProduct?.ProductVariant[currentIndex].Price?.toLocaleString(
+                  "vi-VN"
+                ) || "Loading..." : dataProduct?.ProductVariant[0].Price?.toLocaleString(
                   "vi-VN"
                 ) || "Loading..."}
               </p>
@@ -334,7 +339,7 @@ const ProductDetail = () => {
                   <button
                     key={index}
                     className={`color-item border ${
-                      currentIndex === index ? "border-warning" : "border-muted"
+                      currentIndex === index ? "border-warning border-2" : "border-muted"
                     } bg-white p-1 pe-2`}
                     style={{ maxHeight: "38px" }}
                     onClick={() => {
@@ -378,7 +383,7 @@ const ProductDetail = () => {
                   onChange={handleChangeQuantity}
                 />
                 <button className="border bg-white p-1 px-2 text-muted fw-light"
-                disabled={quantity == dataProduct?.ProductVariant[currentIndex].StockQuantity}
+                disabled={ currentIndex >= 0 ?  quantity == dataProduct?.ProductVariant[currentIndex].StockQuantity : quantity == dataProduct?.ProductVariant[0].StockQuantity}
                 onClick={() =>handleClickQuantity("increase")}>
                   +
                 </button>
@@ -429,14 +434,14 @@ const ProductDetail = () => {
             <div className={`${styles["vertical-line"]}  mx-4`}></div>
             <div className="other-content d-flex">
               <div>
-                <lable className="fw-bold p-0 m-0">Address</lable>
+                <label className="fw-bold p-0 m-0">Address</label>
                 <p className="shop-description p-0 m-0 text-muted">
                   {dataProduct?.ShopId?.address?.province || "Loading..."}
                 </p>
               </div>
               <div className={`${styles["vertical-line"]}  mx-4`}></div>
               <div>
-                <lable className="fw-bold p-0 m-0">Description</lable>
+                <label className="fw-bold p-0 m-0">Description</label>
                 <p className="shop-description p-0 m-0 text-muted">
                   {dataProduct?.ShopId?.description || "Loading..."}
                 </p>

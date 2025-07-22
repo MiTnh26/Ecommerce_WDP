@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap';
 import '../../style/category.css'
 import { useNavigate } from 'react-router-dom';
+import { AppContext  } from "../../store/Context";
+import { useContext } from "react"; 
 // default values trong es6 Component = CategoryItemDefault
 const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength, onClickNext }) => {
     const [itemsPerView, setItemsPerView] = useState(2); // default với mobile = 2
@@ -96,13 +98,15 @@ const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength
 export default Category;
 export const CategoryItemDefault = ({ item }) => {
     const navigate = useNavigate(); // 👈 gọi tại đây
+     const {filterData} = useContext(AppContext);
     return (
         <div
             className="border rounded-3 d-flex flex-column justify-content-center align-items-center"
             style={{
                 aspectRatio: "5/3"
             }}
-            onClick={() => {
+            onClick={() => {            
+                filterData("", item._id);
                 navigate(`/Ecommerce/search?name=&category=${item._id}`);
             }}>
             <div className="fs-1 mb-2">{item.icon}</div>

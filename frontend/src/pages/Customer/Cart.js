@@ -8,16 +8,13 @@ import { useEffect } from "react";
 import axios from "axios";
 import { AppContext } from "../../store/Context";
 import { useContext } from "react";
-const color = [
-];
-const size = [
-];
-const count = 5;
+
 
 const Cart = () => {
   const [checkedItems, setCheckedItems] = useState([]); // chứa id của các variant được chọn
   const [data, setData] = useState([]);
   const [totalCart, setTotalCart] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
   const { checkOut, setCheckOut } = useContext(AppContext);
 
   useEffect(() => {
@@ -189,11 +186,15 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
       TotalPrice: calculateTotalPriceChecked()
     }
     console.log("dataCheckOut", dataCheckOut);
+    setCheckOut(dataCheckOut);
     navigate("/Ecommerce/user/checkout")
   }
 
-
-  console.log("checkedItems", checkedItems);
+  useEffect(() => {
+  const newTotal = calculateTotalPriceChecked();
+  setTotalPrice(newTotal);
+}, [checkedItems]);
+  //console.log("checkedItems", checkedItems);
   return (
     <div className="w-100 bg-light vh-100 overflow-auto">
       <header className="">
@@ -358,13 +359,13 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
         </div>
       </main>
       <footer className="container-sm bg-white fixed-bottom shadow ">
-        <div className="d-flex gap-5 justify-content-between align-items-center py-3">
-          <div className="mx-3">
+        <div className="d-flex gap-5 justify-content-end align-items-center py-3">
+          {/* <div className="mx-3">
             <Form.Check type="checkbox" label={`Chosse all (${totalCart})`} />
-          </div>
+          </div> */}
           <div className="d-flex gap-3 align-items-center">
             <p className="total-price p-0 m-0">
-              Total Price:
+              Total Price: {totalPrice}
               <span className="text-danger">{ }</span>
             </p>
             <Button
@@ -376,37 +377,6 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
           </div>
         </div>
       </footer>
-      <Modal
-        show={showClassification}
-        onHide={handleCloseClassification}
-        centered
-        size="md"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title className="fs-6">Chọn phân loại sản phẩm</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p className="fw-bold p-0 m-0">Color</p>
-          <div className="list-item-color d-flex gap-2 flex-wrap overflow-y-auto h-auto">
-            {color.map((item) => (
-              <button
-                key={item.id}
-                className="color-item border border-muted bg-white p-1"
-                style={{ maxHeight: "38px" }}
-              >
-                <img
-                  src={item.color}
-                  alt={item.name}
-                  className="object-fit-cover"
-                  width={26}
-                  height="auto"
-                />
-                <span className="text-nowrap">{item.name}</span>
-              </button>
-            ))}
-          </div>
-        </Modal.Body>
-      </Modal>
     </div>
   );
 };

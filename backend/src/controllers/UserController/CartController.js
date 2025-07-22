@@ -6,13 +6,11 @@ const { Shop } = require("../../models");
 
 // helper to calculate total quantity in cart
 const calculateTotalQuantity = (items) => {
-  let total = 0;
-  items.forEach((item) => {
-    item.ProductVariant.forEach((variant) => {
-      total += variant.Quantity;
-    });
+  let count = 0;
+  items?.forEach((item) => {
+    count += item.ProductVariant?.length || 0;
   });
-  return total;
+  return count;
 };
 
 exports.addToCart = async (req, res) => {
@@ -27,13 +25,13 @@ exports.addToCart = async (req, res) => {
       //   Quantity = 0,
       ProductVariant = "",
     } = req.body;
-    console.log("UserId:", UserId);
-    console.log("Product_id:", Product_id);
-    console.log("ProductName:", ProductName);
-    console.log("ProductImage:", ProductImage);
-    console.log("ShopID:", ShopID);
+    // console.log("UserId:", UserId);
+    // console.log("Product_id:", Product_id);
+    // console.log("ProductName:", ProductName);
+    // console.log("ProductImage:", ProductImage);
+    // console.log("ShopID:", ShopID);
     // console.log("Quantity:", Quantity);
-    console.log("ProductVariant:", ProductVariant);
+    //console.log("ProductVariant:", ProductVariant);
 
     // check if data is valid
     if (
@@ -256,7 +254,7 @@ exports.getCartByUserId = async (req, res) => {
                                 select: "_id name"
                             });
 
-    console.log("cart",cart);
+    //console.log("cart",cart);
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }

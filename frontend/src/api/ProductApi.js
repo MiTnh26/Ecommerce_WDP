@@ -41,7 +41,7 @@ export const fetchTrendingProducts = async () => {
       withCredentials: true,
     });
     const data = res.data;
-    console.log("fetchTrendingProducts data", data);
+    //console.log("fetchTrendingProducts data", data);
     return data;
   } catch (err) {
     console.log("fetchTrendingProducts err", err);
@@ -54,7 +54,7 @@ export const fetchBestSellerProducts = async () => {
       withCredentials: true,
     });
     const data = res.data;
-    console.log("fetchTopSalesProducts data", data);
+    //console.log("fetchTopSalesProducts data", data);
     return data;
   } catch (err) {
     console.log("fetchTopSalesProducts err", err);
@@ -67,7 +67,7 @@ export const fetchNewProducts = async () => {
       withCredentials: true,
     });
     const data = res.data;
-    console.log("fetchNewProducts data", data);
+    //console.log("fetchNewProducts data", data);
     return data;
   } catch (err) {
     console.log("fetchNewProducts err", err);
@@ -84,7 +84,7 @@ export const fetchProductDetail = async (product_id) => {
       withCredentials: true,
     });
     const data = res.data;
-    console.log("fetchProductDetail data", data);
+    //console.log("fetchProductDetail data", data);
     return data;
   } catch (err) {
     console.log("fetchProductDetail err", err);
@@ -102,9 +102,33 @@ export const fetchProductDetail = async (product_id) => {
         withCredentials: true,
       });
       const data = res.data;
-      console.log("fetchRelatedProducts data", res.data);
+      //console.log("fetchRelatedProducts data", res.data);
       return data;
     } catch (err) {
       console.log("fetchRelatedProducts err", err);   
     }
   };
+  
+  export const filterData = async (whereToBuyFilter, toPrice, fromPrice, search, category) => {
+        console.log("filterData", "1", search, "2",category, "3",fromPrice, toPrice, "4",whereToBuyFilter);
+        try {
+            const res = await axios.post(
+                `${baseURL}/product/filter-product`,
+                {
+                    name: search,            
+                    category: category,
+                    fromPrice: fromPrice,
+                    toPrice: toPrice,
+                    whereToBuyFilter: whereToBuyFilter
+                },
+                {
+                    withCredentials: true
+                }
+            );
+            return res.data
+            // Xử lý kết quả:
+            //console.log(res.data);
+        } catch (error) {
+            console.error('Lỗi lọc sản phẩm:', error);
+        }
+    }

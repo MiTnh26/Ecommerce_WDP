@@ -351,7 +351,7 @@ exports.getProductById = async (req, res) => {
   // if (!mongoose.Types.ObjectId.isValid(id)) {
   //   return res.status(400).json({ message: "Invalid product ID" });
   // }
-  console.log("Fetching product by ID:", id);
+  //console.log("Fetching product by ID:", id);
   try {
   const product = await Product.findOne({ _id: id.toString() })
     .select('_id ProductName ProductImage Description ProductVariant') // chỉ gọi 1 lần duy nhất
@@ -411,6 +411,7 @@ exports.fetchProductsRelatedToCategory = async (req, res) => {
 exports.filterProduct = async (req, res) => {
   try {
     let { name, category, fromPrice, toPrice, whereToBuyFilter } = req.body;
+    let { limit = 20, page = 0 } = req.query;
     //category = "687904f506b1b9b68ea90144";
     //console.log("Filtering products with name:", name, "category:", category, "fromPrice:", fromPrice, "toPrice:", toPrice, "whereToBuyFilter:", whereToBuyFilter);
     const matchStage = {};
@@ -425,12 +426,16 @@ exports.filterProduct = async (req, res) => {
     }
 
     if (fromPrice !== undefined || toPrice !== undefined) {
-      matchStage["ProductVariant.Price"] = {};
-      if (fromPrice !== undefined) {
-        matchStage["ProductVariant.Price"].$gte = fromPrice;
+      matchStage.ProductVariant = { 
+        $elemMatch: {
+          Price: {}
+        }
+      };
+      if (fromPrice !== undefined && fromPrice !== null && fromPrice !== "") {
+        matchStage.ProductVariant.$elemMatch.Price.$gte = Number(fromPrice);
       }
-      if (toPrice !== undefined) {
-        matchStage["ProductVariant.Price"].$lte = toPrice;
+      if (toPrice !== undefined && toPrice !== null && toPrice !== "") {
+        matchStage.ProductVariant.$elemMatch.Price.$lte = Number(toPrice);
       }
     }
 
@@ -477,7 +482,7 @@ exports.filterProduct = async (req, res) => {
       }
     });
 
-    const products = await Product.aggregate(pipeline);
+    const products = await Product.aggregate(pipeline).limit(10).skip(Number(page) * Number(limit));
     //console.log("Filtered products:", products);
     res.json(products);
   } catch (err) {
