@@ -163,9 +163,11 @@ function Login() {
 
         // Redirect after 2 seconds
         setTimeout(() => {
-          navigate("/Ecommerce/home");
-
-          // window.location.href = "/dashboard" // Uncomment to redirect
+          if (data.user && data.user.UserRole === "Admin") {
+            window.location.href = "http://localhost:3000/Ecommerce/admin/admin-dashboard";
+          } else {
+            navigate("/Ecommerce/home");
+          }
         }, 2000);
       } else {
         setErrors((prev) => ({
@@ -203,14 +205,13 @@ function Login() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        // // Redirect after 2 seconds
-        // setTimeout(() => {
-        //   window.location.href = "/home"; // Uncomment to redirect
-        // }, 2000);
+        // Redirect after 2 seconds
         setTimeout(() => {
-          navigate("/Ecommerce/home");
-
-          // window.location.href = "/dashboard" // Uncomment to redirect
+          if (data.user && data.user.UserRole === "Admin") {
+            window.location.href = "http://localhost:3000/Ecommerce/admin/admin-dashboard";
+          } else {
+            navigate("/Ecommerce/home");
+          }
         }, 2000);
       } else {
         setErrors((prev) => ({

@@ -1,22 +1,49 @@
 import "./AdminHeader.css";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 function AdminHeader({ title = "Dashboard", user = null }) {
-  const defaultUser = {
-    name: "Admin",
-    avatar: "/placeholder.svg?height=32&width=32",
-  };
+  const navigate = useNavigate();
+  const [adminInfo, setAdminInfo] = useState(null);
 
-  const currentUser = user || defaultUser;
+  useEffect(() => {
+    // Get admin id from localStorage (prefer userId key)
+    let adminId = localStorage.getItem("userId");
+    if (!adminId) {
+      // fallback: try to get from user object
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        adminId = userData.id || userData.userId || userData.ID;
+      }
+    }
+    if (!adminId) return;
+    fetch(`http://localhost:5000/admin/${adminId}`)
+      .then((res) => res.json())
+      .then((data) => setAdminInfo(data))
+      .catch((err) => setAdminInfo(null));
+  }, []);
+
+  const currentUser = adminInfo
+    ? {
+        name: adminInfo.FirstName && adminInfo.LastName ? `${adminInfo.FirstName} ${adminInfo.LastName}` : adminInfo.Username || "Admin",
+        avatar: adminInfo.Image || "/placeholder.svg?height=32&width=32",
+      }
+    : user || { name: "Admin", avatar: "/placeholder.svg?height=32&width=32" };
+
+  // Debug: Log adminInfo and avatar URL
+  console.log('AdminHeader adminInfo:', adminInfo);
+  console.log('AdminHeader avatar src:', currentUser.avatar);
 
   const handleProfileClick = () => {
-    console.log("Navigate to profile");
+    window.location.href = "http://localhost:3000/Ecommerce/admin/profile";
   };
 
   const handleLogout = () => {
-    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-      console.log("Logout");
-      // Handle logout logic here
-    }
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/Ecommerce/home");
+    window.location.reload();
   };
 
   return (
