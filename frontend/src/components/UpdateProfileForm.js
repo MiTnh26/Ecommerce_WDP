@@ -73,32 +73,79 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
 
     return newErrors;
   };
-
   const handleUpdate = async (e) => {
     e.preventDefault();
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
+    const form = new FormData();
+
+    for (const key in formData) {
+      form.append(key, formData[key]);
+    }
+    form.append("userId", userId);
     try {
       const res = await fetch(`http://localhost:5000/customer/profile/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: form,
       });
+
+      const data = await res.json();
+
       if (res.ok) {
         alert("Update successful!");
         if (onUpdateSuccess) onUpdateSuccess();
       } else {
-        const errData = await res.json();
-        alert("Update failed: " + (errData.message || "Server error"));
+        alert("Update failed: " + (data.message || "Server error"));
       }
     } catch (err) {
       alert("Server connection error");
     }
   };
+
+  // const handleUpdate = async (e) => {
+  //   e.preventDefault();
+  //   const validationErrors = validate();
+  //   if (Object.keys(validationErrors).length > 0) {
+  //     setErrors(validationErrors);
+  //     return;
+  //   }
+
+  //   try {
+  //     const res = await fetch(`http://localhost:5000/customer/profile/${userId}`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(formData),
+  //     });
+  //     if (res.ok) {
+  //       alert("Update successful!");
+  //       if (onUpdateSuccess) onUpdateSuccess();
+  //     } else {
+  //       const errData = await res.json();
+  //       alert("Update failed: " + (errData.message || "Server error"));
+  //     }
+  //   } catch (err) {
+  //     alert("Server connection error");
+  //   }
+  // };
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const previewURL = URL.createObjectURL(file); // Tạo URL preview
+
+      // Lưu file thật vào formData.Image để submit
+      setFormData((prev) => ({
+        ...prev,
+        Image: file,
+        previewImage: previewURL, // Dùng để hiển thị trước
+      }));
+    }
+  };
+
 
   return (
     <Container style={{ maxWidth: "500px", background: "#f0f2f5" }} className="d-flex justify-content-center align-items-center min-vh-100">
@@ -120,9 +167,9 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
                 justifyContent: "center"
               }}
             >
-              {formData.Image ? (
+              {formData.previewImage || typeof formData.Image === "string" ? (
                 <Image
-                  src={formData.Image}
+                  src={formData.previewImage || formData.Image}
                   roundedCircle
                   width="120"
                   height="120"
@@ -132,6 +179,7 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
               ) : (
                 <span style={{ color: "#b0b3b8", fontSize: 48 }}>👤</span>
               )}
+
             </div>
             <h4 className="fw-bold mb-1" style={{ color: "#050505" }}>
               {formData.FirstName} {formData.LastName}
@@ -141,7 +189,7 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
             </div>
           </div>
           <Form onSubmit={handleUpdate}>
-            <Form.Group className="mb-3">
+            {/* <Form.Group className="mb-3">
               <Form.Label className="fw-semibold" style={{ color: "#65676b" }}>Avatar (URL)</Form.Label>
               <Form.Control
                 type="text"
@@ -153,7 +201,17 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
                 style={{ background: "#f0f2f5", border: "none", borderRadius: 8 }}
               />
               <Form.Control.Feedback type="invalid">{errors.Image}</Form.Control.Feedback>
-            </Form.Group>
+            </Form.Group> */}
+            <Form.Label className="fw-semibold" style={{ color: "#65676b" }}>Avatar (File)</Form.Label>
+            <Form.Control
+              type="file"
+              name="Image"
+              accept="image/*"
+              onChange={handleFileChange}
+              isInvalid={!!errors.Image}
+              style={{ background: "#f0f2f5", border: "none", borderRadius: 8 }}
+            />
+            <Form.Control.Feedback type="invalid">{errors.Image}</Form.Control.Feedback>
 
             <div className="row">
               <div className="col-md-6 mb-3">
@@ -241,16 +299,16 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
             </Form.Group>
 
             <Button
-              variant="primary"
+              variant="warning"
               type="submit"
               className="w-100 fw-bold"
               size="lg"
               style={{
                 fontSize: "1.1rem",
-                background: "#1877f2",
+                background: "#ffc107",
                 border: "none",
                 borderRadius: 8,
-                boxShadow: "0 2px 8px rgba(24,119,242,0.15)"
+                boxShadow: "0 2px 8px rgba(255,193,7,0.15)"
               }}
             >
               Update Profile

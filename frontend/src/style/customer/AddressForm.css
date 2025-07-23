@@ -1,0 +1,223 @@
+/* ======= General Layout ======= */
+.container {
+  padding: 40px 20px;
+  background: linear-gradient(to right, #fff8f0, #fffefb);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.card {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 10px 20px rgba(255, 165, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+/* ======= Header ======= */
+.card-header {
+  background: linear-gradient(45deg, #ffbd59, #ff914d);
+  color: white !important;
+  border-bottom: none;
+  padding: 24px;
+}
+
+.card-header .d-flex {
+  gap: 16px;
+}
+
+.card-header h5 {
+  font-weight: 700;
+}
+
+.card-header small {
+  font-size: 0.85rem;
+}
+
+/* ======= Profile Image ======= */
+.card-header img {
+  border: 2px solid white;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card-header img:hover {
+  transform: scale(1.05);
+}
+
+/* ======= Address List ======= */
+.list-group-item {
+  border: none;
+  border-radius: 10px;
+  padding: 16px;
+  background-color: #fffaf3;
+  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.08);
+  transition: background 0.3s ease;
+}
+
+.list-group-item:hover {
+  background-color: #fff3e0;
+}
+
+.list-group-item strong {
+  font-size: 1.05rem;
+  color: #ff6f00;
+}
+
+.badge.bg-primary {
+  background-color: #ff6f00 !important;
+}
+
+/* ======= Buttons ======= */
+button {
+  transition: all 0.3s ease-in-out;
+  border-radius: 8px !important;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+  color: #ff6f00;
+  border-color: #ff6f00;
+}
+
+.btn-outline-primary:hover {
+  background-color: #ff6f00;
+  color: white;
+}
+
+.btn-outline-danger {
+  color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+.btn-outline-danger:hover {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.btn-outline-success {
+  color: #388e3c;
+  border-color: #388e3c;
+}
+
+.btn-outline-success:hover {
+  background-color: #388e3c;
+  color: white;
+}
+
+.btn.btn-success {
+  background-color: #ffa726;
+  border-color: #ffa726;
+}
+
+.btn.btn-success:hover {
+  background-color: #fb8c00;
+  border-color: #fb8c00;
+}
+
+/* ======= Modal Styling ======= */
+.modal-content {
+  border-radius: 18px;
+  border: none;
+}
+
+.modal-header {
+  background-color: #fff3e0;
+  border-bottom: none;
+}
+
+.modal-title {
+  font-weight: 600;
+  color: #ff6f00;
+}
+
+.modal-body {
+  background-color: #fffdf8;
+  padding: 24px;
+}
+
+.modal-footer {
+  background-color: #fff3e0;
+  border-top: none;
+  padding: 16px;
+}
+
+/* ======= Form ======= */
+form label {
+  font-weight: 600;
+  color: #444;
+}
+
+form .form-control,
+form .form-select {
+  border-radius: 8px;
+  border: 1px solid #ffcc80;
+  padding: 10px;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+form .form-control:focus,
+form .form-select:focus {
+  border-color: #ffa726;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+form .form-control.is-invalid,
+form .form-select.is-invalid {
+  border-color: #ef5350;
+}
+
+.form-control-feedback {
+  color: #ef5350;
+}
+
+/* ======= Responsive Fixes ======= */
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+
+  .list-group-item .text-end {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+}
+
+/* ======= Animations ======= */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card,
+.modal-content {
+  animation: fadeInUp 0.3s ease;
+}
+
+/* ======= Custom Add Address Button ======= */
+.card-body > .d-flex > button {
+  background: linear-gradient(45deg, #ffa726, #fb8c00);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.card-body > .d-flex > button:hover {
+  background: linear-gradient(45deg, #fb8c00, #f57c00);
+}
