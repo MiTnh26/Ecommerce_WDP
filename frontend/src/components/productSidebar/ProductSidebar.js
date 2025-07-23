@@ -6,6 +6,7 @@ export default function ProductSidebar({ active, onSelect }) {
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const navigate = useNavigate();
 
   return (
@@ -93,6 +94,28 @@ export default function ProductSidebar({ active, onSelect }) {
               onClick={() => navigate("/Ecommerce/seller/shopinformation")}
             >
               View Shop
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Manager Category Section */}
+      <div className={styles.section}>
+        <div
+          className={styles.sectionTitle}
+          onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+        >
+          Manager Category
+          <span className={styles.arrow}>{isCategoryOpen ? "▾" : "▸"}</span>
+        </div>
+
+        {isCategoryOpen && (
+          <div className={styles.dropdownContent}>
+            <div
+              className={styles.sidebarButton}
+              onClick={() => navigate("/Ecommerce/seller/category")}
+            >
+              Manage Category
             </div>
           </div>
         )}

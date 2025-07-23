@@ -22,8 +22,6 @@ const PurchaseOrders = () => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-
-
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user._id;
   const fallbackImg = "../assets/images/no-image.png";
