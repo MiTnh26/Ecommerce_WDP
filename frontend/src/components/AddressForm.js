@@ -17,8 +17,9 @@ import {
 } from "react-bootstrap";
 import "../style/customer/AddressForm.css";
 
-function AddressForm({ userId }) {
-  const [user, setUser] = useState(null);
+function AddressForm({ userId,user: userProp }) {
+   const [user, setUser] = useState(userProp || null);
+
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
@@ -37,7 +38,9 @@ function AddressForm({ userId }) {
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
   const [errors, setErrors] = useState({});
-
+   useEffect(() => {
+    if (userProp) setUser(userProp);
+  }, [userProp]);
   useEffect(() => {
     if (!userId) return;
     fetch(`http://localhost:5000/customer/profile/${userId}`)

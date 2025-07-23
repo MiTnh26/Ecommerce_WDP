@@ -14,7 +14,7 @@ import '../App.css';
 import '../style/customer/ProfilePage.css';
 
 
-function ProfileView({ userId }) {
+function ProfileView({ userId ,onUpdateSuccess}) {
   const [user, setUser] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
@@ -35,6 +35,20 @@ function ProfileView({ userId }) {
       })
       .catch((err) => console.error("❌ Lỗi khi lấy thông tin user:", err));
   }, [userId]);
+  const handleProfileUpdated = () => {
+  // Fetch lại profile mới sau khi update thành công
+  fetch(`http://localhost:5000/customer/profile/${userId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setUser(data);
+      localStorage.setItem("user", JSON.stringify(data)); 
+      if (onUpdateSuccess) onUpdateSuccess();
+  })
+    .catch((err) => console.error("Lỗi khi refetch user sau update:", err));
+  
+  // Tắt modal sau khi cập nhật
+  setShowUpdateModal(false);
+};
 
 
 
@@ -150,7 +164,7 @@ function ProfileView({ userId }) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-2 pb-4 px-4">
-          <UpdateProfileForm userId={userId} />
+          <UpdateProfileForm userId={userId} onUpdateSuccess={handleProfileUpdated} />
         </Modal.Body>
       </Modal>
     </Container>

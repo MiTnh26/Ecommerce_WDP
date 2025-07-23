@@ -15,26 +15,46 @@ import '../style/customer/ProfilePage.css';
 
 import { Outlet } from "react-router-dom";
 
-const user = JSON.parse(localStorage.getItem("user"));
+// const user = JSON.parse(localStorage.getItem("user"));
 
-let userId = "0";
-try {
-  userId = user._id;
-  console.log("userid", userId);
-} catch (error) {
-  console.error(error);
-}
+// let userId = "0";
+// try {
+//   userId = user._id;
+//   console.log("userid", userId);
+// } catch (error) {
+//   console.error(error);
+// }
 
 function ProfilePage() {
   const [showSubmenu, setShowSubmenu] = useState(false);
 
-  const toggleSubmenu = () => {
-    setShowSubmenu(!showSubmenu);
-  };
+
   const location = useLocation();
   const defaultTab = location.state?.tab || "view";
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || {};
+    } catch (error) {
+      console.error(error);
+      return {};
+    }
+  });
+
+  const userId = user._id || "0";
+  const handleProfileUpdated = async () => {
+  try {
+    const res = await fetch(`http://localhost:5000/customer/profile/${userId}`);
+    const data = await res.json();
+    setUser(data);
+    localStorage.setItem("user", JSON.stringify(data)); // sync lại localStorage nếu cần
+  } catch (err) {
+    console.error("Lỗi khi cập nhật user sau update:", err);
+  }
+};
+
+
 
   return (
     <div className="d-flex flex-column min-vh-100 container-fluid p-0 m-0 profile-page-wrapper">
@@ -131,19 +151,19 @@ function ProfilePage() {
             <Tab.Container activeKey={activeTab}>
               <Tab.Content>
                 <Tab.Pane eventKey="view">
-                  <ProfileView userId={userId} />
+                  <ProfileView userId={userId} onUpdateSuccess={handleProfileUpdated} />
                 </Tab.Pane>
                 <Tab.Pane eventKey="update">
                   <UpdateProfileForm userId={userId} />
                 </Tab.Pane>
                 <Tab.Pane eventKey="address">
-                  <AddressForm userId={userId} />
+                  <AddressForm userId={userId} user={user}  />
                 </Tab.Pane>
                 <Tab.Pane eventKey="changepassword">
                   <ChangePasswordForm userId={userId} />
                 </Tab.Pane>
                 <Tab.Pane eventKey="orderdetail">
-                  <OrderDetail 
+                  <OrderDetail
                     setActiveTab={setActiveTab}
                     orderId={selectedOrderId}
                   />
