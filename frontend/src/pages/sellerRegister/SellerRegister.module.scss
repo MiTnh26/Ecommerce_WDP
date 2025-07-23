@@ -216,3 +216,10 @@ $green: #10b981;
   display: inline-flex;
   gap: 0.5rem;
 }
+
+.errorText {
+  color: #FF0000;
+  font-style: italic;
+  font-size: 1rem;
+  font-weight: 400;
+}

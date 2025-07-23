@@ -21,6 +21,25 @@ exports.getCategoryById = async (req, res) => {
   }
 };
 
+// get categories by shopId
+exports.getCategoriesByShop = async (req, res) => {
+  try {
+    const { shopId } = req.params;
+    if (!shopId) {
+      return res
+        .status(400)
+        .json({ message: "shopId parameter is required" });
+    }
+    const categories = await Category.find({ ShopId: shopId });
+    res.json(categories);
+  } catch (err) {
+    console.error("Server error fetching categories by shop:", err);
+    res
+      .status(500)
+      .json({ message: "Server error fetching categories", error: err.message });
+  }
+};
+
 // Tạo mới category
 exports.createCategory = async (req, res) => {
   try {

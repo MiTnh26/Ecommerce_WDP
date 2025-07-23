@@ -3,7 +3,8 @@ require("dotenv").config();
 const app = express();
 
 
-// Cấu hình JSON và URL-encoded phải đúng thứ tự, không lặp lại!
+
+// ⚠️ Cấu hình JSON và URL-encoded phải đúng thứ tự, không lặp lại!
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
@@ -45,10 +46,13 @@ const adminRouter = require("./src/routes/AdminRoutes");
 const sellerRouter = require("./src/routes/SellerRoutes");
 const categoryRouter = require("./src/routes/CategoryRouter");
 
-const productRouter = require("./src/routes/ProductRoutes")
+const productRouter = require("./src/routes/ProductRoutes");
+const productCtrl = require("./src/controllers/ProductController/ProductController");
+
 app.use("/customer", userRouter);
 app.use("/admin", adminRouter);
 app.use("/seller", sellerRouter);
+app.get("/category", productCtrl.getCategories);
 app.use("/product", productRouter);
 app.use("/category", categoryRouter);
 // //Cho server Khoi dong
