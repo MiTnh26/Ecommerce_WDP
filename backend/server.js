@@ -42,10 +42,9 @@ mongoose
 
 // API routes
 const userRouter = require("./src/routes/UserRoutes");
-
 const adminRouter = require("./src/routes/AdminRoutes");
 const sellerRouter = require("./src/routes/SellerRoutes");
-
+const categoryRouter = require("./src/routes/CategoryRouter");
 
 const productRouter = require("./src/routes/ProductRoutes");
 const productCtrl = require("./src/controllers/ProductController/ProductController");
@@ -55,6 +54,7 @@ app.use("/admin", adminRouter);
 app.use("/seller", sellerRouter);
 app.get("/category", productCtrl.getCategories);
 app.use("/product", productRouter);
+app.use("/category", categoryRouter);
 // //Cho server Khoi dong
 
 

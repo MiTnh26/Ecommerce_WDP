@@ -7,65 +7,103 @@ import slide4 from '../../assets/images/slide-4.jpg'
 import '../../style/HomePage.css'
 import Category from '../../components/homePage/Category'
 import Card from '../../components/homePage/Card'
-const dataCategory = [
-  { id: 1, title: "Fruits & Vegetables", icon: "🥕" },
-  { id: 2, title: "Meat & Fish", icon: "🍗" },
-  { id: 3, title: "Beverages", icon: "☕" },
-  { id: 4, title: "Dairy Products", icon: "🧀" },
-  { id: 5, title: "Snacks", icon: "🍪" },
-  { id: 6, title: "Bakery", icon: "🍞" },
-  { id: 7, title: "Frozen Foods", icon: "🧊" },
-  { id: 8, title: "Household", icon: "🧽" },
-]
-const HomePage = () => {  
-  const [filterTrending, setFilterTrending] = useState("All");
-  const [widthCartTrending, setWidthCartTrending] = useState(1); // default với mobile = 1
-  // navigate
-  const navigate = useNavigate();
-  useEffect(() => {
-    const updateWidthCartTrending = () => {
-      if (window.innerWidth >= 1200) {
-        setWidthCartTrending(5); // Extra large (xl)
-      } else if (window.innerWidth >= 992) {
-        setWidthCartTrending(4); // Large (lg)
-      } else if (window.innerWidth >= 768) {
-        setWidthCartTrending(3); // Medium (md)
-      } else if(window.innerWidth >= 576){
-        setWidthCartTrending(2); // Small (sm)
-      } else {
-        setWidthCartTrending(1); // Small và Extra small (sm, xs)
-      }
-    };
-    updateWidthCartTrending();
-    window.addEventListener("resize", updateWidthCartTrending);
-    return () => window.removeEventListener("resize", updateWidthCartTrending);
-  }, []);
-  console.log("A", widthCartTrending)
+import { useQuery } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
+import axios from 'axios';
+import { getIconForCategory } from '../../store/keywordToIcon';
+import { fetchCategory, fetchCategoryLength, fetchTrendingProducts, fetchBestSellerProducts, fetchNewProducts } from '../../api/ProductApi';
 
-  const handleSelect = (selectedKey, event) => {
-    event.preventDefault(); // Chặn chuyển hướng
-    setFilterTrending(selectedKey);
+const HomePage = () => {
+  // 1. State declare
+  const [dataCategory, setDataCategory] = useState([]);
+  const [maxLengthCategory, setMaxLengthCategory] = useState(0);
+  const navigate = useNavigate();
+
+  // 2. Refs 
+  const { ref: trendingRef, inView: trendingInView } = useInView({ triggerOnce: true });
+  const { ref: bestSellerRef, inView: bestSellerInView } = useInView({ triggerOnce: true });
+  const { ref: newProductRef, inView: newProductRefInView } = useInView({ triggerOnce: true });
+
+  // 3. Configurations
+  const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+
+  // 4. Data fetching - useEffect
+  useEffect(() => {
+    const loadData = async () => {
+      const [categories, count] = await Promise.all([
+        fetchCategory(),
+        fetchCategoryLength()
+      ]);
+      setDataCategory(categories || []);
+      setMaxLengthCategory(count || 0);
+    };
+
+    loadData();
+  }, []);
+
+  // 5. React Query hooks
+    //5.1 trending products
+  const { data: trendingData, isLoading: isLoadingTrending } = useQuery({
+    queryKey: ['trending'],
+    queryFn: fetchTrendingProducts,
+    enabled: trendingInView,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+  });
+    //5.2 best sales products
+  const { data: bestSellerData, isLoading: isBestSellerLoading } = useQuery({
+    queryKey: ['bestSeller'],
+    queryFn: fetchBestSellerProducts,
+    enabled: bestSellerInView,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+  });
+  //5.3 new products
+  const { data: newProductData, isLoading: isNewProductLoading } = useQuery({
+    queryKey: ['newProducts'],
+    queryFn: fetchNewProducts,
+    enabled: newProductRefInView,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+  });
+
+
+  // 6. Event handlers
+    //6.1 Handle category click next category
+  const handleCategoryClickNext = async () => {
+    console.log("handleCategoryClickNext");
+    try {
+      const res = await axios.get(`${baseURL}/category/get-category?limit=1&skip=${dataCategory.length}`, {
+        withCredentials: true,
+      });
+      const data = res.data[0];
+      const icon = getIconForCategory(data.CategoryName);
+      setDataCategory(prev => [...prev, { ...data, icon }]);
+    } catch (error) {
+      console.error("Error fetching more categories:", error);
+    }
   };
+  // test api
   return (
     <div className="mt-4">
       {/* Banner */}
-      <Row>
+      <Row className='bg-white rounded-3 shadow-sm py-2'>
         <Col lg={7}>
           <div className="banner1 ">
             <Carousel className=" rounded-4" controls={false}>
-              <Carousel.Item style={{backgroundImage: `url(${slide1})`, width: '100%', height: '700px', backgroundPosition: 'right center'}} className=" rounded-3">
-              <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
-              <div>
-              <p className='title h1'>Fresh Smoothie & Summer Juice</p>
-              <p className="description text-muted">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
-              </div>
-              <Button variant="outline-secondary" className='rounded-0'>SHOP NOW</Button>
-              </div>
+              <Carousel.Item style={{ backgroundImage: `url(${slide1})`, width: '100%', height: '700px', backgroundPosition: 'right center' }} className=" rounded-3">
+                <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
+                  <div>
+                    <p className='title h1'>...</p>
+                    <p className="description text-muted">...</p>
+                  </div>
+                  <Button variant="outline-secondary" className='rounded-0'>SHOP NOW</Button>
+                </div>
 
-              </Carousel.Item>      
+              </Carousel.Item>
             </Carousel>
           </div>
-          </Col>
+        </Col>
         <Col lg={5} style={{ height: '700px' }} className='d-flex flex-column justify-content-between'>
           {/* Banner trên cùng phai*/}
           <div style={{ height: '340px' }}>
@@ -107,59 +145,28 @@ const HomePage = () => {
           </div>
         </Col>
       </Row>
-      <div className="category mt-5">
-        <Category dataList={dataCategory} title="Category" />
+      <div className="category mt-5 bg-white rounded-3 shadow-sm py-2 px-1 ">
+        {dataCategory && <Category dataList={dataCategory} title="Category" dataLength={maxLengthCategory} onClickNext={handleCategoryClickNext} />}
       </div>
-      <div className="nav-trending-product mt-5">
-        <div className="header-nav d-flex justify-content-between align-items-center">
-          <div className="title h3">Trending Products</div>
-          <Nav 
-          variant="underline" 
-          activeKey={filterTrending}
-          onSelect={handleSelect}
-          >
-            <Nav.Item>
-              <Nav.Link className="fw-normal" eventKey="All">ALL</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link className="fw-normal" eventKey="link-1">Option 1</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link className="fw-normal" eventKey="link-2">Option 2</Nav.Link>
-            </Nav.Item>
-          </Nav>
-        </div>
-              <p>Giá trị hiện tại: {filterTrending}</p>
-              <div className="body-nav d-flex gap-3 flex-wrap">
-              <div className="item-cart" onClick={() => navigate("/Ecommerce/product-detail/1")}
-              style={{width: `calc(${100 / widthCartTrending}% - 1rem)`}} >
-              <Card />
-              </div>
-               <div className="item-cart" 
-              style={{width: `calc(${100 / widthCartTrending}% - 1rem)`}} >
-              <Card />
-              </div>
-              <div className="item-cart" 
-              style={{width: `calc(${100 / widthCartTrending}% - 1rem)`}} >
-              <Card />
-              </div>
-              <div className="item-cart" 
-              style={{width: `calc(${100 / widthCartTrending}% - 1rem)`}} >
-              <Card />
-              </div>
-              <div className="item-cart" 
-              style={{width: `calc(${100 / widthCartTrending}% - 1rem)`}} >
-              <Card />
-              </div>
-              <div className="item-cart" 
-              style={{width: `calc(${100 / widthCartTrending}% - 1rem)`}} >
-              <Card />
-              </div>
-
-        </div>
+      {/* Trending */}
+      <div className="nav-trending-product mt-5 bg-white rounded-3 shadow-sm py-2 px-1" ref={trendingRef}>
+        {isLoadingTrending ? (
+          <>
+            <p>Is Loading ...</p>
+          </>) : (
+          <>
+         {trendingData && trendingData.length > 0  ? (<>
+            <Category dataList={trendingData} title="Trending Products" Component={Card} dataLength={trendingData.length}/>
+          </>):(<>
+            <p className="title h4">Trending Products</p>
+            {/* <Category dataList={dataTrending} title="Trending Products" Component={Card} dataLength={0}/> */}
+            <p>Data is updateing ... </p>
+          </>)}
+          </>
+        )}
       </div>
       {/* Bannner 2 */}
-      <div className="d-flex gap-3 mt-5">
+      <div className="d-flex gap-3 mt-5 bg-white rounded-3 shadow-sm py-2 px-1">
         <div className="banner2 rounded-3"
           style={{
             backgroundImage: `url(${slide1})`,
@@ -194,12 +201,41 @@ const HomePage = () => {
         </div>
       </div>
       {/* Best seller */}
-      <div className="best-seller mt-5">
-      <Category dataList={dataCategory} title="Best Seller" Component={Card}/>
+      <div className="best-seller mt-5 bg-white rounded-3 shadow-sm py-2 px-1" ref={bestSellerRef}>
+        {isBestSellerLoading ? (
+          <>
+            <p>Is Loading ...</p>
+          </>) : (
+          <>
+         {bestSellerData && bestSellerData.length > 0  ? (<>
+            <Category dataList={bestSellerData} title="Best Seller Products" Component={Card} dataLength={bestSellerData.length}/>
+          </>):(<>
+            <p className="title h4">Trending Products</p>
+            <p>Data is updateing ... </p>
+          </>)}
+          </>
+        )}
       </div>
+      
       {/* New product */}
-      <div className="new-product mt-5">
-      <Category dataList={dataCategory} title="New" Component={Card}/>
+      <div className="new-product mt-5 bg-white rounded-3 shadow-sm py-2 px-1" ref={newProductRef}>
+       {isNewProductLoading ? (
+          <>
+            <p>Is Loading ...</p>
+          </>
+          ) : (
+          <>
+          {newProductData && newProductData.length > 0  ? (
+            <>
+            <Category dataList={newProductData} title="New Products" Component={Card} dataLength={newProductData.length}/>
+          </>):(<>
+            <p className="title h4">New Products</p>
+            <p>Data is updateing ... </p>
+          </>
+        
+        )}
+          </>
+        )}
       </div>
     </div>
   )
