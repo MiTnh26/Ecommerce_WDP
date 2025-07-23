@@ -39,6 +39,9 @@ export default function ShopInformation() {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedWard, setSelectedWard] = useState("");
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
+  const [selectedWardCode, setSelectedWardCode] = useState("");
   const queryClient = useQueryClient();
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -61,22 +64,48 @@ export default function ShopInformation() {
       .then(setProvinces);
   }, []);
 
-  // Khi mở modal edit, set lại địa chỉ đã lưu
+  // Khi mở modal edit, nếu đã có địa chỉ, tự động load và set sẵn district và ward theo địa chỉ cũ của shop.
   useEffect(() => {
-    if (showEditModal && shopInfo?.address) {
+    if (showEditModal && shopInfo?.address && provinces.length > 0) {
       setSelectedProvince(shopInfo.address.province || "");
-      setSelectedDistrict(shopInfo.address.district || "");
-      setSelectedWard(shopInfo.address.ward || "");
+      // Tìm province object
+      const provinceObj = provinces.find(p => p.name === shopInfo.address.province);
+      if (provinceObj) {
+        fetch(`https://provinces.open-api.vn/api/p/${provinceObj.code}?depth=2`)
+          .then(res => res.json())
+          .then(data => {
+            setDistricts(data.districts || []);
+            setSelectedDistrict(shopInfo.address.district || "");
+            // Tìm district object
+            const districtObj = data.districts.find(d => d.name === shopInfo.address.district);
+            if (districtObj) {
+              fetch(`https://provinces.open-api.vn/api/d/${districtObj.code}?depth=2`)
+                .then(res => res.json())
+                .then(data2 => {
+                  setWards(data2.wards || []);
+                  setSelectedWard(shopInfo.address.ward || "");
+                });
+            } else {
+              setWards([]);
+              setSelectedWard("");
+            }
+          });
+      } else {
+        setDistricts([]);
+        setWards([]);
+        setSelectedDistrict("");
+        setSelectedWard("");
+      }
     }
-  }, [showEditModal, shopInfo]);
+  }, [showEditModal, shopInfo, provinces]);
 
   // Khi chọn tỉnh
   const handleProvinceChange = async (e) => {
     const name = e.target.value;
-    const selected = provinces.find(p => p.name === name);
-    setSelectedProvince(selected?.name || "");
+    setSelectedProvince(name);
     setSelectedDistrict("");
     setSelectedWard("");
+    const selected = provinces.find(p => p.name === name);
     if (!selected) {
       setDistricts([]);
       setWards([]);
@@ -91,9 +120,9 @@ export default function ShopInformation() {
   // Khi chọn quận/huyện
   const handleDistrictChange = async (e) => {
     const name = e.target.value;
-    const selected = districts.find(d => d.name === name);
-    setSelectedDistrict(selected?.name || "");
+    setSelectedDistrict(name);
     setSelectedWard("");
+    const selected = districts.find(d => d.name === name);
     if (!selected) {
       setWards([]);
       return;
@@ -106,8 +135,7 @@ export default function ShopInformation() {
   // Khi chọn xã/phường
   const handleWardChange = (e) => {
     const name = e.target.value;
-    const selected = wards.find(w => w.name === name);
-    setSelectedWard(selected?.name || "");
+    setSelectedWard(name);
   };
 
   const { mutate, isPending, isError } = useMutation({
@@ -150,6 +178,7 @@ export default function ShopInformation() {
           ward: selectedWard
         }
       };
+      console.log("DATA TO SEND:", dataToSend);
       mutate(dataToSend);
     },
   });
