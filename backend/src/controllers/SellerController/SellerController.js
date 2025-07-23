@@ -20,7 +20,7 @@ const getShopByUserId = async (req, res) => {
   }
 };
 const updateShopProfile = async (req, res) => {
-  const { owner, description, name } = req.body;
+  const { owner, description, shopAvatar, name, address } = req.body;
   try {
     const shop = await Shop.findOne({ owner });
     if (!shop) {
@@ -38,7 +38,8 @@ const updateShopProfile = async (req, res) => {
       {
         name:        name !== undefined ? name : shop.name,
         description: description !== undefined ? description : shop.description,
-        shopAvatar:  newAvatar,
+        shopAvatar: shopAvatar !== undefined ? shopAvatar : shop.shopAvatar,
+        address: address !== undefined ? address : shop.address,
       },
       { new: true }
     );

@@ -172,7 +172,7 @@ const ViewOrderDetail = () => {
                             {product.ProductVariant.map((variant, index) => (
                               <>
                                 <div key={variant._id}>
-                                  ₫{Number(variant.Price).toLocaleString('vi-VN')}
+                                  ${Number(variant.Price).toLocaleString('vi-VN')}
                                   {index < product.ProductVariant.length - 1 && <br />}
                                 </div>
                                 <hr />
