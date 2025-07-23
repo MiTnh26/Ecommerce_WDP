@@ -415,7 +415,7 @@ const orderId = rawOrderId?.trim();
       })
       .populate({
         path: "BuyerId",
-        select: "PhoneNumber" 
+        select: "-__v -createdAt -updatedAt" 
       })
       .lean();
 
