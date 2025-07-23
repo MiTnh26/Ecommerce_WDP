@@ -1,4 +1,4 @@
-const { User, Payment } = require("../../models");
+const { User, Payment, Products } = require("../../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
@@ -9,6 +9,7 @@ const nodemailer = require("nodemailer");
 // const  {Order,OrderItem}  = require("../../models/index");
 const Order = require("../../models/Orders");
 const OrderItem = require("../../models/OrderItems");
+const Shops = require("../../models/Shops");
 
 const client = new OAuth2Client(process.env.O2Auth_Key);
 
@@ -184,7 +185,15 @@ const updateUser = async (req, res) => {
 };
 const addAddress = async (req, res) => {
   const { id } = req.params; // user id
-  const { address, phoneNumber, receiverName, status } = req.body;
+  const {
+    phoneNumber,
+    receiverName,
+    status,
+    province,
+    district,
+    ward,
+    detail,
+  } = req.body;
 
   try {
     const user = await User.findById(id);
@@ -199,10 +208,13 @@ const addAddress = async (req, res) => {
 
     const newAddress = {
       _id: new mongoose.Types.ObjectId(),
-      address,
       phoneNumber,
       receiverName,
       status: status || "Inactive",
+      province,
+      district,
+      ward,
+      detail,
     };
 
     user.ShippingAddress.push(newAddress);
@@ -217,7 +229,15 @@ const addAddress = async (req, res) => {
 };
 const updateAddress = async (req, res) => {
   const { userId, addressId } = req.params;
-  const { address, phoneNumber, receiverName, status } = req.body;
+  const {
+    phoneNumber,
+    receiverName,
+    status,
+    province,
+    district,
+    ward,
+    detail,
+  } = req.body;
 
   try {
     const user = await User.findById(userId);
@@ -225,18 +245,29 @@ const updateAddress = async (req, res) => {
 
     const addr = user.ShippingAddress.id(addressId);
     if (!addr) return res.status(404).json({ message: "Address not found" });
-    if (!address || !phoneNumber || !receiverName) {
+    if (!phoneNumber || !receiverName) {
       return res.status(400).json({ message: "Thiếu thông tin địa chỉ" });
     }
+
     // Nếu cập nhật thành mặc định => gỡ mặc định ở các địa chỉ khác
     if (status === "Default") {
-      user.ShippingAddress.forEach((a) => (a.status = "Inactive"));
+      user.ShippingAddress.forEach((a) => {
+        if (a._id.toString() !== addressId) {
+          a.status = "Inactive";
+        }
+      });
+      addr.status = "Default";
+    } else if (status) {
+      addr.status = status;
     }
 
-    addr.address = address ?? addr.address;
     addr.phoneNumber = phoneNumber ?? addr.phoneNumber;
     addr.receiverName = receiverName ?? addr.receiverName;
     addr.status = status ?? addr.status;
+    addr.province = province ?? addr.province;
+    addr.district = district ?? addr.district;
+    addr.ward = ward ?? addr.ward;
+    addr.detail = detail ?? addr.detail;
 
     await user.save();
 
@@ -258,11 +289,25 @@ const getAddressById = async (req, res) => {
     const address = user.ShippingAddress.id(addressId);
     if (!address) return res.status(404).json({ message: "Address not found" });
 
-    res.status(200).json(address);
+    // Trả về object đầy đủ rõ ràng để tránh mất trường nào
+    const result = {
+      _id: address._id,
+      receiverName: address.receiverName,
+      phoneNumber: address.phoneNumber,
+
+      status: address.status,
+      province: address.province,
+      district: address.district,
+      ward: address.ward,
+      detail: address.detail,
+    };
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: "Failed to get address", error });
   }
 };
+
 const deleteAddress = async (req, res) => {
   const { userId, addressId } = req.params;
 
@@ -393,7 +438,159 @@ const setDefaultAddress = async (req, res) => {
     res.status(500).json({ message: "Failed to set default address", error });
   }
 };
+const getAddressByUserId = async (req, res) => {
+  const { id } = req.params;
 
+  try {
+    const user = await User.findById(id).select("ShippingAddress");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      addresses: user.ShippingAddress || [],
+    });
+  } catch (error) {
+    console.error("❌ Error get address by userId:", error);
+    res.status(500).json({ message: "Failed get address by userId", error });
+  }
+};
+const getShopById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const shop = await Shops.findById(id);
+    if (!shop) {
+      return res.status(404).json({ message: "Shop not fount" });
+    }
+    res.status(200).json(shop);
+  } catch (error) {
+    res.status(500).json({ message: "Fail get shop by Id", error });
+  }
+};
+const getProductById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await Products.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not fount" });
+    }
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ message: "Fail get product by Id", error });
+  }
+};
+const getProductVariantById = async (req, res) => {
+  const { productId, productVariantId } = req.params;
+
+  try {
+    const product = await Products.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const productVariant = product.ProductVariant.id(productVariantId);
+    if (!productVariant)
+      return res.status(404).json({ message: "ProductVariant not found" });
+
+    // Trả về object đầy đủ rõ ràng để tránh mất trường nào
+    const result = {
+      _id: productVariant._id,
+      Image: productVariant.Image,
+      Price: productVariant.Price,
+
+      ProductVariantName: productVariant.ProductVariantName,
+      StockQuantity: productVariant.StockQuantity,
+      Status: productVariant.Status,
+    };
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get address", error });
+  }
+};
+const getPaymentMethod = async (req, res) => {
+  try {
+    const paymentMethod = await Payment.find();
+
+    if (!paymentMethod || paymentMethod.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy phương thức thanh toán nào." });
+    }
+
+    res.status(200).json(paymentMethod);
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy phương thức thanh toán:", error);
+    res
+      .status(500)
+      .json({ message: "Lấy phương thức thanh toán thất bại", error });
+  }
+};
+const createOrderItems = async (req, res) => {
+  try {
+    // Lấy dữ liệu từ body
+    const { Product, Total, Status } = req.body;
+    if (!Product || !Array.isArray(Product) || Product.length === 0) {
+      return res.status(400).json({ message: "Product array is required" });
+    }
+    // Tạo order item mới
+    const newOrderItem = new OrderItem({
+      Product,
+      Total,
+      Status: Status || "Pending",
+    });
+    await newOrderItem.save();
+    res.status(201).json({
+      message: "Order item created successfully",
+      orderItem: newOrderItem,
+    });
+  } catch (error) {
+    console.error("Error creating order item:", error);
+    res.status(500).json({ message: "Failed to create order item", error });
+  }
+};
+const checkout = async (req, res) => {
+  try {
+    const {
+      OrderDate,
+      PaymentId,
+      ShippingAddress,
+      Status,
+      TotalAmount,
+      BuyerId,
+      ShopId,
+      Items,
+    } = req.body;
+
+    if (
+      !PaymentId ||
+      !ShippingAddress ||
+      !TotalAmount ||
+      !BuyerId ||
+      !ShopId ||
+      !Items
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const newOrder = new Order({
+      OrderDate: OrderDate || Date.now(),
+      PaymentId,
+      ShippingAddress,
+      Status: Status || "Pending",
+      TotalAmount,
+      BuyerId,
+      ShopId,
+      Items,
+    });
+    await newOrder.save();
+    res
+      .status(201)
+      .json({ message: "Order created successfully", order: newOrder });
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ message: "Failed to create order", error });
+  }
+};
 module.exports = {
   setDefaultAddress,
   getOrderDetails,
@@ -410,4 +607,11 @@ module.exports = {
   getUserById,
   updateUser,
   getPaymentForCheckout,
+  getAddressByUserId,
+  getShopById,
+  getProductById,
+  getProductVariantById,
+  getPaymentMethod,
+  createOrderItems,
+  checkout,
 };

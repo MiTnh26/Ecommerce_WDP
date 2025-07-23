@@ -38,16 +38,21 @@ const userSchema = new mongoose.Schema(
     },
     ShippingAddress: [
       {
-        address: String,
-        phoneNumber: Number,
+        receiverName: String,
+        phoneNumber: String,
         status: {
           type: String,
           enum: ["Inactive", "Default"],
           default: "Inactive",
         },
-        receiverName: String,
+        detail: String,   // địa chỉ chi tiết (số nhà, tên đường)
+        ward: String,
+        district: String,
+        province: String,
+        address: String,  // có thể vẫn lưu trường full address để hiển thị
       },
     ],
+
     Status: {
       type: String,
       enum: ["Active", "Banned"],

@@ -126,4 +126,14 @@ const registerShop = async (req, res) => {
   }
 };
 
-module.exports = { getShopByUserId, updateShopProfile, registerShop };
+// get address.province
+const getProvince = async (req, res) => {
+  try {
+    const province = await Shop.find().distinct("address.province");
+    res.status(200).json(province);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get province", error });
+  }
+};
+
+module.exports = { getShopByUserId, updateShopProfile, registerShop, getProvince };

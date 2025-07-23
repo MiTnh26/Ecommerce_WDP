@@ -53,16 +53,27 @@ function ProfilePage() {
               variant="pills"
               className="flex-column"
               activeKey={activeTab}
-              onSelect={(k) => setActiveTab(k)}
+              onSelect={(selectedKey) => {
+                setActiveTab(selectedKey);
+                const personalInfoTabs = ["view", "bank", "address", "changepassword", "notisetting"];
+                if (!personalInfoTabs.includes(selectedKey)) {
+                  setShowSubmenu(false); // tự đóng submenu nếu chọn tab khác
+                }
+              }}
             >
+
               <Nav.Item>
-                <Nav.Link eventKey="view" className="mb-4 text-center">View profile</Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link onClick={toggleSubmenu} style={{ cursor: "pointer" }}>
+                <Nav.Link
+                  onClick={() => {
+                    setShowSubmenu(!showSubmenu);
+                    setActiveTab("view"); // tự mở tab View Profile
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
                   Personal Information ▾
                 </Nav.Link>
               </Nav.Item>
+
               {showSubmenu && (
                 <div style={{ marginLeft: "15px" }}>
                   <Nav.Item>
