@@ -248,7 +248,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                       alt=""
                       className="order-item-img"
                     /> */}
-                     <img
+                    <img
                       src={variant.Image || fallbackImg}
                       alt=""
                       className="order-item-img"
@@ -290,7 +290,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                 <div>
                   <span>Payment: </span>
                   <span className="purchaseorders-order-footer-highlight">
-                    {order.PaymentId?.PaymentMethod || "unknow"}
+                    {order.PaymentId?.Type || "unknow"}
                   </span>
                 </div>
               </div>
@@ -303,14 +303,25 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                 </div>
                 <div className="purchaseorders-order-footer-btns">
                   <Button
-                    
+
                     size="sm"
+                    style={{
+                      background: "linear-gradient(90deg, #ff7a00 0%, #ffae42 100%)",
+                      color: "white",
+                      border: "none",
+                      padding: "0.4rem 1rem",
+                      borderRadius: "8px",
+                      fontWeight: 500,
+                      boxShadow: "0 4px 12px rgba(255, 122, 0, 0.3)",
+                      transition: "all 0.3s ease",
+                      cursor: "pointer",
+                    }}
                     className="purchaseorders-detail-btn"
                     onClick={() => {
                       setSelectedOrderId(order._id)
                       setActiveTab("orderdetail");
-                      
-                      
+
+
                     }}
                   >
                     {order.Status === "Cancelled" ? "Cancellation details" : "View details"}
@@ -318,16 +329,38 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                   {["Delivered", "Cancelled"].includes(order.Status) && (
                     <Button
                       size="sm"
-                      className="purchaseorders-buyagain-btn"
+                      style={{
+                        background: "linear-gradient(90deg, #a259ff 0%, #c084fc 100%)",
+                        color: "white",
+                        border: "none",
+                        padding: "0.4rem 1rem",
+                        borderRadius: "8px",
+                        fontWeight: 500,
+                        boxShadow: "0 4px 12px rgba(162, 89, 255, 0.3)",
+                        transition: "all 0.3s ease",
+                        cursor: "pointer",
+                      }}
                       onClick={() => handleBuyAgain(order)}
                     >
                       Buy again
                     </Button>
+
+
                   )}
                   {["Pending"].includes(order.Status) && (
                     <Button
                       size="sm"
-                      className="purchaseorders-cancel-btn"
+                      style={{
+                        background: "linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%)",
+                        color: "white",
+                        border: "none",
+                        padding: "0.4rem 1rem",
+                        borderRadius: "8px",
+                        fontWeight: 500,
+                        boxShadow: "0 4px 12px rgba(255, 77, 79, 0.3)",
+                        transition: "all 0.3s ease",
+                        cursor: "pointer",
+                      }}
                       onClick={() => {
                         if (window.confirm("Bạn chắc chắn muốn huỷ đơn hàng này?")) {
                           handleCancelOrder(order);
@@ -336,6 +369,8 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                     >
                       Cancel Order
                     </Button>
+
+
                   )}
                 </div>
               </div>

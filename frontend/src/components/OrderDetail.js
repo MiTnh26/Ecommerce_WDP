@@ -115,9 +115,9 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
     >
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
         <div>
-          <div style={{ fontWeight: 600, fontSize: 16 }}>
+          {/* <div style={{ fontWeight: 600, fontSize: 16 }}>
             Order ID: <span style={{ color: blue }}>{order._id}</span>
-          </div>
+          </div> */}
           <div style={{ color: "#888", fontSize: 14 }}>
             Order Date: {new Date(order.OrderDate).toLocaleString()}
           </div>
@@ -146,7 +146,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
           <b>Shipping Address:</b> {order.ShippingAddress}
         </div>
         <div>
-          <b>Payment Method:</b> {order.PaymentId?.PaymentMethod || "Unknown"}
+          <b>Payment Method:</b> {order.PaymentId?.Type|| "Unknown"}
         </div>
       </div>
     </div>

@@ -390,7 +390,7 @@ const getOrderByUserId = async (req, res) => {
       })
       .populate({
         path: "PaymentId",
-        select: "PaymentMethod" 
+        select: "-__v -createdAt -updatedAt" 
       })
       .sort({ createdAt: -1 })
       .lean();
@@ -428,7 +428,7 @@ const orderId = rawOrderId?.trim();
       })
       .populate({
         path: "PaymentId",
-        select: "PaymentMethod" 
+        select: "-__v -createdAt -updatedAt" 
       })
       .populate({
         path: "BuyerId",

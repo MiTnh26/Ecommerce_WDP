@@ -138,7 +138,7 @@ function ProfileView({ userId ,onUpdateSuccess}) {
               className="rounded-pill fw-semibold"
               onClick={handleShowModal}
               style={{
-                // background: "linear-gradient(90deg, #0d6efd 60%, #4f8cff 100%)",
+                background: "linear-gradient(90deg, #ff7a00 60%, #ffae42 100%)",
                 border: "none",
                 boxShadow: "0 2px 12px rgba(13,110,253,0.10)",
               }}
