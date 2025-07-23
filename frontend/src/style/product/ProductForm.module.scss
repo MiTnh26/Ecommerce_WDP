@@ -145,3 +145,19 @@ $btn-green:  #00FF00;
   font-size: 1rem;
   font-weight: 400;
 }
+
+.preview {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.variantThumb {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
