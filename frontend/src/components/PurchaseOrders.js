@@ -22,7 +22,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const user = JSON.parse(localStorage.getItem("user"));
-  const userId = user._id;
+  // const userId = user._id;
   const fallbackImg = "../assets/images/no-image.png";
   const navigate = useNavigate();
 
