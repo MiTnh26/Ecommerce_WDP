@@ -1,4 +1,4 @@
-const Product  = require("../../models/Products");
+const Product = require("../../models/Products");
 const Category = require("../../models/Categories");
 
 /**
@@ -16,6 +16,24 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+exports.getAllProductsByShop = async (req, res) => {
+  const { shopId } = req.params;
+  if (!shopId) {
+    return res.status(400).json({ message: "shopId param is required" });
+  }
+  try {
+    const products = await Product.find({ ShopId: shopId })
+      .populate("CategoryId")
+      .populate("ShopId");
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ message: "Server error fetching products", error: err.message });
+  }
+};
+
 /**
  * POST /products   (create)
  * PUT  /products   (update)
@@ -30,7 +48,7 @@ exports.saveProduct = async (req, res) => {
       ShopId,
       ProductName,
       Description = "",
-      Status      = "Active",
+      Status = "Active",
     } = req.body;
 
     if (!ShopId) {
@@ -60,10 +78,10 @@ exports.saveProduct = async (req, res) => {
       }
       return {
         ProductVariantName: v.ProductVariantName,
-        Price:              Number(v.Price)        || 0,
-        StockQuantity:      Number(v.StockQuantity)|| 0,
-        Status:             v.Status              || "Active",
-        Image:              imageUrl,
+        Price: Number(v.Price) || 0,
+        StockQuantity: Number(v.StockQuantity) || 0,
+        Status: v.Status || "Active",
+        Image: imageUrl,
       };
     });
 
@@ -95,7 +113,7 @@ exports.saveProduct = async (req, res) => {
         ProductName,
         Description,
         Status,
-        ProductImage:   productImageUrl,
+        ProductImage: productImageUrl,
         ProductVariant: variantDocs,
       });
       await product.save();
@@ -132,9 +150,9 @@ exports.addVariant = async (req, res) => {
     const product = await Product.findById(id);
     product.ProductVariant.push({
       ProductVariantName,
-      Image:          imageUrl,
-      Price:          Number(Price),
-      StockQuantity:  Number(StockQuantity),
+      Image: imageUrl,
+      Price: Number(Price),
+      StockQuantity: Number(StockQuantity),
       Status,
     });
     await product.save();

@@ -6,28 +6,54 @@ export default function ViewListPage({
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
+  shopId,
+  reloadKey,
 }) {
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
 
-  useEffect(
-    () => {
-      fetch("http://localhost:5000/product")
+  useEffect(() => {
+    try {
+      const shopIdInfo = shopId;
+      if (!shopIdInfo) return;
+
+      fetch(`http://localhost:5000/product/shop/${shopId}`)
         .then((res) => res.json())
         .then(setProducts)
         .catch(() => setProducts([]));
-    },
-    [
-      /* you could add a reload flag here */
-    ]
-  );
+    } catch (error) {
+      console.error(error);
+    }
+  }, [shopId, reloadKey]);
+
+  // Normalize query once
+  const cleanQ = query.replace(/\s+/g, "").toLowerCase();
 
   const filtered = products.filter((p) => {
-    if (filter !== "All" && p.Status !== filter) return false;
-    if (query && !p.ProductName?.toLowerCase().includes(query.toLowerCase()))
+    try {
+      // 1) Status filter
+      if (filter !== "All" && p.Status !== filter) {
+        return false;
+      }
+
+      // 2) Text search filter
+      if (cleanQ) {
+        const cleanName = (p.ProductName || "")
+          .replace(/\s+/g, "")
+          .toLowerCase();
+        if (!cleanName.includes(cleanQ)) {
+          return false;
+        }
+      }
+
+      // 3) If we got here, it passes all filters
+      return true;
+    } catch (err) {
+      // In case of any unexpected error, exclude this item
+      console.error("Filter error on product", p._id, err);
       return false;
-    return true;
+    }
   });
 
   return (

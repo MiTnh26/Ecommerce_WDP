@@ -2,25 +2,44 @@
 import React, { useEffect, useState } from "react";
 import ProductForm from "../../components/productForm/ProductForm";
 
-export default function AddProductPage({ product, onCancel }) {
+export default function AddProductPage({ product, onCancel, shopId }) {
   const [categories, setCategories] = useState([]);
-  const [shopId, setShopId] = useState(null);
+  const [existingProducts, setExistingProducts] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/category")
-      .then((res) => res.json())
-      .then(setCategories);
-  }, []);
+    if (!shopId) return;
+    fetch(`http://localhost:5000/product/shop/${shopId}`)
+      .then(res => res.json())
+      .then(setExistingProducts)
+      .catch(() => setExistingProducts([]));
+  }, [shopId]);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user._id) return;
+    try {
+      const shopIdInfo = shopId;
+      if (!shopIdInfo) return;
 
-    fetch(`http://localhost:5000/seller/getShopInformation?owner=${user._id}`)
-      .then((res) => res.json())
-      .then((shop) => setShopId(shop._id))
-      .catch(console.error);
+      fetch(`http://localhost:5000/product/category/shop/${shopIdInfo}`)
+        .then((res) => res.json())
+        .then(setCategories)
+        .catch((err) => {
+          console.error("Error loading categories:", err);
+          setCategories([]);
+        });
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
+
+  // useEffect(() => {
+  //   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  //   if (!user._id) return;
+
+  //   fetch(`http://localhost:5000/seller/getShopInformation?owner=${user._id}`)
+  //     .then((res) => res.json())
+  //     .then((shop) => setShopId(shop._id))
+  //     .catch(console.error);
+  // }, []);
 
   const handleSave = (data) => {
     if (shopId) {
@@ -53,6 +72,7 @@ export default function AddProductPage({ product, onCancel }) {
       onSave={handleSave}
       onCancel={onCancel}
       product={product}
+      existingProducts={existingProducts}
     />
   );
 }

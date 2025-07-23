@@ -1,6 +1,7 @@
 const express = require("express");
 const multer  = require("multer");
 const ctrl    = require("../controllers/ProductController/ProductController");
+const ctrlCate    = require("../controllers/SellerController/CategoryController");
 const { storage } = require("../config/cloudinary");  
 
 const router = express.Router();
@@ -10,6 +11,9 @@ const upload = multer({ storage });
 
 // 2) GET /products — no file upload
 router.get("/", ctrl.getAllProducts);
+
+// 2a) GET /products/shop/:shopId — products for one shop
+router.get("/shop/:shopId", ctrl.getAllProductsByShop);
 
 // 3 & 4) POST /products & PUT /products
 //    expect 1 × ProductImage + up to 9 × VariantImage
@@ -35,5 +39,8 @@ router.delete("/:id/variants/:variantId", ctrl.removeVariant);
 
 // 9) GET /category — list categories
 router.get("/category", ctrl.getCategories);
+
+// 10) GET /category/shop/:shopId — list categories by shop
+router.get("/category/shop/:shopId", ctrlCate.getCategoriesByShop);
 
 module.exports = router;
