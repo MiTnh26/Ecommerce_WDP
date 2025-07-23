@@ -188,7 +188,11 @@ const updateUser = async (req, res) => {
       updateData.Image = req.file.path; // Gán link Cloudinary vào trường Image
     }
 
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
 
     res.json(updatedUser);
   } catch (err) {
@@ -283,7 +287,6 @@ const updateAddress = async (req, res) => {
     addr.ward = ward ?? addr.ward;
     addr.detail = detail ?? addr.detail;
 
-
     await user.save();
 
     res.status(200).json({
@@ -309,7 +312,6 @@ const getAddressById = async (req, res) => {
       _id: address._id,
       receiverName: address.receiverName,
       phoneNumber: address.phoneNumber,
-
 
       status: address.status,
       province: address.province,
@@ -383,19 +385,19 @@ const getOrderByUserId = async (req, res) => {
     const orders = await Order.find({ BuyerId: userId })
       .populate({
         path: "Items",
-        select: "-__v -createdAt -updatedAt"
+        select: "-__v -createdAt -updatedAt",
       })
       .populate({
-        path: "ShopId"
+        path: "ShopId",
       })
       .populate({
         path: "PaymentId",
-        select: "-__v -createdAt -updatedAt" 
+        select: "-__v -createdAt -updatedAt",
       })
       .sort({ createdAt: -1 })
       .lean();
 
-    const fixedOrders = orders.map(order => ({
+    const fixedOrders = orders.map((order) => ({
       ...order,
       Items: order.Items ? [order.Items] : [],
     }));
@@ -409,30 +411,29 @@ const getOrderByUserId = async (req, res) => {
   }
 };
 
-
 const getOrderDetails = async (req, res) => {
- const rawOrderId = req.params.orderId;
-const orderId = rawOrderId?.trim();
- console.log("Raw orderId param:", orderId);
+  const rawOrderId = req.params.orderId;
+  const orderId = rawOrderId?.trim();
+  console.log("Raw orderId param:", orderId);
   try {
     // const { orderId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({ message: "Invalid orderId format" });
     }
-   
+
     const order = await Order.findById(orderId)
       .populate({
         path: "Items",
-        select: "-__v -createdAt -updatedAt"
+        select: "-__v -createdAt -updatedAt",
       })
       .populate({
         path: "PaymentId",
-        select: "-__v -createdAt -updatedAt" 
+        select: "-__v -createdAt -updatedAt",
       })
       .populate({
         path: "BuyerId",
-        select: "-__v -createdAt -updatedAt" 
+        select: "-__v -createdAt -updatedAt",
       })
       .lean();
 
@@ -454,7 +455,6 @@ const orderId = rawOrderId?.trim();
       .json({ message: "Error fetching order details", error: error.message });
   }
 };
-
 
 const setDefaultAddress = async (req, res) => {
   const { userId, addressId } = req.params;
@@ -484,13 +484,14 @@ const setDefaultAddress = async (req, res) => {
 const changePasswordInUser = async (req, res) => {
   const { id } = req.params;
   const { currentPassword, newPassword } = req.body;
-  console.log('id', id);
-  console.log('currentPassword', currentPassword);
+  console.log("id", id);
+  console.log("currentPassword", currentPassword);
 
   try {
     const user = await User.findById(id);
-    if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
-    console.log('user.Password', user.Password);
+    if (!user)
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    console.log("user.Password", user.Password);
     const isMatch = await bcrypt.compare(currentPassword, user.Password);
 
     if (!isMatch) {
@@ -502,7 +503,6 @@ const changePasswordInUser = async (req, res) => {
 
     user.Password = hashedNewPassword;
     await user.save();
-
 
     res.json({ message: "Đổi mật khẩu thành công" });
   } catch (err) {
@@ -537,9 +537,6 @@ const cancelOrder = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
-
-
 
 const getAddressByUserId = async (req, res) => {
   const { id } = req.params;
@@ -695,20 +692,23 @@ const checkout = async (req, res) => {
   }
 };
 module.exports = {
-  setDefaultAddress, changePasswordInUser,
-  getOrderDetails, getOrderByUserId,
-  addAddress, updateAddress,
-  getAddressById, deleteAddress,
-  getUsers, login, register,
-  googleLogin, changePassword,
-  getUserById, updateUser,getPaymentForCheckout,cancelOrder
-
- 
-
-
-
-
-,
+  setDefaultAddress,
+  changePasswordInUser,
+  getOrderDetails,
+  getOrderByUserId,
+  addAddress,
+  updateAddress,
+  getAddressById,
+  deleteAddress,
+  getUsers,
+  login,
+  register,
+  googleLogin,
+  changePassword,
+  getUserById,
+  updateUser,
+  getPaymentForCheckout,
+  cancelOrder,
   getAddressByUserId,
   getShopById,
   getProductById,

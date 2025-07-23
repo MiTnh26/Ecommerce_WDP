@@ -182,7 +182,7 @@ export default function ProductForm({
               ? mainImage.name
               : mainPreview
               ? "Current image"
-              : "Add image (0/9)"}
+              : "Add image"}
           </span>
         </div>
         {mainPreview && (
