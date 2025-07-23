@@ -26,6 +26,14 @@ const sidebarConfig = [
       { label: "View Shop", to: "/Ecommerce/seller/shop-profile" },
     ],
   },
+  {
+  key: "statistics",
+  title: "Seller Statistic",
+  items: [
+    { label: "View Statistic", to: "/Ecommerce/seller/statistic" },
+  ],
+},
+
 ];
 
 const Sidebar = () => {
@@ -36,6 +44,7 @@ const Sidebar = () => {
     if (location.pathname.includes("products")) return "0";
     if (location.pathname.includes("orders")) return "1";
     if (location.pathname.includes("shop")) return "2";
+    if (location.pathname.includes("statistic")) return "3";
     return "";
   };
 

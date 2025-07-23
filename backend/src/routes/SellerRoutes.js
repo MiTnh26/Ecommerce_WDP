@@ -7,8 +7,11 @@ const SellerController = require("../controllers/SellerController/SellerControll
 const ViewListOrderController = require("../controllers/SellerController/ViewListOrder");
 const ViewOrderDetailController = require("../controllers/SellerController/ViewOrderDetail");
 const CategoryController = require("../controllers/SellerController/CategoryController");
+const StatisticController = require("../controllers/SellerController/StatisticController");
 
 router.get("/getShopInformation", SellerController.getShopByUserId);
+
+router.get("/statistic", StatisticController.getSellerStatistics);
 router.put(
   "/updateShopProfile",
   upload.single("shopAvatar"),

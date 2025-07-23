@@ -6,6 +6,8 @@ export default function ProductSidebar({ active, onSelect }) {
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [isOrderOpen, setIsOrderOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isStatisticOpen, setIsStatisticOpen] = useState(false);
+
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -28,9 +30,8 @@ export default function ProductSidebar({ active, onSelect }) {
         {isProductOpen && (
           <div className={styles.dropdownContent}>
             <div
-              className={`${styles.sidebarButton} ${
-                active === "list" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarButton} ${active === "list" ? styles.active : ""
+                }`}
               onClick={() => {
                 navigate("/Ecommerce/product/product-page", {
                   state: { tab: "list" },
@@ -40,9 +41,8 @@ export default function ProductSidebar({ active, onSelect }) {
               View list product
             </div>
             <div
-              className={`${styles.sidebarButton} ${
-                active === "add" ? styles.active : ""
-              }`}
+              className={`${styles.sidebarButton} ${active === "add" ? styles.active : ""
+                }`}
               onClick={() => {
                 navigate("/Ecommerce/product/product-page", {
                   state: { tab: "add" },
@@ -99,6 +99,27 @@ export default function ProductSidebar({ active, onSelect }) {
         )}
       </div>
 
+      {/* Statistic Section */}
+      <div className={styles.section}>
+        <div
+          className={styles.sectionTitle}
+          onClick={() => setIsStatisticOpen(!isStatisticOpen)}
+        >
+          Statistic
+          <span className={styles.arrow}>{isStatisticOpen ? "▾" : "▸"}</span>
+        </div>
+
+        {isStatisticOpen && (
+          <div className={styles.dropdownContent}>
+            <div
+              className={styles.sidebarButton}
+              onClick={() => navigate("/Ecommerce/seller/statistic")}
+            >
+              View Statistic
+            </div>
+          </div>
+        )}
+      </div>
       {/* Manager Category Section */}
       <div className={styles.section}>
         <div
