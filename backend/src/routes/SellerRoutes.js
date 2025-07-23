@@ -17,6 +17,9 @@ router.post(
   upload.single("shopAvatar"),
   SellerController.registerShop
 );
+
+router.get("/getShopProvince", SellerController.getProvince);
+
 // Route lấy danh sách đơn hàng của seller
 router.get("/orders", ViewListOrderController.getOrdersByShop);
 
@@ -31,5 +34,6 @@ router.get('/categories/:id', CategoryController.getCategoryById);
 router.post('/categories', CategoryController.createCategory);
 router.put('/categories/:id', CategoryController.updateCategory);
 router.delete('/categories/:id', CategoryController.deleteCategory);
+
 
 module.exports = router;

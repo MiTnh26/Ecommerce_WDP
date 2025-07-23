@@ -1,8 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const UserController = require("../controllers/UserController/UserController");
-const {sendEmailOtp, verifyOtp} = require("../service/sendEmailOtp");
-const verifyOtpMiddleware = require("../middleware/verifyOtpMiddleware")
+const CartController = require("../controllers/UserController/CartController");
+const { sendEmailOtp, verifyOtp } = require("../service/sendEmailOtp");
+const verifyOtpMiddleware = require("../middleware/verifyOtpMiddleware");
+
+
 const multer = require("multer");
 const { storage } = require("../config/cloudinary"); 
 const upload = multer({ storage });
@@ -48,4 +51,10 @@ router.put(
   verifyOtpMiddleware,
   UserController.changePassword
 );
+
+router.post("/add-to-cart", CartController.addToCart);
+router.post("/change-quantity", CartController.changeQuantity);
+router.delete("/remove-p-variant-cart", CartController.deleteProductVariantInCart);
+router.post("/get-cart", CartController.getCartByUserId);
+//router.post("/get-total-cart-item", CartController.getToTalItemInCart);
 module.exports = router;

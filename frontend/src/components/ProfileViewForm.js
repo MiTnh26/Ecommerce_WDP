@@ -24,22 +24,15 @@ function ProfileView({ userId }) {
   //     .then((data) => setUser(data))
   //     .catch((err) => console.error("Lỗi khi lấy thông tin user:", err));
   // }, [userId]);
-  // useEffect(() => {
-  //   if (!userId) return;
+  useEffect(() => {
+    if (!userId) return;
 
-  //   fetch(`http://localhost:5000/customer/profile/${userId}`)
-  //     .then((res) => res.json())
-  //     .then((data) => {
-  //       console.log("✅ Data fetch thành công:", data); // <-- log ra data tại đây
-  //       setUser(data);
-  //     })
-  //     .catch((err) => console.error("❌ Lỗi khi lấy thông tin user:", err));
-  // }, [userId]);
-
-  const fetchUser = () => {
     fetch(`http://localhost:5000/customer/profile/${userId}`)
       .then((res) => res.json())
-      .then((data) => setUser(data))
+      .then((data) => {
+        console.log("✅ Data fetch thành công:", data); // <-- log ra data tại đây
+        setUser(data);
+      })
       .catch((err) => console.error("❌ Lỗi khi lấy thông tin user:", err));
   };
 
@@ -48,12 +41,6 @@ function ProfileView({ userId }) {
 
   const handleCloseModal = () => setShowUpdateModal(false);
   const handleShowModal = () => setShowUpdateModal(true);
-   useEffect(() => {
-  const shouldFetch = Boolean(userId); // hoặc: if (!userId) return;
-  if (!shouldFetch) return;
-  fetchUser();
-}, [userId]);
-
 
   if (!user) {
     return (
@@ -62,11 +49,6 @@ function ProfileView({ userId }) {
       </Container>
     );
   }
-
- 
-
-
-
 
   return (
     <Container className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
@@ -156,20 +138,11 @@ function ProfileView({ userId }) {
       <Modal
         show={showUpdateModal}
         onHide={handleCloseModal}
-        backdrop="static"
+        size="md"
         centered
-        dialogClassName="modal-dialog-centered"
         contentClassName="border-0 rounded-4"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center"
-        }}
-        dialogStyle={{
-          maxWidth: "900px",
-          width: "90vw",
-          margin: "auto"
-        }}
+        dialogClassName="modal-dialog-centered"
+        backdrop="static"
       >
         <Modal.Header closeButton className="border-0 pb-0">
           <Modal.Title as="h5" className="fw-bold">
@@ -177,20 +150,9 @@ function ProfileView({ userId }) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-2 pb-4 px-4">
-          <UpdateProfileForm
-            userId={userId}
-            onUpdateSuccess={() => {
-              handleCloseModal();
-              fetchUser(); // cập nhật lại thông tin sau khi update
-            }}
-          />
+          <UpdateProfileForm userId={userId} />
         </Modal.Body>
-
       </Modal>
-
-
-
-
     </Container>
   );
 }
