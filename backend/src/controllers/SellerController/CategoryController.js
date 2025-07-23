@@ -1,31 +1,36 @@
 const Category = require('../../models/Categories');
 
-// Lấy tất cả category
+// Lấy tất cả category của shop
 exports.getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const shopId = req.query.shopId;
+    if (!shopId) return res.status(400).json({ message: 'Missing shopId' });
+    const categories = await Category.find({ ShopId: shopId });
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching categories', error });
   }
 };
 
-// Lấy category theo id
+// Lấy category theo id (chỉ lấy category của shop)
 exports.getCategoryById = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
-    if (!category) return res.status(404).json({ message: 'Category not found' });
+    const shopId = req.query.shopId;
+    if (!shopId) return res.status(400).json({ message: 'Missing shopId' });
+    const category = await Category.findOne({ _id: req.params.id, ShopId: shopId });
+    if (!category) return res.status(404).json({ message: 'Category not found or not belong to your shop' });
     res.json(category);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching category', error });
   }
 };
 
-// Tạo mới category
+// Tạo mới category cho shop
 exports.createCategory = async (req, res) => {
   try {
-    const { CategoryName, Status } = req.body;
-    const newCategory = new Category({ CategoryName, Status });
+    const { CategoryName, Status, shopId } = req.body;
+    if (!shopId) return res.status(400).json({ message: 'Missing shopId' });
+    const newCategory = new Category({ CategoryName, Status, ShopId: shopId });
     await newCategory.save();
     res.status(201).json(newCategory);
   } catch (error) {
@@ -33,27 +38,30 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-// Cập nhật category
+// Cập nhật category (chỉ cho phép update category của shop mình)
 exports.updateCategory = async (req, res) => {
   try {
-    const { CategoryName, Status } = req.body;
-    const updated = await Category.findByIdAndUpdate(
-      req.params.id,
+    const { CategoryName, Status, shopId } = req.body;
+    if (!shopId) return res.status(400).json({ message: 'Missing shopId' });
+    const updated = await Category.findOneAndUpdate(
+      { _id: req.params.id, ShopId: shopId },
       { CategoryName, Status },
       { new: true }
     );
-    if (!updated) return res.status(404).json({ message: 'Category not found' });
+    if (!updated) return res.status(404).json({ message: 'Category not found or not belong to your shop' });
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: 'Error updating category', error });
   }
 };
 
-// Xóa category
+// Xóa category (chỉ cho phép xóa category của shop mình)
 exports.deleteCategory = async (req, res) => {
   try {
-    const deleted = await Category.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: 'Category not found' });
+    const { shopId } = req.query;
+    if (!shopId) return res.status(400).json({ message: 'Missing shopId' });
+    const deleted = await Category.findOneAndDelete({ _id: req.params.id, ShopId: shopId });
+    if (!deleted) return res.status(404).json({ message: 'Category not found or not belong to your shop' });
     res.json({ message: 'Category deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting category', error });

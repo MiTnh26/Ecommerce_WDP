@@ -94,6 +94,8 @@ function SellerRegistrationWizard() {
       const newShop = await response.json();
       console.log("Shop registered:", newShop);
       alert("Shop registered successfully!");
+      // Lưu shopId vào localStorage
+      localStorage.setItem("shopId", newShop._id);
       // Optionally, clear form or navigate:
       setFormData({
         shopName: "",
