@@ -1,4 +1,3 @@
-
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
@@ -8,9 +7,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // import './index.css';
 
-import reportWebVitals from './reportWebVitals';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import reportWebVitals from "./reportWebVitals";
+
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 

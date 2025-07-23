@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -20,7 +20,6 @@ import axios from "axios";
 import { useDataByUrl } from "../../utility/FeatchData";
 import { SHOP_API } from "../../api/SellerApi";
 import { uploadFile } from "../../utility/uploadFile";
-import { useEffect } from "react";
 
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
@@ -34,6 +33,12 @@ const MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
 export default function ShopInformation() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [selectedProvince, setSelectedProvince] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedWard, setSelectedWard] = useState("");
   const queryClient = useQueryClient();
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -46,22 +51,67 @@ export default function ShopInformation() {
   const shopInfo = data?.data;
 
   useEffect(() => {
-    if (shopInfo?._id) {
-      localStorage.setItem("shopId", shopInfo._id);
-      setPreviewImage(shopInfo?.shopAvatar || null);
-    }
+    setPreviewImage(shopInfo?.shopAvatar || null);
   }, [shopInfo]);
 
+  // Fetch provinces on mount
+  useEffect(() => {
+    fetch("https://provinces.open-api.vn/api/p/")
+      .then(res => res.json())
+      .then(setProvinces);
+  }, []);
+
+  // Khi mở modal edit, set lại địa chỉ đã lưu
+  useEffect(() => {
+    if (showEditModal && shopInfo?.address) {
+      setSelectedProvince(shopInfo.address.province || "");
+      setSelectedDistrict(shopInfo.address.district || "");
+      setSelectedWard(shopInfo.address.ward || "");
+    }
+  }, [showEditModal, shopInfo]);
+
+  // Khi chọn tỉnh
+  const handleProvinceChange = async (e) => {
+    const name = e.target.value;
+    const selected = provinces.find(p => p.name === name);
+    setSelectedProvince(selected?.name || "");
+    setSelectedDistrict("");
+    setSelectedWard("");
+    if (!selected) {
+      setDistricts([]);
+      setWards([]);
+      return;
+    }
+    const res = await fetch(`https://provinces.open-api.vn/api/p/${selected.code}?depth=2`);
+    const data = await res.json();
+    setDistricts(data.districts || []);
+    setWards([]);
+  };
+
+  // Khi chọn quận/huyện
+  const handleDistrictChange = async (e) => {
+    const name = e.target.value;
+    const selected = districts.find(d => d.name === name);
+    setSelectedDistrict(selected?.name || "");
+    setSelectedWard("");
+    if (!selected) {
+      setWards([]);
+      return;
+    }
+    const res = await fetch(`https://provinces.open-api.vn/api/d/${selected.code}?depth=2`);
+    const data = await res.json();
+    setWards(data.wards || []);
+  };
+
+  // Khi chọn xã/phường
+  const handleWardChange = (e) => {
+    const name = e.target.value;
+    const selected = wards.find(w => w.name === name);
+    setSelectedWard(selected?.name || "");
+  };
+
   const { mutate, isPending, isError } = useMutation({
-    mutationFn: (payload) =>
-      axios.put(SHOP_API.UPDATE_SHOP_PROFILE, {
-        _id: payload._id,
-        name: payload.name,
-        description: payload.description,
-        status: payload.status,
-        owner: payload.owner,
-        shopAvatar: payload.shopAvatar,
-      }),
+    mutationFn: (payload) => axios.put(SHOP_API.UPDATE_SHOP_PROFILE, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shopInfo"] });
       setShowEditModal(false);
@@ -80,6 +130,7 @@ export default function ShopInformation() {
       description: shopInfo?.description || "",
       status: shopInfo?.status || "Pending",
       shopAvatar: shopInfo?.shopAvatar || null,
+      // Không cần address ở đây, sẽ lấy từ state khi submit
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
@@ -93,6 +144,11 @@ export default function ShopInformation() {
       const dataToSend = {
         ...values,
         owner: shopInfo?.owner,
+        address: {
+          province: selectedProvince,
+          district: selectedDistrict,
+          ward: selectedWard
+        }
       };
       mutate(dataToSend);
     },
@@ -158,7 +214,13 @@ export default function ShopInformation() {
 
               <h4 className="mb-3">{shopInfo?.name}</h4>
               <p className="text-muted">{shopInfo?.description}</p>
-
+              {/* Hiển thị địa chỉ shop */}
+              {shopInfo?.address && (
+                <div className="mb-3">
+                  <span className="fw-semibold">Địa chỉ: </span>
+                  <span>{[shopInfo.address.ward, shopInfo.address.district, shopInfo.address.province].filter(Boolean).join(", ")}</span>
+                </div>
+              )}
               <Button
                 variant="primary"
                 className="px-4 mt-2"
@@ -207,7 +269,7 @@ export default function ShopInformation() {
                 </Form.Group>
               </Col>
 
-              {/* <Col md={6}>
+              <Col md={6}>
                 <Form.Group>
                   <Form.Label>Status *</Form.Label>
                   <Form.Select
@@ -224,7 +286,7 @@ export default function ShopInformation() {
                     {formik.errors.status}
                   </Form.Control.Feedback>
                 </Form.Group>
-              </Col> */}
+              </Col>
             </Row>
 
             <Form.Group className="mb-3">
@@ -243,6 +305,57 @@ export default function ShopInformation() {
                 {formik.errors.description}
               </Form.Control.Feedback>
             </Form.Group>
+
+            {/* Địa chỉ: Tỉnh/Thành, Quận/Huyện, Xã/Phường */}
+            <Row className="mb-3">
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label>Tỉnh/Thành *</Form.Label>
+                  <Form.Select
+                    value={selectedProvince}
+                    onChange={handleProvinceChange}
+                    required
+                  >
+                    <option value="">Chọn tỉnh/thành</option>
+                    {provinces.map(p => (
+                      <option key={p.code} value={p.name}>{p.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label>Quận/Huyện *</Form.Label>
+                  <Form.Select
+                    value={selectedDistrict}
+                    onChange={handleDistrictChange}
+                    required
+                    disabled={!selectedProvince}
+                  >
+                    <option value="">Chọn quận/huyện</option>
+                    {districts.map(d => (
+                      <option key={d.code} value={d.name}>{d.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label>Xã/Phường *</Form.Label>
+                  <Form.Select
+                    value={selectedWard}
+                    onChange={handleWardChange}
+                    required
+                    disabled={!selectedDistrict}
+                  >
+                    <option value="">Chọn xã/phường</option>
+                    {wards.map(w => (
+                      <option key={w.code} value={w.name}>{w.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
 
             <Form.Group className="mb-3">
               <Form.Label>Shop Avatar</Form.Label>

@@ -35,13 +35,10 @@ const orderSchema = new mongoose.Schema(
       ref: "Shop",
       required: true,
     },
-    Items: 
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "OrderItem",
-      }
-    ,
-
+    Items: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OrderItem",
+    },
   },
   { timestamps: true }
 );

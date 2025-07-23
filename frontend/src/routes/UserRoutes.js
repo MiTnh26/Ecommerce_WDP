@@ -1,15 +1,13 @@
 import ProfilePage from "../pages/ProfilePage";
-import Cart from "../pages/customer/Cart";
+import Cart from "../pages/Customer/Cart";
 import CheckoutPage from "../pages/user/checkout";
 import UserLayout from "../layouts/UserLayout";
-import OrderDetail from "../components/OrderDetail";  // layout vừa tạo
+import OrderDetail from "../components/OrderDetail"; // layout vừa tạo
 const UserRoutes = [
-
   {
     path: "/Ecommerce/user",
     element: <UserLayout />,
     children: [
-     
       {
         path: "checkout",
         element: <CheckoutPage />,
@@ -20,11 +18,11 @@ const UserRoutes = [
     path: "/Ecommerce/user/cart",
     element: <Cart />,
   },
-   {
-        path: "/Ecommerce/user/profile",
-        element: <ProfilePage />,
-      },
-      {
+  {
+    path: "/Ecommerce/user/profile",
+    element: <ProfilePage />,
+  },
+  {
     path: "/orderdetail/:orderId",
     element: <OrderDetail />,
   },

@@ -1,17 +1,26 @@
-import React, { useState } from "react";
-import Sidebar from "../../components/productSidebar/ProductSidebar";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import SellerLayout from "./SellerLayout";
 import ViewListPage from "./ViewListPage";
 import AddProductPage from "./AddProductPage";
 
 export default function ProductIndex() {
+  const location = useLocation();
   const [tab, setTab] = useState("list");
 
+  useEffect(() => {
+    if (location.state?.tab) {
+      setTab(location.state.tab);
+    }
+  }, [location.state?.tab]);
+
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar active={tab} onSelect={setTab} />
-      <main style={{ flex: 1, padding: "1.5rem", background: "#f3f4f6" }}>
-        {tab === "list" ? <ViewListPage onAddProduct={() => setTab("add")} /> : <AddProductPage />}
-      </main>
-    </div>
+    <SellerLayout activeTab={tab} onTabSelect={setTab}>
+      {tab === "list" ? (
+        <ViewListPage onAddProduct={() => setTab("add")} />
+      ) : (
+        <AddProductPage />
+      )}
+    </SellerLayout>
   );
 }

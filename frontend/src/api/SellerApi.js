@@ -8,9 +8,6 @@ export const SHOP_API = {
   UPDATE_SHOP_PROFILE: `${API_URL}/updateShopProfile`,
 };
 
-export const ORDER_ITERM = {
-  GET_ORDER_ITEM: (orderId) => `${API_URL}/orders/${orderId}`,
-}
 
 export function useShopInfo(user) {
   const [shopInfo, setShopInfo] = useState(null);
@@ -23,15 +20,11 @@ export function useShopInfo(user) {
     const fetchShopInfo = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(SHOP_API.GET_SHOP_INFORMATION, {
-          owner: user,
-        });
+        const response = await axios.get(SHOP_API.GET_SHOP_INFORMATION, { owner: user });
         setShopInfo(response.data);
         setError(null);
       } catch (err) {
-        setError(
-          err.response?.data?.message || "Failed to fetch shop information"
-        );
+        setError(err.response?.data?.message || "Failed to fetch shop information");
       } finally {
         setIsLoading(false);
       }

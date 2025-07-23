@@ -46,9 +46,9 @@ exports.getOrderDetail = async (req, res) => {
       ReceiverPhone: defaultAddress?.phoneNumber || order.BuyerId.PhoneNumber,
       ShippingAddress: order.ShippingAddress,
       PaymentId: order.PaymentId?.PaymentMethod || "N/A",
-      Items: order.Items.map(item => ({
-        _id: item._id,
-        Product: item.Product.map(product => ({
+      Items: order.Items ? {
+        _id: order.Items._id,
+        Product: order.Items.Product.map(product => ({
           _id: product._id,
           ProductName: product.ProductName,
           ProductImage: product.ProductImage,
@@ -60,7 +60,7 @@ exports.getOrderDetail = async (req, res) => {
             Image: variant.Image
           }))
         }))
-      }))
+      } : null
     };
 
     res.json(formattedOrder);

@@ -5,8 +5,11 @@ import ReactQuill from "react-quill";
 import { ArrowRight } from "lucide-react";
 import styles from "./SellerRegister.module.scss";
 import "react-quill/dist/quill.snow.css";
+import { useNavigate } from "react-router-dom";
 
 function SellerRegistrationWizard() {
+  const navigate = useNavigate();
+
   // We’re on step 2 (Shop Setup) in your wizard
   const step = 2;
 
@@ -91,6 +94,8 @@ function SellerRegistrationWizard() {
       const newShop = await response.json();
       console.log("Shop registered:", newShop);
       alert("Shop registered successfully!");
+      // Lưu shopId vào localStorage
+      localStorage.setItem("shopId", newShop._id);
       // Optionally, clear form or navigate:
       setFormData({
         shopName: "",
@@ -100,6 +105,8 @@ function SellerRegistrationWizard() {
         district: "",
         ward: "",
       });
+
+      navigate("/Ecommerce/product/product-page");
     } catch (err) {
       console.error("Error registering shop:", err);
       alert("Error: " + err.message);

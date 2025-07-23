@@ -141,72 +141,67 @@ const ViewOrderDetail = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {order.Items.map((item, itemIndex) => (
-                        <React.Fragment key={`item-${itemIndex}`}>
-                          {item.Product.map((product, productIndex) => (
-                            <tr key={`${product._id}-${productIndex}`}>
-                              <td>
-                                <img
-                                  src={product.ProductImage || "/assets/images/no-image.png"}
-                                  alt={product.ProductName}
-                                  style={{
-                                    width: "80px",
-                                    height: "80px",
-                                    objectFit: "cover",
-                                    border: "1px solid #dee2e6",
-                                    borderRadius: "8px",
-                                  }}
-                                />
-                              </td>
-                              <td className="align-middle">{product.ProductName}</td>
-                              <td className="align-middle">
-                                {product.ProductVariant.map((variant, index) => (
-                                  <>
-                                    <div key={variant._id}>
-                                      {variant.ProductVariantName}
-                                      {index < product.ProductVariant.length - 1 && <br />}
-                                    </div>
-                                    <hr />
-                                  </>
-                                ))}
-                              </td>
-                              <td className="align-middle">
-                                {product.ProductVariant.map((variant, index) => (
-                                  <>
-                                    <div key={variant._id}>
-                                      ₫{Number(variant.Price).toLocaleString('vi-VN')}
-                                      {index < product.ProductVariant.length - 1 && <br />}
-                                    </div>
-                                    <hr />
-                                  </>
-
-                                ))}
-                              </td>
-                              <td className="align-middle">
-                                {product.ProductVariant.map((variant, index) => (
-                                  <>
-                                    <div key={variant._id}>
-                                      {variant.Quantity}
-                                      {index < product.ProductVariant.length - 1 && <br />}
-                                    </div>
-                                    <hr />
-                                  </>
-                                ))}
-                              </td>
-                              <td className="align-middle">
-                                {product.ProductVariant.map((variant, index) => (
-                                  <>
-                                    <div key={variant._id}>
-                                      ${Number(variant.Price * variant.Quantity).toLocaleString('vi-VN')}
-                                      {index < product.ProductVariant.length - 1 && <br />}
-                                    </div>
-                                    <hr />
-                                  </>
-                                ))}
-                              </td>
-                            </tr>
-                          ))}
-                        </React.Fragment>
+                      {order.Items && order.Items.Product && order.Items.Product.map((product, productIndex) => (
+                        <tr key={`${product._id}-${productIndex}`}>
+                          <td>
+                            <img
+                              src={product.ProductImage || "/assets/images/no-image.png"}
+                              alt={product.ProductName}
+                              style={{
+                                width: "80px",
+                                height: "80px",
+                                objectFit: "cover",
+                                border: "1px solid #dee2e6",
+                                borderRadius: "8px",
+                              }}
+                            />
+                          </td>
+                          <td className="align-middle">{product.ProductName}</td>
+                          <td className="align-middle">
+                            {product.ProductVariant.map((variant, index) => (
+                              <>
+                                <div key={variant._id}>
+                                  {variant.ProductVariantName}
+                                  {index < product.ProductVariant.length - 1 && <br />}
+                                </div>
+                                <hr />
+                              </>
+                            ))}
+                          </td>
+                          <td className="align-middle">
+                            {product.ProductVariant.map((variant, index) => (
+                              <>
+                                <div key={variant._id}>
+                                  ${Number(variant.Price).toLocaleString('vi-VN')}
+                                  {index < product.ProductVariant.length - 1 && <br />}
+                                </div>
+                                <hr />
+                              </>
+                            ))}
+                          </td>
+                          <td className="align-middle">
+                            {product.ProductVariant.map((variant, index) => (
+                              <>
+                                <div key={variant._id}>
+                                  {variant.Quantity}
+                                  {index < product.ProductVariant.length - 1 && <br />}
+                                </div>
+                                <hr />
+                              </>
+                            ))}
+                          </td>
+                          <td className="align-middle">
+                            {product.ProductVariant.map((variant, index) => (
+                              <>
+                                <div key={variant._id}>
+                                  ${Number(variant.Price * variant.Quantity).toLocaleString('vi-VN')}
+                                  {index < product.ProductVariant.length - 1 && <br />}
+                                </div>
+                                <hr />
+                              </>
+                            ))}
+                          </td>
+                        </tr>
                       ))}
                     </tbody>
                   </Table>

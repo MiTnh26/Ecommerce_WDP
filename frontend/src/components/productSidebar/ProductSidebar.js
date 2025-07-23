@@ -1,8 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "../../style/product/ProductSidebar.module.scss";
+import { useNavigate } from "react-router-dom";
 
 export default function ProductSidebar({ active, onSelect }) {
   const [isProductOpen, setIsProductOpen] = useState(false);
+  const [isOrderOpen, setIsOrderOpen] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <nav className={styles.sidebar}>
@@ -10,6 +15,7 @@ export default function ProductSidebar({ active, onSelect }) {
         <img src="/logo-ecommerce.jpg" alt="" />
       </h2>
 
+      {/* Manager Products Section */}
       <div className={styles.section}>
         <div
           className={styles.sectionTitle}
@@ -25,7 +31,11 @@ export default function ProductSidebar({ active, onSelect }) {
               className={`${styles.sidebarButton} ${
                 active === "list" ? styles.active : ""
               }`}
-              onClick={() => onSelect("list")}
+              onClick={() => {
+                navigate("/Ecommerce/product/product-page", {
+                  state: { tab: "list" },
+                });
+              }}
             >
               View list product
             </div>
@@ -33,9 +43,78 @@ export default function ProductSidebar({ active, onSelect }) {
               className={`${styles.sidebarButton} ${
                 active === "add" ? styles.active : ""
               }`}
-              onClick={() => onSelect("add")}
+              onClick={() => {
+                navigate("/Ecommerce/product/product-page", {
+                  state: { tab: "add" },
+                });
+              }}
             >
               Add new product
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Manager Orders Section */}
+      <div className={styles.section}>
+        <div
+          className={styles.sectionTitle}
+          onClick={() => setIsOrderOpen(!isOrderOpen)}
+        >
+          Manager Orders
+          <span className={styles.arrow}>{isOrderOpen ? "▾" : "▸"}</span>
+        </div>
+
+        {isOrderOpen && (
+          <div className={styles.dropdownContent}>
+            <div
+              className={styles.sidebarButton}
+              onClick={() => navigate("/Ecommerce/seller/viewlistorder")}
+            >
+              View Orders
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Manager Shop Section */}
+      <div className={styles.section}>
+        <div
+          className={styles.sectionTitle}
+          onClick={() => setIsShopOpen(!isShopOpen)}
+        >
+          Manager Shop
+          <span className={styles.arrow}>{isShopOpen ? "▾" : "▸"}</span>
+        </div>
+
+        {isShopOpen && (
+          <div className={styles.dropdownContent}>
+            <div
+              className={styles.sidebarButton}
+              onClick={() => navigate("/Ecommerce/seller/shopinformation")}
+            >
+              View Shop
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Manager Category Section */}
+      <div className={styles.section}>
+        <div
+          className={styles.sectionTitle}
+          onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+        >
+          Manager Category
+          <span className={styles.arrow}>{isCategoryOpen ? "▾" : "▸"}</span>
+        </div>
+        {isCategoryOpen && (
+          <div className={styles.dropdownContent}>
+            <div
+              className={styles.sidebarButton}
+              onClick={() => navigate("/Ecommerce/seller/category")}
+            >
+              View Category
             </div>
           </div>
         )}

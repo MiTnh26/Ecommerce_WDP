@@ -20,6 +20,7 @@ const user = JSON.parse(localStorage.getItem("user"));
 let userId = "0";
 try {
   userId = user._id;
+  console.log("userid", userId);
 } catch (error) {
   console.error(error);
 }
