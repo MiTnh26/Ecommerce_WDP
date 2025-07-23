@@ -34,7 +34,7 @@ function ProfileView({ userId }) {
         setUser(data);
       })
       .catch((err) => console.error("❌ Lỗi khi lấy thông tin user:", err));
-  };
+  }, [userId]);
 
 
 
