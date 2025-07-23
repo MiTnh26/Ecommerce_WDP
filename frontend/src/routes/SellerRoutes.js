@@ -6,6 +6,8 @@ import ViewOrderIndex from "../components/seller/ListOrderIndex";
 import ShopInformationIndex from "../components/seller/ShopInformationIndex";
 import OrderDetailIndex from "../components/seller/OrderDetailIndex";
 import CategoryList from "../components/seller/Category";
+import StatisticPageIndex from "../components/seller/StatisticPageIndex";
+import CategoryIndex from "../components/seller/CategoryIndex";
 
 const SellerRoutes = [
   {
@@ -26,11 +28,15 @@ const SellerRoutes = [
       },
       {
         path: "category",
-        element: <CategoryList />,
+        element: <CategoryIndex />,
       },
       {
         path: "shopinformation",
         element: <ShopInformationIndex />,
+      },
+      {
+        path: "statistic",
+        element: <StatisticPageIndex  />,
       },
     ],
   },

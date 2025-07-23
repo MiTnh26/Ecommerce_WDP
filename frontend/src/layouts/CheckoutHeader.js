@@ -9,18 +9,15 @@ export default function Component() {
       {/* Header content */}
       <header className="bg-white px-4 py-3 shadow-sm">
         <div className="flex items-center">
-          <a href="http://localhost:3000/Ecommerce/home">
-            <img
-              src={logo}
-              alt="EZShop"
-              className="h-8 object-contain cursor-pointer hover:opacity-80 transition-opacity"
-            />
+        <a href="http://localhost:3000/Ecommerce/home">
+          <img
+            src={logo}
+            alt="EZShop"
+            className="h-8 w-8 object-contain rounded-md mr-2"
+            style={{ maxWidth: 36, maxHeight: 36 }}
+          />
           </a>
-          {/* Divider */}
-          <div className="mx-3 h-4 w-px bg-gray-300"></div>
-
-          {/* Payment text */}
-          <span className="text-gray-700 text-sm">Thanh Toán</span>
+          <span className="text-gray-700 text-base font-medium"> || Thanh Toán</span>
         </div>
       </header>
     </div>

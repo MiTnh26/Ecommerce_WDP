@@ -1,15 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const store = multer.memoryStorage();
-const upload = multer({ storage: store });
+const { storage } = require("../config/cloudinary");
+const upload = multer({ storage });
 const SellerController = require("../controllers/SellerController/SellerController");
 const ViewListOrderController = require("../controllers/SellerController/ViewListOrder");
 const ViewOrderDetailController = require("../controllers/SellerController/ViewOrderDetail");
 const CategoryController = require("../controllers/SellerController/CategoryController");
+const StatisticController = require("../controllers/SellerController/StatisticController");
 
 router.get("/getShopInformation", SellerController.getShopByUserId);
-router.put("/updateShopProfile", SellerController.updateShopProfile);
+
+router.get("/statistic", StatisticController.getSellerStatistics);
+router.put(
+  "/updateShopProfile",
+  upload.single("shopAvatar"),
+  SellerController.updateShopProfile
+);
 router.post(
   "/registerShop",
   upload.single("shopAvatar"),
@@ -27,11 +34,11 @@ router.get("/orders/:orderId", ViewOrderDetailController.getOrderDetail);
 router.put("/orders/:orderId", ViewOrderDetailController.updateOrderStatus);
 
 // Category CRUD
-router.get('/categories', CategoryController.getAllCategories);
-router.get('/categories/:id', CategoryController.getCategoryById);
-router.post('/categories', CategoryController.createCategory);
-router.put('/categories/:id', CategoryController.updateCategory);
-router.delete('/categories/:id', CategoryController.deleteCategory);
+router.get("/categories", CategoryController.getAllCategories);
+router.get("/categories/:id", CategoryController.getCategoryById);
+router.post("/categories", CategoryController.createCategory);
+router.put("/categories/:id", CategoryController.updateCategory);
+router.delete("/categories/:id", CategoryController.deleteCategory);
 
 
 module.exports = router;

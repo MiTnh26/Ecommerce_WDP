@@ -1,0 +1,325 @@
+
+body {
+font-family: 'Poppins', sans-serif;
+background: linear-gradient(145deg, #fff8ec, #fff0d6);
+color: #333;
+}
+
+a {
+text-decoration: none;
+}
+
+/* Scrollbar Custom ================= */
+::-webkit-scrollbar {
+width: 6px;
+}
+::-webkit-scrollbar-track {
+background: #fff0d6;
+}
+::-webkit-scrollbar-thumb {
+background: #f6b26b;
+border-radius: 6px;
+}
+
+/* Wrapper ========================= */
+.profile-page-wrapper {
+min-height: 100vh;
+background: linear-gradient(120deg, #fff3e0, #fff8ec);
+display: flex;
+flex-direction: column;
+}
+
+/* Container ======================= */
+.profile-container {
+padding-top:0px;
+padding-bottom: 0px;
+}
+
+/* Header ========================== */
+header {
+background-color: #fff8ec;
+box-shadow: 0 3px 10px rgba(255, 192, 121, 0.2);
+}
+
+/* Avatar Section ================== */
+.profile-avatar-section {
+display: flex;
+flex-direction: column;
+align-items: center;
+padding-bottom: 1rem;
+border-bottom: 1px dashed #f6b26b;
+}
+
+.profile-avatar {
+width: 80px;
+height: 80px;
+object-fit: cover;
+border-radius: 50%;
+border: 3px solid #fcd9a1;
+transition: transform 0.4s ease;
+}
+
+.profile-avatar:hover {
+transform: scale(1.1);
+}
+
+.profile-username {
+font-weight: bold;
+margin-top: 10px;
+color: #e27d28;
+}
+
+/* Sidebar ========================= */
+.profile-sidebar {
+background: #fffdf7;
+border-radius: 16px;
+border: 1px solid #f6dbb0;
+box-shadow: 0 8px 20px rgba(255, 190, 105, 0.15);
+transition: box-shadow 0.3s ease;
+padding: 20px;
+}
+
+.profile-sidebar:hover {
+box-shadow: 0 10px 25px rgba(241, 168, 51, 0.2);
+}
+
+/* Nav Menu ======================== */
+.profile-nav {
+margin-top: 20px;
+}
+
+.profile-nav-link {
+display: flex;
+align-items: center;
+/* justify-content: space-between; */
+background: transparent;
+border-radius: 10px;
+padding: 12px 16px;
+color: #444;
+font-weight: 500;
+transition: all 0.25s ease-in-out;
+}
+
+.profile-nav-link:hover {
+background-color: #ffe7c7;
+color: #d46f00;
+transform: scale(1.02);
+box-shadow: 0 2px 8px rgba(255, 167, 38, 0.15);
+}
+
+.profile-nav-link.active {
+background-color: #fcd9a1;
+color: #b35b00;
+}
+
+.profile-nav-icon {
+  margin-right: 8px;
+}
+
+.profile-nav-title {
+flex: 1;
+text-align: left;
+}
+
+.profile-nav-caret {
+font-size: 12px;
+margin-left: 8px;
+transition: transform 0.3s ease;
+}
+
+/* Submenu ========================= */
+.profile-submenu {
+margin-top: 6px;
+/* margin-left: 14px; */
+/* padding-left: 10px; */
+border-left: 2px dashed #f6b26b;
+animation: slideDown 0.4s ease-in-out;
+}
+
+@keyframes slideDown {
+from {
+opacity: 0;
+transform: translateY(-8px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+/* Content Area ==================== */
+.profile-content {
+background: #fffefc;
+border-radius: 18px;
+padding: 30px;
+box-shadow: 0 6px 15px rgba(241, 165, 55, 0.1);
+transition: all 0.3s ease;
+}
+
+.profile-content h4 {
+color: #d87800;
+font-weight: 600;
+margin-bottom: 20px;
+}
+
+/* Button Styling ================== */
+button,
+.btn {
+border-radius: 10px !important;
+padding: 10px 18px;
+transition: all 0.3s ease-in-out;
+font-weight: 500;
+}
+
+.btn-primary {
+background: linear-gradient(135deg, #ffb347, #f47c00);
+color: white;
+border: none;
+}
+
+.btn-primary:hover {
+background: linear-gradient(135deg, #fca43d, #c76300);
+transform: scale(1.04);
+box-shadow: 0 4px 12px rgba(245, 166, 35, 0.4);
+}
+
+.btn-outline-primary {
+border: 2px solid #ffa94d;
+color: #ffa94d;
+background: transparent;
+}
+
+.btn-outline-primary:hover {
+background-color: #854c0f;
+color: #cc6d00;
+border-color: #cc6d00;
+}
+
+/* Notification Placeholder ========= */
+.tab-pane > div {
+font-style: italic;
+color: #888;
+margin-top: 20px;
+background: #ffffff;
+/* border-left: 5px solid #ffc07f; */
+/* padding: 12px; */
+border-radius: 6px;
+}
+
+/* Outlet padding fix ============== */
+main.container-fluid {
+padding-top: 20px;
+padding-bottom: 30px;
+}
+
+/* Footer ========================== */
+/* footer {
+margin-top: auto;
+background: #fff8ec;
+padding: 20px;
+text-align: center;
+font-size: 14px;
+color: #999;
+border-top: 1px solid #f0d9b5;
+} */
+
+/* Media Queries =================== */
+@media (max-width: 992px) {
+.profile-avatar {
+width: 70px;
+height: 70px;
+}
+
+.profile-content {
+padding: 20px;
+}
+
+.profile-nav-link {
+  text-align: left;
+  justify-content: flex-start !important; /* Cực kỳ quan trọng */
+  gap: 10px;
+}
+
+.btn {
+font-size: 14px;
+}
+}
+
+@media (max-width: 576px) {
+.profile-avatar {
+width: 60px;
+height: 60px;
+}
+
+.profile-username {
+font-size: 14px;
+}
+
+.profile-nav-link {
+flex-direction: column;
+align-items: flex-start;
+}
+
+.profile-nav-title {
+margin-top: 4px;
+}
+}
+
+/* Extra Visual Effects ============ */
+.profile-nav-link:active {
+transform: scale(0.98);
+}
+
+.profile-submenu .nav-link {
+  padding-left: 30px;
+  justify-content: flex-start !important;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Custom transition animation on load */
+@keyframes fadeInUp {
+from {
+opacity: 0;
+transform: translateY(20px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+
+.profile-content {
+animation: fadeInUp 0.6s ease;
+}
+
+/* Soft badge sample (optional) ==== */
+.badge-soft-warning {
+background-color: #ffe4b5;
+color: #b26a00;
+padding: 4px 8px;
+border-radius: 10px;
+font-size: 12px;
+}
+
+/* Toast, alert, status UI ========= */
+.alert-toast {
+background-color: #fff4e6;
+border-left: 5px solid #ffa94d;
+padding: 10px 16px;
+border-radius: 8px;
+color: #cc6d00;
+margin-top: 10px;
+}
+.profile-nav-link.active,
+.profile-nav-link.active:focus,
+.profile-nav-link.active:active {
+  background-color: #fcd9a1 !important;
+  color: #b35b00 !important;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(255, 180, 80, 0.3);
+}
+
+/* End of File ===================== */
