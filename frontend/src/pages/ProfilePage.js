@@ -90,11 +90,11 @@ function ProfilePage() {
                       <i className="bi bi-person-circle me-2" /> View Profile
                     </Nav.Link>
                   </Nav.Item>
-                  <Nav.Item>
+                  {/* <Nav.Item>
                     <Nav.Link eventKey="bank" className="nav-hover profile-nav-link">
                       <i className="bi bi-bank me-2" /> Bank
                     </Nav.Link>
-                  </Nav.Item>
+                  </Nav.Item> */}
                   <Nav.Item>
                     <Nav.Link eventKey="address" className="nav-hover profile-nav-link">
                       <i className="bi bi-geo-alt me-2" /> Address
@@ -105,19 +105,19 @@ function ProfilePage() {
                       <i className="bi bi-key me-2" /> Change Password
                     </Nav.Link>
                   </Nav.Item>
-                  <Nav.Item>
+                  {/* <Nav.Item>
                     <Nav.Link eventKey="notisetting" className="nav-hover profile-nav-link">
                       <i className="bi bi-bell me-2" /> Notification Setting
                     </Nav.Link>
-                  </Nav.Item>
+                  </Nav.Item> */}
                 </div>
               )}
 
-              <Nav.Item>
+              {/* <Nav.Item>
                 <Nav.Link eventKey="history" className="nav-hover profile-nav-link">
                   <i className="bi bi-clock-history me-2" /> Purchase History
                 </Nav.Link>
-              </Nav.Item>
+              </Nav.Item> */}
               <Nav.Item>
                 <Nav.Link eventKey="purchaseorder" className="nav-hover profile-nav-link">
                   <i className="bi bi-bag-check me-2" /> Orders

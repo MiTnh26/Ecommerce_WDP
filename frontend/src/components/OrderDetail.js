@@ -188,6 +188,18 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
                   background: "#fafafa",
                 }}
               />
+               <img
+                src={variants.Image || fallbackImg}
+                alt=""
+                style={{
+                  width: 80,
+                  height: 80,
+                  objectFit: "cover",
+                  border: "1px solid #f0f0f0",
+                  borderRadius: 4,
+                  background: "#fafafa",
+                }}
+              />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 500, fontSize: 15, color: "#222" }}>
                   {product.ProductName}
@@ -221,6 +233,18 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
               style={{
                 width: 80,
                 height: 80,
+                objectFit: "cover",
+                border: "1px solid #f0f0f0",
+                borderRadius: 4,
+                background: "#fafafa",
+              }}
+            />
+              <img
+              src={variant.Image || fallbackImg}
+              alt=""
+              style={{
+                width: 40,
+                height: 40,
                 objectFit: "cover",
                 border: "1px solid #f0f0f0",
                 borderRadius: 4,

@@ -193,14 +193,14 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                 <span className="purchaseorders-order-shop-name">
                   {order.ShopId?.name || "Shop"}
                 </span>
-                <Button
+                {/* <Button
                   size="sm"
                   variant="link"
                   className="purchaseorders-contact-seller-btn"
                   onClick={() => alert(`Contact seller: ${order.ShopId?.name}`)}
                 >
                   Contact seller
-                </Button>
+                </Button> */}
               </div>
               <span className="purchaseorders-order-status">
                 {order.Status}
@@ -243,8 +243,13 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                     className="order-item-row"
                     key={`${item._id}-${product._id}-${i}`}
                   >
-                    <img
+                    {/* <img
                       src={product.ProductImage || fallbackImg}
+                      alt=""
+                      className="order-item-img"
+                    /> */}
+                     <img
+                      src={variant.Image || fallbackImg}
                       alt=""
                       className="order-item-img"
                     />
