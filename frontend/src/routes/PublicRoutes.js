@@ -5,7 +5,8 @@ import {
   LoginPage,
   RegisterPage,
   ForgotPasswordPage,
-  ProductDetail, ProductList
+  ProductDetail,
+  ProductList,
 } from "../pages/public/index";
 const PublicRoutes = [
   {
@@ -21,9 +22,9 @@ const PublicRoutes = [
         element: <ProductDetail />,
       },
       {
-        path: "/Ecommerce/search",
+        path: "/Ecommerce/search/:keyword",
         element: <ProductList />,
-      }
+      },
     ],
   },
   {
@@ -39,8 +40,6 @@ const PublicRoutes = [
     element: <ForgotPasswordPage />,
   },
   { path: "*", element: <NotFound404 /> },
-
-  
 ];
 
 export default PublicRoutes;
