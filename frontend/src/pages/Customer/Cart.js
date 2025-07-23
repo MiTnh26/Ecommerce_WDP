@@ -8,7 +8,8 @@ import { useEffect } from "react";
 import axios from "axios";
 import { AppContext } from "../../store/Context";
 import { useContext } from "react";
-
+import { useQueryClient } from '@tanstack/react-query';
+import img_empty from "../../assets/images/data-empty.png";
 
 const Cart = () => {
   const [checkedItems, setCheckedItems] = useState([]); // chứa id của các variant được chọn
@@ -17,10 +18,13 @@ const Cart = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const { checkOut, setCheckOut } = useContext(AppContext);
 
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
+        console.log("Data Test", user._id);
         if (!user._id) {
           navigate("/Ecommerce/login");
         }
@@ -34,14 +38,14 @@ const Cart = () => {
         console.log("data", data);
         setData(data);
         // Tính tổng số item trong ProductVariant
-        const total = data.Items.reduce((sum, item) => {
-          if (Array.isArray(item.ProductVariant)) {
-            return sum + item.ProductVariant.length;
-          }
-          return sum;
-        }, 0);
+        // const total = data.Items.reduce((sum, item) => {
+        //   if (Array.isArray(item.ProductVariant)) {
+        //     return sum + item.ProductVariant.length;
+        //   }
+        //   return sum;
+        // }, 0);
 
-        setTotalCart(total);
+        // setTotalCart(total);
       } catch (err) {
         console.log(err);
       }
@@ -49,15 +53,7 @@ const Cart = () => {
     fetchData();
   }, [])
 
-  const [showClassification, setShowClassification] = useState(false);
   const navigate = useNavigate();
-
-  const handleOpenClassification = () => {
-    setShowClassification(true);
-  };
-  const handleCloseClassification = () => {
-    setShowClassification(false);
-  };
 
   // handle delete
   const handleDeleteProduct = async (Product_id, ProductVariant) => {
@@ -99,6 +95,7 @@ const Cart = () => {
           Items: filteredItems,
         });
       }
+      queryClient.invalidateQueries(["cart"]);
     } catch (err) {
       console.log(err);
     }
@@ -106,10 +103,11 @@ const Cart = () => {
 
   // handle click check box
 const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Price }) => {
+  console.log(ShopId)
   if (name === "all") {
     const allVariants = data.Items.flatMap(item =>
       item.ProductVariant.map(variant => ({
-        ShopId: item.ShopID._id,
+        ShopId: item.ShopID,
         Product_Id: item._id,
         ProductVariant_id: variant._id,
         Quantity: variant.Quantity,
@@ -125,16 +123,18 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
   }
 
   if (name === "shop") {
-    const shopItem = data.Items.find(item => item.ShopID._id === ShopId);
+    const shopItem = data.Items.find(item => item.ShopID === ShopId);
     if (!shopItem) return;
 
-    const shopVariants = shopItem.ProductVariant.map(variant => ({
-      ShopId,
-      Product_Id: shopItem._id,
-      ProductVariant_id: variant._id,
-      Quantity: variant.Quantity,
-      Price: variant.Price
-    }));
+    const shopVariants = shopItem.ProductVariant
+      .filter(variant => variant.Status === "Active")
+      .map(variant => ({
+        ShopId,
+        Product_Id: shopItem._id,
+        ProductVariant_id: variant._id,
+        Quantity: variant.Quantity,
+        Price: variant.Price
+      }));
 
     const allSelected = shopVariants.every(variant =>
       checkedItems.some(checked => checked.ProductVariant_id === variant.ProductVariant_id)
@@ -194,6 +194,75 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
   const newTotal = calculateTotalPriceChecked();
   setTotalPrice(newTotal);
 }, [checkedItems]);
+
+  const handleChangeQuantity = (Product_id, ProductVariant, behavor) => {
+    if (behavor === "increase") {
+      ProductVariant.Quantity += 1;
+    } else if (behavor === "decrease") {
+      if (ProductVariant.Quantity === 1) {
+        return;
+      }
+      ProductVariant.Quantity -= 1;
+    }
+
+    const callData = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        console.log("Data Test", Product_id, ProductVariant, user._id);
+        if (!Product_id || !ProductVariant) {
+          console.log("Not empty Product_id or ProductVariant");
+          return;
+        }
+        if (!user._id) {
+          navigate("/Ecommerce/login");
+        }
+        console.log("Data Test",ProductVariant) 
+              const res = await axios.post("http://localhost:5000/customer/change-quantity", {
+            UserId: user._id,
+            Product_id: Product_id,
+            ProductVariant: { _id: ProductVariant._id, Quantity: ProductVariant.Quantity}},
+          {withCredentials: true},
+        );
+        if (res.status === 200) {
+          window.alert("Change quantity success");
+          // cập nhat lai data
+          // Sau khi gọi API thay đổi số lượng thành công:
+const filteredItems = data.Items.map(item => {
+  if (item._id === Product_id) {
+    return {
+      ...item,
+      ProductVariant: item.ProductVariant.map(variant =>
+        String(variant._id) === String(ProductVariant._id)
+          ? { ...variant, Quantity: ProductVariant.Quantity }
+          : variant
+      ),
+    };
+  }
+  return item;
+});
+
+// Tính lại tổng price
+const newTotalPrice = filteredItems.reduce((total, item) => {
+  return total + item.ProductVariant.reduce((sum, variant) => {
+    return sum + variant.Price * variant.Quantity;
+  }, 0);
+}, 0);
+
+// Cập nhật state
+setData({
+  ...data,
+  Items: filteredItems,
+});
+setTotalPrice(newTotalPrice);
+      }
+      }
+      
+      catch (err) {
+        console.log(err);
+      }
+    }  
+    callData();
+  }
   //console.log("checkedItems", checkedItems);
   return (
     <div className="w-100 bg-light vh-100 overflow-auto">
@@ -238,7 +307,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
               ></div>
               <p className="title p-0 m-0 text-warning fw-bold">GIỎ HÀNG</p>
             </div>
-            <form
+            {/* <form
               className="header-bottom-right d-flex "
               style={{ width: "100%", maxWidth: "350px" }}
             >
@@ -251,7 +320,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
               <button className="bg-warning border-start-0 border-0 px-4 rounded-end">
                 <i className="fa-solid fa-magnifying-glass text-white"></i>
               </button>
-            </form>
+            </form> */}
           </div>
         </div>
       </header>
@@ -262,7 +331,8 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
               type="checkbox"
               onChange={() => handleCheck({ name: "all" })}
               checked={
-                data.Items?.flatMap(item => item.ProductVariant).every(v =>
+                (data.Items?.flatMap(item => item.ProductVariant) || []).length > 0 &&
+                (data.Items?.flatMap(item => item.ProductVariant) || []).every(v =>
                   checkedItems.some(c => c.ProductVariant_id === v._id)
                 )
               }
@@ -285,13 +355,23 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
             <p className="mb-0">Action</p>
           </div>
         </div>
-        <div className="cart-body bg-white mt-2 overflow-auto">
+          {data.Items?.length === 0 &&
+            (<div>
+              <img
+                src={img_empty}
+                alt="no data"
+                className="object-fit-cover opacity-50 mx-auto d-block"></img>
+              <p className="text-center text-muted" style={{ fontSize: "0.8rem" }}>Cart is empty</p>
+
+            </div>)
+          }
+        <div className="cart-body mt-2 overflow-auto">
           {data.Items?.map((item, index) => (
-            <div className="cart-item rounded mb-2" key={item._id}>
+            <div className="cart-item rounded mb-3 bg-white" key={item._id}>
               <div className="chosse-all-in-shop d-flex py-2 px-1 position-relative">
                 <Form.Check
                   type="checkbox"
-                  onChange={() => handleCheck({ name: "shop", ShopId: item.ShopID._id })}
+                  onChange={() => handleCheck({ name: "shop", ShopId: item.ShopID })}
                   checked={
                     item.ProductVariant.every(v =>
                       checkedItems.some(c => c.ProductVariant_id === v._id)
@@ -300,7 +380,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
                 />
 
 
-                <div className="flex-grow-1"><p className="mb-0">Shop : {item.ShopID?.name}</p></div>
+                <div className="flex-grow-1"><p className="mb-0">Shop : {item.ShopName}</p></div>
                 {/* Đường kẻ 90% nằm dưới */}
                 <div
                   className="position-absolute"
@@ -320,7 +400,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
                     onChange={() =>
                       handleCheck({
                         name: "productVariant",
-                        ShopId: item.ShopID._id,
+                        ShopId: item.ShopID,
                         Product_Id: item._id,
                         ProductVariant_id: variant._id,
                         Quantity: variant.Quantity,
@@ -328,24 +408,31 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
                       })
                     }
                     checked={checkedItems.some(v => v.ProductVariant_id === variant._id)}
+                    disabled={variant.Status == "Inactive"}
                   />
 
 
                   <div className="flex-grow-1 d-flex gap-3">
                     <img src={variant.Image} alt="img product" width={"80px"} height={"80px"} />
-                    <p className="product-name text-wrap p-0 m-0" style={{ flexBasis: '50%', flexShrink: 0 }}>{item.ProductName}</p>
-                    <p className="classification text-muted p-0 m-0 " style={{ flexBasis: '20%', flexShrink: 0 }} onClick={() => handleOpenClassification(true)}>{variant.ProductVariantName}</p>
+                    <p className={`product-name text-wrap p-0 m-0 ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '50%', flexShrink: 0 }}>{item.ProductName}</p>
+                    <p className={`classification text-muted p-0 m-0 ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '20%', flexShrink: 0 }}>{variant.ProductVariantName}</p>
                   </div>
                   <div className="flex-shrink-0 flex-basic-15 text-center">
-                    <p className="discount-price align-self-center p-0 m-0">{variant.Price.toLocaleString("vi-VN")}</p></div>
+                    <p className={`discount-price align-self-center p-0 m-0 ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}>{variant.Price.toLocaleString("vi-VN")}</p></div>
                   <div className="flex-shrink-0 flex-basic-15 text-center">
                     <div className="quantity-inputt d-flex justify-content-center">
-                      <button className="border bg-white p-1 px-2 ">-</button>
-                      <input type="number" className="border bg-white py-1 px-2 text-center border-start-0 border-end-0 input-no-spinner" style={{ width: '40px' }} value={variant.Quantity} />
-                      <button className="border bg-white p-1 px-2 text-muted fw-light">+</button>
+                      <button 
+                        className="border bg-white p-1 px-2" 
+                        onClick = {() => handleChangeQuantity(item._id, {"_id": "1", "Quantity": "1"}, "decrease")} 
+                        disabled= {variant.Status == "Inactive"}>-</button>
+                      <input type="number" className="border bg-white py-1 px-2 text-center border-start-0 border-end-0 input-no-spinner" style={{ width: '40px' }} value={variant.Quantity} readOnly/>
+                      <button 
+                        className="border bg-white p-1 px-2 text-muted fw-light" 
+                        onClick={() => handleChangeQuantity(item._id, {"_id": variant._id, "Quantity": variant.Quantity}, "increase")}
+                        disabled= {variant.Status == "Inactive"}>+</button>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 flex-basic-15 text-center"><p className="total-price p-0 m-0 text-danger">{(variant.Price * variant.Quantity).toLocaleString("vi-VN")}</p></div>
+                  <div className="flex-shrink-0 flex-basic-15 text-center"><p className={`total-price p-0 m-0 text-danger ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}>{(variant.Price * variant.Quantity).toLocaleString("vi-VN")}</p></div>
                   <div className="flex-shrink-0 flex-basic-10 text-center" >
                     <button className="btn btn-outline-danger" onClick={() => handleDeleteProduct(item._id, variant._id)}>
                       <i className="fa-solid fa-trash"></i>

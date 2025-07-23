@@ -8,6 +8,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import reportWebVitals from "./reportWebVitals";
 
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import 'bootstrap-icons/font/bootstrap-icons.css'; // thêm dòng này
+
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 

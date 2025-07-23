@@ -46,4 +46,5 @@ router.post("/change-quantity", CartController.changeQuantity);
 router.delete("/remove-p-variant-cart", CartController.deleteProductVariantInCart);
 router.post("/get-cart", CartController.getCartByUserId);
 //router.post("/get-total-cart-item", CartController.getToTalItemInCart);
+router.post("/find-owner-by-user-id", UserController.findOwnerByUserId);
 module.exports = router;

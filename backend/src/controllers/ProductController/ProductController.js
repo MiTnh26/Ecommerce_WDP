@@ -133,113 +133,7 @@ exports.getTrendingProducts = async (req, res) => {
     const currentPeriodStart = new Date(now.getTime() - (trendingDays * 24 * 60 * 60 * 1000));
     const previousPeriodStart = new Date(now.getTime() - (comparisonDays * 24 * 60 * 60 * 1000));
 
-    // Lấy dữ liệu giai đoạn hiện tại (7 ngày gần đây)
-    const currentPeriodData = await OrderItem.aggregate([
-      {
-        $match: {
-          Status: "Delivered",
-          createdAt: { $gte: currentPeriodStart }
-        }
-      },
-      {
-        $unwind: "$Product"
-      },
-      {
-        $unwind: "$Product.ProductVariant"
-      },
-      {
-        $group: {
-          _id: "$Product._id",
-          ProductName: { $first: "$Product.ProductName" },
-          ProductImage: { $first: "$Product.ProductImage" },
-          Price: { $first: "$Product.ProductVariant.Price" },
-          currentSold: { $sum: "$Product.ProductVariant.Quantity" },
-          currentRevenue: { 
-            $sum: { 
-              $multiply: ["$Product.ProductVariant.Quantity", "$Product.ProductVariant.Price"] 
-            } 
-          }
-        }
-      },
-      {
-        $lookup: {
-          from: "products", // Tên collection trong MongoDB
-          localField: "_id",
-          foreignField: "_id",
-          as: "productDetails"
-        }
-      },
-      {
-        $unwind: "$productDetails"
-      },
-      {
-        $addFields: {
-          StockQuantity: {
-            $first: "$productDetails.ProductVariant.StockQuantity"
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          ProductName: 1,
-          ProductImage: 1,
-          Price: 1,
-          currentSold: 1,
-          currentRevenue: 1,
-          StockQuantity: 1
-        }
-      }
-    ]);
-    // Lấy dữ liệu giai đoạn trước đó (7 ngày trước đó)
-    const previousPeriodData = await OrderItem.aggregate([
-      {
-        $match: {
-          Status: "Delivered",
-          createdAt: { 
-            $gte: previousPeriodStart, 
-            $lt: currentPeriodStart 
-          }
-        }
-      },
-      {
-        $unwind: "$Product"
-      },
-      {
-        $unwind: "$Product.ProductVariant"
-      },
-      {
-        $group: {
-          _id: "$Product._id",
-          previousSold: { $sum: "$Product.ProductVariant.Quantity" }
-        }
-      }
-    ]);
-    // Tính toán trending
-    const trendingProducts = currentPeriodData.map(current => {
-      const previous = previousPeriodData.find(p => p._id.toString() === current._id.toString());
-      const previousSold = previous ? previous.previousSold : 0;
-      
-      // Tính tỷ lệ tăng trưởng
-      const growthRate = previousSold > 0 
-        ? ((current.currentSold - previousSold) / previousSold) * 100 
-        : current.currentSold > 0 ? 100 : 0;
-
-      return {
-        _id: current._id,
-        ProductName: current.ProductName,
-        ProductImage: current.ProductImage,
-        Price:  current.Price,
-        StockQuantity: current.StockQuantity,
-        currentSold: current.currentSold,
-        previousSold: previousSold,
-        growthRate: Math.round(growthRate * 100) / 100,
-        trendingScore: current.currentSold * (1 + growthRate / 100) // Scoring formula
-      };
-    })
-    .filter(product => product.growthRate > 20)
-    .sort((a, b) => b.trendingScore - a.trendingScore)
-    .slice(0, limit); 
+     
     
     res.status(200).json(trendingProducts);
     
@@ -254,17 +148,32 @@ exports.getNewProducts = async (req, res) => {
   const {page = 0} = req.query;
   //console.log("Fetching new products with limit:", limit, "and page:", page);
   try {
-    const products = await Product.find()
-    .select({
+    const products = await Product.aggregate([
+    {
+      $lookup: {
+        from: "shops",
+        localField: "ShopId",
+        foreignField: "_id",
+        as: "shop"
+      }
+    },
+    { $unwind: "$shop" },
+    { $match: { "shop.status": { $ne: "Banned" } } },
+    {
+      $project: {
         _id: 1,
         ProductName: 1,
         ProductImage: 1,
-        StockQuantity: { $arrayElemAt: ["$ProductVariant.StockQuantity", 0] }, // Lấy StockQuantity của phần tử đầu tiên
-        Price: { $arrayElemAt: ["$ProductVariant.Price", 0] } // Lấy Price của phần tử đầu tiên
-    })
-      .sort({ createdAt: -1 }) // Sort by creation date, newest first
-      .limit(Number(limit))
-      .skip(Number(page) * Number(limit))
+        ShopId: 1,
+        StockQuantity: { $arrayElemAt: ["$ProductVariant.StockQuantity", 0] },
+        Price: { $arrayElemAt: ["$ProductVariant.Price", 0] },
+        
+      }
+    },
+    { $sort: { createdAt: -1 } },
+    { $skip: Number(page) * Number(limit) },
+    { $limit: Number(limit) }
+  ]);
     
     res.status(200).json(products);
   } catch (err) {
@@ -287,45 +196,37 @@ exports.getBestSellerProducts = async (req, res) => {
       {
         $unwind: "$Product.ProductVariant"
       },
+      // join bảng product lây được shop id
+      {
+        $lookup: {
+          from: "products",
+          localField: "Product._id",
+          foreignField: "_id",
+          as: "Product_detail"
+        }
+      },
+      // join bang shop de lay duoc trang thai status
+      {
+        $lookup: {
+          from: "shops",
+          localField: "Product_detail.ShopId",
+          foreignField: "_id",
+          as: "Product_detail_with_shop"
+        }
+      },
+      // match with not banned
+      {
+        $match: {
+          "Product_detail_with_shop.status": { $ne: "Banned" }
+        }
+      },
       {
         $group: {
          _id: "$Product._id",
           ProductName: { $first: "$Product.ProductName" },
           ProductImage: { $first: "$Product.ProductImage" },
           Price: { $first: "$Product.ProductVariant.Price" },
-          //totalSold: { $sum: "$Product.ProductVariant.Quantity" },
-          // totalRevenue: { 
-          //   $sum: { 
-          //     $multiply: ["$Product.ProductVariant.Quantity", "$Product.ProductVariant.Price"] 
-          //   } 
-          // }
-        }
-      },
-      {
-        $lookup: {
-          from: "products", // Name of the collection in MongoDB
-          localField: "_id",
-          foreignField: "_id",
-          as: "productDetails"
-        }
-      },
-      {
-        $unwind: "$productDetails"
-      },
-      {
-        $addFields: {
-          StockQuantity: {
-            $first: "$productDetails.ProductVariant.StockQuantity"
-          }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          ProductName: 1,
-          ProductImage: 1,
-          Price: 1,        
-          StockQuantity: 1
+          totalSold: { $sum: "$Product.ProductVariant.Quantity" },
         }
       },
       {
@@ -354,70 +255,109 @@ exports.getProductById = async (req, res) => {
   //console.log("Fetching product by ID:", id);
   try {
   const product = await Product.findOne({ _id: id.toString() })
-    .select('_id ProductName ProductImage Description ProductVariant') // chỉ gọi 1 lần duy nhất
-    .populate({
-      path: 'CategoryId',
-      select: '_id CategoryName',
-    })
+    .select('_id ProductName ProductImage Description ProductVariant Status') // chỉ gọi 1 lần duy nhất
+    // .populate({
+    //   path: 'CategoryId',
+    //   select: '_id CategoryName',
+    // })
     .populate({
       path: 'ShopId',
-      select: '_id name shopAvatar description address',
+      select: '_id name shopAvatar description address status',
     });
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    res.json(product);
+    // Shop: Banned - inactive, active: product =>  Shop is banned
+    if (product.ShopId.status === "Banned" ) {
+      return res.status(200).json({ product: null, message: "Shop is banned" });
+    }
+    // Shop: Active  - inactive, active: product =>  Product is stop selling
+    if (product.ShopId.status === "Active" && product.Status === "Inactive") {
+      return res.status(200).json({ product: null, message: "Product is stop selling" });
+    }
+    res.json({ product: product, message: "Fetch product successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error fetching product" });
   }
 }
+const buildSearchPatterns = (input) => {
+  const words = input.trim().toLowerCase().split(/\s+/); // Tách theo khoảng trắng
+  const patterns = new Set();
 
-exports.fetchProductsRelatedToCategory = async (req, res) => {
+  // 1. Toàn bộ chuỗi
+  patterns.add(input.toLowerCase());
+
+  // 2. Tổ hợp 2 từ liên tiếp (có thể mở rộng thành 3 từ, v.v.)
+  for (let i = 0; i < words.length - 1; i++) {
+    const phrase2 = `${words[i]} ${words[i + 1]}`;
+    patterns.add(phrase2);
+  }
+
+  // 3. Từng từ riêng lẻ
+  for (const word of words) {
+    patterns.add(word);
+  }
+
+  return Array.from(patterns);
+}
+
+
+exports.fetchProductsRelated = async (req, res) => {
   try {
-    const { category_id } = req.params;
-    console.log("Fetching related products for category ID:", category_id);
-    if (!category_id) {
-      return res.status(400).json({ message: "Category ID is required" });
+    const { name_product } = req.body;
+    if (!name_product) {
+      return res.status(400).json({ message: "Product name is required" });
     }
-    // const products = await Product.find({CategoryId: category_id})
+    const product_name = name_product;
+    //console.log("Fetching related products for:", product_name);
+
+    const searchWords = buildSearchPatterns(product_name);
+    //console.log("Search words:", searchWords);
+    const orConditions = searchWords.map(keyword => ({
+      ProductName: { $regex: `\\b${keyword}\\b`, $options: "i" }
+    }));
+
     const products = await Product.aggregate([
   {
     $match: {
-      CategoryId: new mongoose.Types.ObjectId(category_id)
+      $or: orConditions,
     },
   },
   {
-    $project: {
-      _id: 1,
-      ProductName: 1,
-      ProductImage: 1,
-      Description: 1,
-      ProductVariant: 1,
+    $addFields: {
       Price: {
-        $max: "$ProductVariant.Price"
-      }
-    }
+        $arrayElemAt: ["$ProductVariant.Price", 0], // không được dùng trực tiếp như vậy
+      },
+    },
   },
-  { $limit: 10 }
+  {
+    $limit: 10,
+  },
 ]);
-   res.json(products);
+
+    return res.status(200).json(products);
   } catch (err) {
     console.error("Error fetching related products:", err);
-    throw err;
+    return res.status(500).json({ error: "Lỗi khi tìm sản phẩm liên quan" });
   }
 };
+
+
 exports.filterProduct = async (req, res) => {
   try {
     let { name, category, fromPrice, toPrice, whereToBuyFilter } = req.body;
     let { limit = 20, page = 0 } = req.query;
+    const nameRevert = name.trim();
     //category = "687904f506b1b9b68ea90144";
     //console.log("Filtering products with name:", name, "category:", category, "fromPrice:", fromPrice, "toPrice:", toPrice, "whereToBuyFilter:", whereToBuyFilter);
-    const matchStage = {};
+    const matchStage = {
+      Status: "Active",
+    };
 
-    if (name) {
-      matchStage.ProductName = { $regex: name, $options: "i" };
+    if (nameRevert) {
+      matchStage.ProductName = { $regex: nameRevert, $options: "i" };
     }
 
     if (category) {
@@ -460,6 +400,9 @@ exports.filterProduct = async (req, res) => {
         }
       },
       { $unwind: "$shopData" },
+      { $match : {
+        "shopData.status": "Active"
+      }}
     ];
 
     if (whereToBuyFilter && whereToBuyFilter.length > 0) {
