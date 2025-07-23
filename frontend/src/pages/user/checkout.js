@@ -1,232 +1,564 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./checkout.css";
-
-// Mock data for user addresses
-const mockAddresses = [
-  {
-    id: 1,
-    name: "Nguyễn Văn An",
-    phone: "0901234567",
-    address: "123 Nguyễn Huệ, Phường Bến Nghé",
-    ward: "Phường Bến Nghé",
-    district: "Quận 1",
-    city: "TP. Hồ Chí Minh",
-    fullAddress: "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-    isDefault: true,
-    type: "home",
-  },
-  {
-    id: 2,
-    name: "Nguyễn Văn An",
-    phone: "0901234567",
-    address: "456 Lê Lợi, Phường 8",
-    ward: "Phường 8",
-    district: "Quận 3",
-    city: "TP. Hồ Chí Minh",
-    fullAddress: "456 Lê Lợi, Phường 8, Quận 3, TP. Hồ Chí Minh",
-    isDefault: false,
-    type: "office",
-  },
-  {
-    id: 3,
-    name: "Trần Thị Bình",
-    phone: "0912345678",
-    address: "789 Trần Hưng Đạo, Phường 1",
-    ward: "Phường 1",
-    district: "Quận 5",
-    city: "TP. Hồ Chí Minh",
-    fullAddress: "789 Trần Hưng Đạo, Phường 1, Quận 5, TP. Hồ Chí Minh",
-    isDefault: false,
-    type: "other",
-  },
-];
-
-// Mock data for payment methods
-const mockPaymentMethods = [
-  {
-    id: 1,
-    name: "Ví MoMo",
-    type: "e_wallet",
-    provider: "MoMo",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 0,
-    description: "Thanh toán nhanh chóng qua ví MoMo",
-    isAvailable: true,
-  },
-  {
-    id: 2,
-    name: "ZaloPay",
-    type: "e_wallet",
-    provider: "ZaloPay",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 0,
-    description: "Thanh toán tiện lợi qua ZaloPay",
-    isAvailable: true,
-  },
-  {
-    id: 3,
-    name: "Thẻ tín dụng/ghi nợ",
-    type: "card",
-    provider: "Visa/Mastercard",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 0,
-    description: "Thanh toán bằng thẻ tín dụng hoặc thẻ ghi nợ",
-    isAvailable: true,
-  },
-  {
-    id: 4,
-    name: "Chuyển khoản ngân hàng",
-    type: "bank_transfer",
-    provider: "Banking",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 0,
-    description: "Chuyển khoản qua ngân hàng",
-    isAvailable: true,
-  },
-  {
-    id: 5,
-    name: "Thanh toán khi nhận hàng (COD)",
-    type: "cod",
-    provider: "COD",
-    icon: "/placeholder.svg?height=40&width=40",
-    fee: 15000,
-    description: "Thanh toán bằng tiền mặt khi nhận hàng",
-    isAvailable: true,
-  },
-];
-
-// Mock data for cart items grouped by shop
-const mockCartItemsByShop = {
-  "Tech Store VN": {
-    shopId: 1,
-    shopName: "Tech Store VN",
-    shopAvatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    items: [
-      {
-        id: 1,
-        name: "iPhone 15 Pro Max 256GB",
-        image: "/placeholder.svg?height=80&width=80",
-        price: 29990000,
-        quantity: 1,
-        variant: "Titan Tự Nhiên",
-      },
-      {
-        id: 2,
-        name: "AirPods Pro 2nd Generation",
-        image: "/placeholder.svg?height=80&width=80",
-        price: 6490000,
-        quantity: 2,
-        variant: "Trắng",
-      },
-    ],
-    insurance: {
-      available: true,
-      price: 5500,
-      selected: false,
-    },
-    vouchers: [
-      {
-        id: 1,
-        code: "FREESHIP50K",
-        discount: 50000,
-        type: "shipping",
-        description: "Miễn phí vận chuyển đơn từ 500k",
-      },
-    ],
-    selectedVoucher: null,
-    note: "",
-    shippingOptions: [
-      {
-        id: 1,
-        name: "Giao hàng tiêu chuẩn",
-        description: "3-5 ngày làm việc",
-        price: 30000,
-        estimatedDays: "3-5",
-      },
-      {
-        id: 2,
-        name: "Giao hàng nhanh",
-        description: "1-2 ngày làm việc",
-        price: 50000,
-        estimatedDays: "1-2",
-      },
-    ],
-    selectedShipping: null,
-  },
-  "Apple Store Official": {
-    shopId: 2,
-    shopName: "Apple Store Official",
-    shopAvatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    items: [
-      {
-        id: 3,
-        name: "MacBook Air M2 13 inch",
-        image: "/placeholder.svg?height=80&width=80",
-        price: 27990000,
-        quantity: 1,
-        variant: "Midnight - 256GB",
-      },
-    ],
-    insurance: {
-      available: true,
-      price: 4200,
-      selected: false,
-    },
-    vouchers: [
-      {
-        id: 2,
-        code: "NEWUSER20",
-        discount: 200000,
-        type: "discount",
-        description: "Giảm 200k cho khách hàng mới",
-      },
-    ],
-    selectedVoucher: null,
-    note: "",
-    shippingOptions: [
-      {
-        id: 1,
-        name: "Giao hàng tiêu chuẩn",
-        description: "3-5 ngày làm việc",
-        price: 32000,
-        estimatedDays: "3-5",
-      },
-      {
-        id: 2,
-        name: "Giao hàng nhanh",
-        description: "1-2 ngày làm việc",
-        price: 52000,
-        estimatedDays: "1-2",
-      },
-    ],
-    selectedShipping: null,
-  },
-};
+import axios from "axios";
 
 function CheckoutPage() {
-  const [selectedAddress, setSelectedAddress] = useState(
-    mockAddresses.find((addr) => addr.isDefault) || mockAddresses[0]
-  );
-  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [selectedAddress, setSelectedAddress] = useState(0);
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [orderNote, setOrderNote] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
-  const [newAddressForm, setNewAddressForm] = useState({
-    name: "",
-    phone: "",
+  const [selectedShipping, setSelectedShipping] = useState("fast");
+  const [addresses, setAddresses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [checkOut, setCheckOut] = useState();
+  const [orders, setOrders] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    receiverName: "",
+    phoneNumber: "",
     province: "",
     district: "",
     ward: "",
-    detailAddress: "",
-    isDefault: false,
+    detail: "",
+    status: "Inactive",
     type: "home",
   });
+  const [showAddressListModal, setShowAddressListModal] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(true);
+  const [paymentError, setPaymentError] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // States for location data
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  // Thêm mapping cho tên loại phương thức thanh toán
+  const paymentTypeNames = {
+    e_wallet: "E Wallet",
+    card: "Card",
+    bank_transfer: "Bank Transfer",
+    cod: "COD",
+    gateway: "Gate Way",
+  };
+
+  // Thêm state cho dropbox mở/đóng từng loại
+  const [openPaymentType, setOpenPaymentType] = useState(null);
+
+  // Load provinces on component mount
+  useEffect(() => {
+    fetch("https://provinces.open-api.vn/api/p/")
+      .then((res) => res.json())
+      .then(setProvinces)
+      .catch((err) => console.error("Error loading provinces:", err));
+  }, []);
+
+  // useEffect để lấy dữ liệu checkout và userId
+  useEffect(() => {
+    // Lấy dữ liệu checkout từ localStorage
+    const storedCheckOut = localStorage.getItem("checkOut");
+    if (storedCheckOut) {
+      try {
+        const checkOutData = JSON.parse(storedCheckOut);
+        setCheckOut(checkOutData);
+        console.log("CheckOut data:", checkOutData);
+
+        // Lấy userId từ checkOut data
+        if (checkOutData.UserId) {
+          setUserId(checkOutData.UserId);
+          fetchAddresses(checkOutData.UserId);
+        } else {
+          setError("Không tìm thấy thông tin người dùng trong checkout");
+          setLoading(false);
+        }
+
+        // Transform checkout data thành orders format
+        if (checkOutData.Items && Array.isArray(checkOutData.Items)) {
+          transformCheckoutToOrders(checkOutData.Items);
+        }
+      } catch (err) {
+        console.error("Error parsing checkout data:", err);
+        setError("Lỗi đọc dữ liệu checkout");
+        setLoading(false);
+      }
+    } else {
+      setError("Không tìm thấy dữ liệu checkout");
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch payment methods from backend
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      setPaymentLoading(true);
+      setPaymentError(null);
+      try {
+        const res = await fetch(
+          "http://localhost:5000/customer/getPaymentMethod"
+        );
+        if (!res.ok) throw new Error("Không thể tải phương thức thanh toán");
+        const data = await res.json();
+        setPaymentMethods(data);
+        // Set default payment method
+        const defaultMethod = data.find((m) => m.Default) || data[0] || null;
+        setSelectedPayment(defaultMethod ? defaultMethod._id : null);
+      } catch (err) {
+        setPaymentError(err.message);
+        setPaymentMethods([]);
+      } finally {
+        setPaymentLoading(false);
+      }
+    };
+    fetchPaymentMethods();
+  }, []);
+
+  // Khi chọn tỉnh
+  const handleProvinceChange = async (e) => {
+    const name = e.target.value;
+    const selected = provinces.find((p) => p.name === name);
+    setNewAddress((prev) => ({
+      ...prev,
+      province: selected?.name || "",
+      district: "",
+      ward: "",
+    }));
+
+    if (!selected) return;
+
+    try {
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/p/${selected.code}?depth=2`
+      );
+      const data = await res.json();
+      setDistricts(data.districts || []);
+      setWards([]);
+    } catch (err) {
+      console.error("Error loading districts:", err);
+    }
+  };
+
+  // Khi chọn quận/huyện
+  const handleDistrictChange = async (e) => {
+    const name = e.target.value;
+    const selected = districts.find((d) => d.name === name);
+    setNewAddress((prev) => ({
+      ...prev,
+      district: selected?.name || "",
+      ward: "",
+    }));
+
+    if (!selected) return;
+
+    try {
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/d/${selected.code}?depth=2`
+      );
+      const data = await res.json();
+      setWards(data.wards || []);
+    } catch (err) {
+      console.error("Error loading wards:", err);
+    }
+  };
+
+  // Xử lý thay đổi các trường khác
+  const handleAddressFieldChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "ward") {
+      const selected = wards.find((w) => w.name === value);
+      setNewAddress((prev) => ({
+        ...prev,
+        ward: selected?.name || "",
+      }));
+    } else {
+      setNewAddress((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  // Function to format full address
+  const formatFullAddress = (address) => {
+    const parts = [];
+    if (address.detail) parts.push(address.detail);
+    if (address.ward) parts.push(address.ward);
+    if (address.district) parts.push(address.district);
+    if (address.province) parts.push(address.province);
+    return parts.join(", ");
+  };
+
+  const transformCheckoutToOrders = async (items) => {
+    setProductsLoading(true);
+    try {
+      // Group items by ShopId
+      const groupedByShop = items.reduce((acc, item) => {
+        const shopId = item.ShopId;
+        if (!acc[shopId]) {
+          acc[shopId] = [];
+        }
+        acc[shopId].push(item);
+        return acc;
+      }, {});
+
+      // Transform each shop group
+      const transformedOrders = await Promise.all(
+        Object.entries(groupedByShop).map(async ([shopId, shopItems]) => {
+          // Fetch product details for each item
+          const itemsWithDetails = await Promise.all(
+            shopItems.map(async (item) => {
+              try {
+                // Fetch product details với API endpoint mới
+                const productResponse = await fetch(
+                  `http://localhost:5000/customer/getProduct/${item.Product_Id}`,
+                  {
+                    method: "GET",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  }
+                );
+
+                if (productResponse.ok) {
+                  const product = await productResponse.json();
+                  console.log("Product data:", product);
+
+                  // Fetch variant details với API endpoint mới
+                  let variant = null;
+                  let variantPrice = item.Price;
+                  let variantImage = product.ProductImage;
+                  let variantName = "Mặc định";
+
+                  if (item.ProductVariant_id) {
+                    try {
+                      const variantResponse = await fetch(
+                        `http://localhost:5000/customer/getProduct/${item.Product_Id}/variant/${item.ProductVariant_id}`,
+                        {
+                          method: "GET",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                        }
+                      );
+
+                      if (variantResponse.ok) {
+                        variant = await variantResponse.json();
+                        console.log("Variant data:", variant);
+                        variantPrice = variant.Price || item.Price;
+                        variantImage = variant.Image || product.ProductImage;
+                        // Ưu tiên lấy tên từ variant object
+                        if (variant.ProductVariantName) {
+                          variantName = variant.ProductVariantName;
+                        } else if (
+                          product.ProductVariant &&
+                          Array.isArray(product.ProductVariant)
+                        ) {
+                          // Nếu không, tìm trong mảng ProductVariant của product
+                          const found = product.ProductVariant.find(
+                            (v) => v._id === item.ProductVariant_id
+                          );
+                          if (found && found.ProductVariantName) {
+                            variantName = found.ProductVariantName;
+                          }
+                        }
+                      } else if (
+                        product.ProductVariant &&
+                        Array.isArray(product.ProductVariant)
+                      ) {
+                        // Nếu không fetch được variant riêng, tìm trong mảng ProductVariant của product
+                        const found = product.ProductVariant.find(
+                          (v) => v._id === item.ProductVariant_id
+                        );
+                        if (found && found.ProductVariantName) {
+                          variantName = found.ProductVariantName;
+                        }
+                      }
+                    } catch (variantErr) {
+                      console.error(
+                        "Error fetching variant details:",
+                        variantErr
+                      );
+                      // Nếu lỗi, thử tìm trong mảng ProductVariant của product
+                      if (
+                        product.ProductVariant &&
+                        Array.isArray(product.ProductVariant)
+                      ) {
+                        const found = product.ProductVariant.find(
+                          (v) => v._id === item.ProductVariant_id
+                        );
+                        if (found && found.ProductVariantName) {
+                          variantName = found.ProductVariantName;
+                        }
+                      }
+                    }
+                  }
+
+                  return {
+                    id: item.Product_Id,
+                    name: product.ProductName || "Sản phẩm",
+                    description: product.Description || "",
+                    price: variantPrice,
+                    quantity: item.Quantity,
+                    image: variantImage || "/placeholder.svg",
+                    color: variantName,
+                    ProductVariantName: variantName, // Đảm bảo luôn có trường này
+                    productId: item.Product_Id,
+                    variantId: item.ProductVariant_id,
+                    sales: product.Sales || 0,
+                    status: product.Status || "Active",
+                    categoryId: product.CategoryId,
+                    createdAt: product.CreatedAt,
+                    stockQuantity: variant?.StockQuantity || 0,
+                    variantStatus: variant?.Status || "Active",
+                  };
+                } else {
+                  // Fallback if API fails
+                  console.error(
+                    "Failed to fetch product:",
+                    productResponse.status
+                  );
+                  return {
+                    id: item.Product_Id,
+                    name: "Sản phẩm",
+                    description: "",
+                    price: item.Price,
+                    quantity: item.Quantity,
+                    image: "/placeholder.svg",
+                    color: "Mặc định",
+                    ProductVariantName: "Mặc định", // fallback luôn có trường này
+                    productId: item.Product_Id,
+                    variantId: item.ProductVariant_id,
+                    sales: 0,
+                    status: "Active",
+                    stockQuantity: 0,
+                    variantStatus: "Active",
+                  };
+                }
+              } catch (err) {
+                console.error("Error fetching product details:", err);
+                return {
+                  id: item.Product_Id,
+                  name: "Sản phẩm",
+                  description: "",
+                  price: item.Price,
+                  quantity: item.Quantity,
+                  image: "/placeholder.svg",
+                  color: "Mặc định",
+                  ProductVariantName: "Mặc định", // fallback luôn có trường này
+                  productId: item.Product_Id,
+                  variantId: item.ProductVariant_id,
+                  sales: 0,
+                  status: "Active",
+                  stockQuantity: 0,
+                  variantStatus: "Active",
+                };
+              }
+            })
+          );
+
+          // Fetch shop details với API endpoint mới
+          let shopName = `Shop ${shopId}`;
+          let shopAvatar = "/placeholder.svg";
+          let shopDescription = "";
+          let shopAddress = "";
+          let shopStatus = "Active";
+
+          try {
+            const shopResponse = await fetch(
+              `http://localhost:5000/customer/getShop/${shopId}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+
+            if (shopResponse.ok) {
+              const shopData = await shopResponse.json();
+              console.log("Shop data:", shopData);
+
+              shopName = shopData.name || shopName;
+              shopAvatar = shopData.shopAvatar || shopAvatar;
+              shopDescription = shopData.description || "";
+              shopStatus = shopData.status || "Active";
+
+              // Format shop address
+              if (shopData.address) {
+                const addressParts = [];
+                if (shopData.address.ward)
+                  addressParts.push(shopData.address.ward);
+                if (shopData.address.district)
+                  addressParts.push(shopData.address.district);
+                if (shopData.address.province)
+                  addressParts.push(shopData.address.province);
+                shopAddress = addressParts.join(", ");
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching shop details:", err);
+          }
+
+          return {
+            shopId: shopId,
+            shopName: shopName,
+            shopAvatar: shopAvatar,
+            shopDescription: shopDescription,
+            shopAddress: shopAddress,
+            shopStatus: shopStatus,
+            isOnline: shopStatus === "Active",
+            items: itemsWithDetails,
+          };
+        })
+      );
+
+      setOrders(transformedOrders);
+    } catch (err) {
+      console.error("Error transforming checkout data:", err);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const fetchAddresses = async (userIdParam) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Sử dụng GET request với userId trong URL path
+      const response = await fetch(
+        `http://localhost:5000/customer/getAddress/${userIdParam || userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch addresses");
+      }
+
+      const data = await response.json();
+      console.log("Addresses data:", data);
+
+      if (data.addresses && Array.isArray(data.addresses)) {
+        // Transform API data to match component structure
+        const transformedAddresses = data.addresses.map((addr, index) => ({
+          id: addr._id,
+          name: addr.receiverName,
+          phone: addr.phoneNumber,
+          isDefault: addr.status === "Default",
+          type: "home", // Default type since API doesn't provide this
+          detail: addr.detail,
+          district: addr.district,
+          province: addr.province,
+          ward: addr.ward,
+        }));
+
+        setAddresses(transformedAddresses);
+
+        // Set selected address to default one or first one
+        const defaultIndex = transformedAddresses.findIndex(
+          (addr) => addr.isDefault
+        );
+        setSelectedAddress(defaultIndex >= 0 ? defaultIndex : 0);
+      } else {
+        setAddresses([]);
+      }
+    } catch (err) {
+      console.error("Error fetching addresses:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddressSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!userId) {
+      alert("Không tìm thấy thông tin người dùng");
+      return;
+    }
+
+    // Validate số điện thoại phải đúng 10 chữ số
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(newAddress.phoneNumber)) {
+      alert("Số điện thoại phải có đúng 10 chữ số");
+      return;
+    }
+
+    try {
+      // Call API to add new address với endpoint mới
+      const response = await fetch(
+        `http://localhost:5000/customer/user/${userId}/address`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phoneNumber: newAddress.phoneNumber,
+            receiverName: newAddress.receiverName,
+            status: newAddress.status,
+            province: newAddress.province,
+            district: newAddress.district,
+            ward: newAddress.ward,
+            detail: newAddress.detail,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        // Refresh addresses list
+        await fetchAddresses();
+
+        // Reset form
+        setNewAddress({
+          receiverName: "",
+          phoneNumber: "",
+          province: "",
+          district: "",
+          ward: "",
+          detail: "",
+          status: "Inactive",
+          type: "home",
+        });
+        setDistricts([]);
+        setWards([]);
+        setShowAddressModal(false);
+        alert("Thêm địa chỉ thành công!");
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add address");
+      }
+    } catch (err) {
+      console.error("Error adding address:", err);
+      alert("Có lỗi xảy ra khi thêm địa chỉ: " + err.message);
+    }
+  };
+
+  const calculateShopTotal = (shop) => {
+    const itemsTotal = shop.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    return itemsTotal;
+  };
+
+  const calculateGrandTotal = () => {
+    const itemsTotal = orders.reduce(
+      (sum, shop) => sum + calculateShopTotal(shop),
+      0
+    );
+    return itemsTotal;
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -234,473 +566,450 @@ function CheckoutPage() {
     }).format(amount);
   };
 
-  const handleAddressFormChange = (field, value) => {
-    setNewAddressForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleAddNewAddress = () => {
-    // Validate form
-    if (
-      !newAddressForm.name ||
-      !newAddressForm.phone ||
-      !newAddressForm.detailAddress
-    ) {
-      alert("Vui lòng điền đầy đủ thông tin");
+  const handleCheckout = async () => {
+    if (!userId || addresses.length === 0) {
+      alert("Vui lòng thêm địa chỉ giao hàng");
       return;
     }
 
-    // Create new address object
-    const newAddress = {
-      id: mockAddresses.length + 1,
-      name: newAddressForm.name,
-      phone: newAddressForm.phone,
-      address: newAddressForm.detailAddress,
-      ward: newAddressForm.ward,
-      district: newAddressForm.district,
-      city: newAddressForm.province,
-      fullAddress: `${newAddressForm.detailAddress}, ${newAddressForm.ward}, ${newAddressForm.district}, ${newAddressForm.province}`,
-      isDefault: newAddressForm.isDefault,
-      type: newAddressForm.type,
-    };
-
-    // Add to addresses list (in real app, this would be an API call)
-    mockAddresses.push(newAddress);
-
-    // Set as selected address if it's default or if no address is selected
-    if (newAddressForm.isDefault || !selectedAddress) {
-      setSelectedAddress(newAddress);
+    if (!checkOut || !checkOut.Items || checkOut.Items.length === 0) {
+      alert("Giỏ hàng trống");
+      return;
     }
 
-    // Reset form and close modal
-    setNewAddressForm({
-      name: "",
-      phone: "",
-      province: "",
-      district: "",
-      ward: "",
-      detailAddress: "",
-      isDefault: false,
-      type: "home",
+    try {
+      // Lặp qua từng shop để tạo orderItem và order riêng
+      for (const shop of orders) {
+        // 1. Chuẩn bị dữ liệu cho OrderItems của shop
+        const orderItemsPayload = {
+          Product: shop.items.map((item) => ({
+            _id: item.productId,
+            ProductName: item.name,
+            ProductImage: item.image,
+            ProductVariant: [
+              {
+                _id: item.variantId || item.productId,
+                Image: item.image,
+                Price: item.price,
+                ProductVariantName: item.ProductVariantName,
+                Quantity: item.quantity,
+              },
+            ],
+          })),
+          Total: calculateShopTotal(shop),
+          Status: "Pending",
+        };
+
+        // 2. Gọi API tạo OrderItems cho shop
+        const orderItemsRes = await fetch(
+          "http://localhost:5000/customer/createOrderItems",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderItemsPayload),
+          }
+        );
+        if (!orderItemsRes.ok) {
+          const err = await orderItemsRes.json();
+          throw new Error(err.message || "Tạo OrderItems thất bại");
+        }
+        const orderItemsData = await orderItemsRes.json();
+        const orderItemsId = orderItemsData.orderItem._id;
+
+        // 3. Chuẩn bị dữ liệu cho Order của shop
+        const orderPayload = {
+          PaymentId: selectedPayment,
+          ShippingAddress: formatFullAddress(addresses[selectedAddress]),
+          Status: "Pending",
+          TotalAmount: calculateShopTotal(shop),
+          BuyerId: userId,
+          ShopId: shop.shopId,
+          Items: orderItemsId,
+        };
+
+        // 4. Gọi API tạo Order cho shop
+        const orderRes = await fetch(
+          "http://localhost:5000/customer/checkout",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(orderPayload),
+          }
+        );
+        if (!orderRes.ok) {
+          const err = await orderRes.json();
+          throw new Error(err.message || "Tạo Order thất bại");
+        }
+      }
+      // Thành công
+      // Xóa từng sản phẩm đã đặt khỏi giỏ hàng
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user && user._id && checkOut.Items) {
+        for (const item of checkOut.Items) {
+          // Nếu có ProductVariant_id thì xóa theo biến thể, nếu không thì xóa theo sản phẩm
+          await axios.delete("http://localhost:5000/customer/remove-p-variant-cart", {
+            data: {
+              UserId: user._id,
+              Product_id: item.Product_Id,
+              ProductVariant: { _id: item.ProductVariant_id },
+            },
+            withCredentials: true,
+          });
+        }
+      }
+      setShowSuccessModal(true);
+      localStorage.removeItem("checkOut");
+      setTimeout(() => {
+        window.location.href = "http://localhost:3000/Ecommerce/home";
+      }, 5000);
+    } catch (err) {
+      console.error("Error creating order:", err);
+      alert("Có lỗi xảy ra khi đặt hàng: " + err.message);
+    }
+  };
+
+  const handleSelectAddress = (index) => {
+    setSelectedAddress(index);
+    setShowAddressListModal(false);
+  };
+
+  const handleSetDefaultAddress = (isDefault) => {
+    setNewAddress({
+      ...newAddress,
+      status: isDefault ? "Default" : "Inactive",
     });
-    setShowAddAddressModal(false);
-    setShowAddressModal(false);
-  };
-  // const getAddressTypeIcon = (type) => {
-  //   switch (type) {
-  //     case "home":
-  //       return "ti ti-home";
-  //     case "office":
-  //       return "ti ti-building";
-  //     default:
-  //       return "ti ti-map-pin";
-  //   }
-  // };
-
-  // const getAddressTypeLabel = (type) => {
-  //   switch (type) {
-  //     case "home":
-  //       return "Nhà riêng";
-  //     case "office":
-  //       return "Văn phòng";
-  //     default:
-  //       return "Khác";
-  //   }
-  // };
-
-  // Calculate totals for all shops
-  const calculateGrandTotal = () => {
-    return Object.values(mockCartItemsByShop).reduce((grandTotal, shop) => {
-      const shopSubtotal = shop.items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
-      const shopInsurance = shop.insurance.selected ? shop.insurance.price : 0;
-      const shopShipping = shop.selectedShipping?.price || 0;
-      const shopDiscount = shop.selectedVoucher?.discount || 0;
-
-      return (
-        grandTotal + shopSubtotal + shopInsurance + shopShipping - shopDiscount
-      );
-    }, 0);
   };
 
-  const grandTotal = calculateGrandTotal();
-
-  const handleSelectAddress = (address) => {
-    setSelectedAddress(address);
-    setShowAddressModal(false);
-  };
-
-  const handleSelectPayment = (payment) => {
-    setSelectedPayment(payment);
-    setShowPaymentModal(false);
-  };
-
-  const handlePlaceOrder = async () => {
-    if (!selectedAddress || !selectedPayment) {
-      alert("Vui lòng chọn địa chỉ giao hàng và phương thức thanh toán");
-      return;
-    }
-
-    setIsProcessing(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      alert("Đặt hàng thành công! Cảm ơn bạn đã mua hàng.");
-      setIsProcessing(false);
-      // Redirect to order success page or order history
-    }, 2000);
-  };
+  // Tạo danh sách các loại phương thức có trong danh sách trả về
+  const paymentTypes = Object.keys(paymentTypeNames).filter((type) =>
+    paymentMethods.some((m) => m.Type === type)
+  );
 
   return (
     <div className="checkout-container">
-      <div className="checkout-header">
-        <h1>Thanh toán</h1>
-        <div className="checkout-steps">
-          <div className="step completed">
-            <span className="step-number">1</span>
-            <span className="step-label">Giỏ hàng</span>
-          </div>
-          <div className="step active">
-            <span className="step-number">2</span>
-            <span className="step-label">Thanh toán</span>
-          </div>
-          <div className="step">
-            <span className="step-number">3</span>
-            <span className="step-label">Hoàn thành</span>
-          </div>
-        </div>
-      </div>
-
       <div className="checkout-content">
         <div className="checkout-main">
-          {/* Delivery Address Section */}
-          <div className="checkout-section">
+          {/* Địa chỉ giao hàng */}
+          <div className="section-card">
             <div className="section-header">
-              <h3>
-                <i className="ti ti-map-pin"></i>
-                Địa chỉ giao hàng
-              </h3>
-              <button
-                className="btn-change"
-                onClick={() => setShowAddressModal(true)}
-              >
-                Thay đổi
-              </button>
+              <i className="ti ti-map-pin"></i>
+              <span>Địa chỉ nhận hàng</span>
             </div>
-            <div className="section-content">
-              {selectedAddress ? (
-                <div className="selected-address">
+            <div className="address-content">
+              {loading ? (
+                <div className="address-loading">Đang tải địa chỉ...</div>
+              ) : error ? (
+                <div className="address-error">
+                  Lỗi tải địa chỉ: {error}
+                  <button
+                    onClick={() => fetchAddresses()}
+                    className="btn-retry"
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              ) : addresses.length > 0 ? (
+                <>
                   <div className="address-info">
-                    <div className="address-header">
+                    <div className="address-main">
                       <span className="address-name">
-                        {selectedAddress.name}
+                        {addresses[selectedAddress]?.name}
                       </span>
                       <span className="address-phone">
-                        {selectedAddress.phone}
+                        {addresses[selectedAddress]?.phone}
                       </span>
-                      {/* <span className={`address-type ${selectedAddress.type}`}>
-                        <i
-                          className={getAddressTypeIcon(selectedAddress.type)}
-                        ></i>
-                        {getAddressTypeLabel(selectedAddress.type)}
-                      </span> */}
-                      {selectedAddress.isDefault && (
-                        <span className="default-badge">Mặc định</span>
+                      {addresses[selectedAddress]?.isDefault && (
+                        <span className="address-default">Mặc định</span>
                       )}
                     </div>
                     <div className="address-detail">
-                      {selectedAddress.fullAddress}
+                      {formatFullAddress(addresses[selectedAddress])}
                     </div>
                   </div>
-                </div>
+                  <button
+                    className="btn-change"
+                    onClick={() => setShowAddressListModal(true)}
+                  >
+                    Thay đổi
+                  </button>
+                </>
               ) : (
                 <div className="no-address">
-                  <p>Chưa chọn địa chỉ giao hàng</p>
+                  <p>Chưa có địa chỉ giao hàng</p>
                   <button
-                    className="btn btn-primary"
+                    className="btn-add-address"
                     onClick={() => setShowAddressModal(true)}
                   >
-                    Chọn địa chỉ
+                    Thêm địa chỉ
                   </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Shop Items Section */}
-          <div className="checkout-section">
-            <div className="section-header">
-              <h3>
-                <i className="ti ti-package"></i>
-                Sản phẩm đã chọn
-              </h3>
+          {/* Sản phẩm theo shop */}
+          {productsLoading ? (
+            <div className="section-card">
+              <div className="products-loading">
+                <div className="loading-spinner"></div>
+                <span>Đang tải sản phẩm...</span>
+              </div>
             </div>
-            <div className="section-content">
-              {Object.values(mockCartItemsByShop).map((shop) => (
-                <div key={shop.shopId} className="shop-section">
-                  {/* Shop Header */}
-                  <div className="shop-header">
-                    <div className="shop-info">
+          ) : orders.length > 0 ? (
+            orders.map((shop) => (
+              <div key={shop.shopId} className="section-card shop-section">
+                {/* Shop header */}
+                <div className="shop-header">
+                  <div className="shop-info">
+                    <div className="shop-avatar">
                       <img
                         src={shop.shopAvatar || "/placeholder.svg"}
                         alt={shop.shopName}
-                        className="shop-avatar"
+                        className="shop-avatar-img"
+                        onError={(e) => {
+                          if (!e.target.src.includes("/placeholder.svg")) {
+                            e.target.src = "/placeholder.svg";
+                          }
+                        }}
                       />
-                      <div className="shop-details">
+                    </div>
+                    <div className="shop-details">
+                      <div className="shop-name-row">
                         <span className="shop-name">{shop.shopName}</span>
                       </div>
+                      {shop.shopDescription && (
+                        <div className="shop-description">
+                          {shop.shopDescription}
+                        </div>
+                      )}
+                      {shop.shopAddress && (
+                        <div className="shop-address">{shop.shopAddress}</div>
+                      )}
                     </div>
-                    {/* <button className="btn-chat">
-                      <i className="ti ti-message-circle"></i>
-                      Chat ngay
-                    </button> */}
                   </div>
+                </div>
 
-                  {/* Shop Items */}
-                  <div className="shop-items">
-                    {shop.items.map((item) => (
-                      <div key={item.id} className="order-item">
+                {/* Sản phẩm */}
+                <div className="products-list">
+                  {shop.items.map((item) => (
+                    <div
+                      key={`${item.productId}-${item.variantId}`}
+                      className="product-item"
+                    >
+                      <div className="product-image-container">
                         <img
-                          src={item.image || "/placeholder.svg"}
+                          src={item.image}
                           alt={item.name}
-                          className="item-image"
+                          className="product-image"
+                          onError={(e) => {
+                            if (!e.target.src.includes("/placeholder.svg")) {
+                              e.target.src = "/placeholder.svg";
+                            }
+                          }}
                         />
-                        <div className="item-info">
-                          <h4 className="item-name">{item.name}</h4>
-                          <p className="item-variant">{item.variant}</p>
+                      </div>
+                      <div className="product-info">
+                        <div className="product-name" title={item.name}>
+                          {item.name}
                         </div>
-                        <div className="item-quantity">x{item.quantity}</div>
-                        <div className="item-price">
-                          {formatCurrency(item.price)}
+                        <div className="product-variant">
+                          Loại:{" "}
+                          {item.color || item.ProductVariantName || "Mặc định"}
                         </div>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Shop Note */}
-                  <div className="shop-note">
-                    <label>Lời nhắn:</label>
-                    <input
-                      type="text"
-                      placeholder="Lưu ý cho Người bán..."
-                      value={shop.note}
-                      onChange={(e) => {
-                        shop.note = e.target.value;
-                      }}
-                    />
-                  </div>
-
-                  {/* Shop Shipping */}
-                  <div className="shop-shipping">
-                    <div className="shipping-header">
-                      <span>Phương thức vận chuyển:</span>
-                    </div>
-                    <div className="shipping-options">
-                      {shop.shippingOptions.map((option) => (
-                        <label key={option.id} className="shipping-option">
-                          <input
-                            type="radio"
-                            name={`shipping-${shop.shopId}`}
-                            value={option.id}
-                            // checked={shop.selectedShipping?.id === option.id}
-                            onChange={() => {
-                              shop.selectedShipping = option;
-                            }}
-                          />
-                          <div className="option-content">
-                            <div className="option-info">
-                              <span className="option-name">{option.name}</span>
-                              <span className="option-description">
-                                {option.description}
-                              </span>
-                            </div>
-                            <div className="option-price">
-                              {formatCurrency(option.price)}
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Shop Vouchers */}
-                  {/* <div className="shop-vouchers">
-                    <div className="voucher-header">
-                      <i className="ti ti-ticket"></i>
-                      <span>Voucher của Shop</span>
-                      <button className="btn-select-voucher">
-                        Chọn Voucher
-                      </button>
-                    </div>
-                    {shop.selectedVoucher && (
-                      <div className="selected-voucher">
-                        <span>Đã áp dụng: {shop.selectedVoucher.code}</span>
-                        <span>
-                          -{formatCurrency(shop.selectedVoucher.discount)}
-                        </span>
+                      <div className="product-price">
+                        {formatCurrency(item.price)}
                       </div>
-                    )}
-                  </div> */}
-
-                  {/* Shop Total */}
-                  <div className="shop-total">
-                    <div className="total-row">
-                      <span>Tổng số tiền ({shop.items.length} sản phẩm):</span>
-                      <span className="total-amount">
-                        {formatCurrency(
-                          shop.items.reduce(
-                            (sum, item) => sum + item.price * item.quantity,
-                            0
-                          ) +
-                            (shop.insurance.selected
-                              ? shop.insurance.price
-                              : 0) +
-                            (shop.selectedShipping?.price || 0) -
-                            (shop.selectedVoucher?.discount || 0)
-                        )}
-                      </span>
+                      <div className="product-quantity">x{item.quantity}</div>
+                      <div className="product-total">
+                        {formatCurrency(item.price * item.quantity)}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Payment Method Section */}
-          <div className="checkout-section">
+                {/* Tổng tiền shop */}
+                <div className="shop-total">
+                  <span>Tổng số tiền ({shop.items.length} sản phẩm): </span>
+                  <span className="total-amount">
+                    {formatCurrency(calculateShopTotal(shop))}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="section-card">
+              <div className="empty-cart">
+                <i className="ti ti-shopping-cart-off"></i>
+                <p>Giỏ hàng trống</p>
+              </div>
+            </div>
+          )}
+
+          {/* Phương thức thanh toán */}
+          <div className="section-card">
             <div className="section-header">
-              <h3>
-                <i className="ti ti-credit-card"></i>
-                Phương thức thanh toán
-              </h3>
-              <button
-                className="btn-change"
-                onClick={() => setShowPaymentModal(true)}
-              >
-                Chọn
-              </button>
+              <img
+                src="/logo-ecommerce.jpg"
+                alt="Logo"
+                className="checkout-logo"
+              />
+              <span>Thanh Toán</span>
             </div>
-            <div className="section-content">
-              {selectedPayment ? (
-                <div className="selected-payment">
-                  <img
-                    src={selectedPayment.icon || "/placeholder.svg"}
-                    alt={selectedPayment.name}
-                    className="payment-icon"
-                  />
-                  <div className="payment-info">
-                    <span className="payment-name">{selectedPayment.name}</span>
-                    <span className="payment-description">
-                      {selectedPayment.description}
-                    </span>
-                    {selectedPayment.fee > 0 && (
-                      <span className="payment-fee">
-                        Phí: {formatCurrency(selectedPayment.fee)}
-                      </span>
-                    )}
-                  </div>
+            <div
+              className="payment-options"
+              style={{ display: "flex", flexDirection: "column", gap: 12 }}
+            >
+              {paymentLoading ? (
+                <div className="payment-loading">
+                  Đang tải phương thức thanh toán...
                 </div>
-              ) : (
-                <div className="no-payment">
-                  <p>Chưa chọn phương thức thanh toán</p>
+              ) : paymentError ? (
+                <div className="payment-error">
+                  Lỗi: {paymentError}
                   <button
-                    className="btn btn-primary"
-                    onClick={() => setShowPaymentModal(true)}
+                    onClick={() => window.location.reload()}
+                    className="btn-retry"
                   >
-                    Chọn phương thức
+                    Thử lại
                   </button>
                 </div>
+              ) : paymentTypes.length === 0 ? (
+                <div className="payment-empty">
+                  Không có phương thức thanh toán khả dụng
+                </div>
+              ) : (
+                paymentTypes.map((type) => {
+                  // Lọc và sắp xếp phương thức theo loại, mặc định lên đầu
+                  const methods = paymentMethods
+                    .filter((m) => m.Type === type)
+                    .sort((a, b) => (b.Default ? 1 : 0) - (a.Default ? 1 : 0));
+                  return (
+                    <div key={type} className="payment-dropbox">
+                      <button
+                        type="button"
+                        className="payment-dropbox-btn"
+                        onClick={() =>
+                          setOpenPaymentType(
+                            openPaymentType === type ? null : type
+                          )
+                        }
+                      >
+                        <span>{paymentTypeNames[type]}</span>
+                        <span
+                          style={{ marginLeft: 8, fontSize: 12, color: "#888" }}
+                        >
+                          {methods.length} phương thức
+                        </span>
+                        <span style={{ marginLeft: "auto" }}>
+                          <i
+                            className={`ti ti-chevron-${
+                              openPaymentType === type ? "up" : "down"
+                            }`}
+                          ></i>
+                        </span>
+                      </button>
+                      {openPaymentType === type && (
+                        <div className="payment-dropbox-list">
+                          {methods.map((method) => (
+                            <label
+                              key={method._id}
+                              className="payment-option"
+                              style={{ marginBottom: 0 }}
+                            >
+                              <input
+                                type="radio"
+                                name="payment"
+                                value={method._id}
+                                checked={selectedPayment === method._id}
+                                onChange={() => setSelectedPayment(method._id)}
+                              />
+                              {method.Image && (
+                                <img
+                                  src={method.Image}
+                                  alt={method.Name}
+                                  className="payment-method-img"
+                                  style={{
+                                    width: 32,
+                                    height: 32,
+                                    objectFit: "contain",
+                                    marginRight: 8,
+                                  }}
+                                  onError={(e) =>
+                                    (e.target.style.display = "none")
+                                  }
+                                />
+                              )}
+                              <span>{method.Name}</span>
+                              <span
+                                style={{
+                                  marginLeft: 8,
+                                  color: "#888",
+                                  fontSize: 12,
+                                }}
+                              >
+                                {method.Provider}
+                              </span>
+                              {method.Default && (
+                                <span className="payment-default">
+                                  Mặc định
+                                </span>
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
         </div>
 
-        {/* Order Summary Sidebar */}
+        {/* Sidebar thanh toán */}
         <div className="checkout-sidebar">
-          <div className="order-summary">
-            <h3>Tóm tắt đơn hàng</h3>
+          <div className="payment-summary">
+            <h3>Đơn hàng</h3>
 
             <div className="summary-row">
-              <span>
-                Tạm tính (
-                {Object.values(mockCartItemsByShop).reduce(
-                  (total, shop) => total + shop.items.length,
-                  0
-                )}{" "}
-                sản phẩm)
-              </span>
+              <span>Tạm tính</span>
               <span>
                 {formatCurrency(
-                  Object.values(mockCartItemsByShop).reduce(
-                    (sum, shop) =>
-                      sum +
-                      shop.items.reduce(
-                        (shopSum, item) => shopSum + item.price * item.quantity,
-                        0
-                      ),
+                  orders.reduce(
+                    (sum, shop) => sum + calculateShopTotal(shop),
                     0
                   )
                 )}
               </span>
             </div>
 
-            <div className="summary-row">
-              <span>Phí vận chuyển</span>
-              <span>
-                {formatCurrency(
-                  Object.values(mockCartItemsByShop).reduce(
-                    (sum, shop) => sum + (shop.selectedShipping?.price || 0),
-                    0
-                  )
-                )}
-              </span>
-            </div>
-
-            {/* {paymentFee > 0 && (
-              <div className="summary-row">
-                <span>Phí thanh toán</span>
-                <span>{formatCurrency(paymentFee)}</span>
-              </div>
-            )} */}
-
-            <div className="summary-divider"></div>
-
-            <div className="summary-row total">
+            <div className="summary-total">
               <span>Tổng cộng</span>
-              <span>{formatCurrency(grandTotal)}</span>
+              <span>{formatCurrency(calculateGrandTotal())}</span>
             </div>
 
             <button
-              className="btn-place-order"
-              onClick={handlePlaceOrder}
-              disabled={!selectedAddress || !selectedPayment || isProcessing}
+              className="btn-checkout"
+              disabled={addresses.length === 0 || orders.length === 0}
+              onClick={handleCheckout}
             >
-              {isProcessing ? (
-                <>
-                  <i className="ti ti-loader spinning"></i>
-                  Đang xử lý...
-                </>
-              ) : (
-                <>
-                  <i className="ti ti-check"></i>
-                  Đặt hàng
-                </>
-              )}
+              {addresses.length === 0
+                ? "Vui lòng thêm địa chỉ"
+                : orders.length === 0
+                ? "Giỏ hàng trống"
+                : "Đặt hàng"}
             </button>
 
-            <div className="security-info">
-              <i className="ti ti-shield-check"></i>
-              <span>Thông tin của bạn được bảo mật</span>
+            <div className="checkout-note">
+              Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo điều
+              khoản của EZShop
             </div>
           </div>
         </div>
       </div>
 
-      {/* Address Selection Modal */}
+      {/* Modal thêm địa chỉ */}
       {showAddressModal && (
         <div
           className="modal-overlay"
@@ -711,7 +1020,7 @@ function CheckoutPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
-              <h3>Chọn địa chỉ giao hàng</h3>
+              <h3>Địa chỉ mới</h3>
               <button
                 className="modal-close"
                 onClick={() => setShowAddressModal(false)}
@@ -720,192 +1029,93 @@ function CheckoutPage() {
               </button>
             </div>
             <div className="modal-body">
-              <div className="address-list">
-                {mockAddresses.map((address) => (
-                  <div
-                    key={address.id}
-                    className={`address-item ${
-                      selectedAddress?.id === address.id ? "selected" : ""
-                    }`}
-                    onClick={() => handleSelectAddress(address)}
-                  >
-                    <div className="address-radio">
-                      <input
-                        type="radio"
-                        name="address"
-                        checked={selectedAddress?.id === address.id}
-                        readOnly
-                      />
-                    </div>
-                    <div className="address-content">
-                      <div className="address-header">
-                        <span className="address-name">{address.name}</span>
-                        <span className="address-phone">{address.phone}</span>
-                        {/* <span className={`address-type ${address.type}`}>
-                          <i className={getAddressTypeIcon(address.type)}></i>
-                          {getAddressTypeLabel(address.type)}
-                        </span> */}
-                        {address.isDefault && (
-                          <span className="default-badge">Mặc định</span>
-                        )}
-                      </div>
-                      <div className="address-detail">
-                        {address.fullAddress}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button
-                className="btn btn-outline add-address-btn"
-                onClick={() => setShowAddAddressModal(true)}
-              >
-                <i className="ti ti-plus"></i>
-                Thêm địa chỉ mới
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Method Selection Modal */}
-      {showPaymentModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowPaymentModal(false)}
-        >
-          <div
-            className="modal-content payment-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <h3>Chọn phương thức thanh toán</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowPaymentModal(false)}
-              >
-                <i className="ti ti-x"></i>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="payment-list">
-                {mockPaymentMethods.map((payment) => (
-                  <div
-                    key={payment.id}
-                    className={`payment-item ${
-                      selectedPayment?.id === payment.id ? "selected" : ""
-                    } ${!payment.isAvailable ? "disabled" : ""}`}
-                    onClick={() =>
-                      payment.isAvailable && handleSelectPayment(payment)
-                    }
-                  >
-                    <div className="payment-radio">
-                      <input
-                        type="radio"
-                        name="payment"
-                        checked={selectedPayment?.id === payment.id}
-                        disabled={!payment.isAvailable}
-                        readOnly
-                      />
-                    </div>
-                    <img
-                      src={payment.icon || "/placeholder.svg"}
-                      alt={payment.name}
-                      className="payment-icon"
-                    />
-                    <div className="payment-content">
-                      <div className="payment-name">{payment.name}</div>
-                      <div className="payment-description">
-                        {payment.description}
-                      </div>
-                      {payment.fee > 0 && (
-                        <div className="payment-fee">
-                          Phí: {formatCurrency(payment.fee)}
-                        </div>
-                      )}
-                    </div>
-                    {!payment.isAvailable && (
-                      <div className="payment-unavailable">Không khả dụng</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Add New Address Modal */}
-      {showAddAddressModal && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowAddAddressModal(false)}
-        >
-          <div
-            className="modal-content add-address-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <h3>Địa chỉ mới</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowAddAddressModal(false)}
-              >
-                <i className="ti ti-x"></i>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="address-form">
+              <form onSubmit={handleAddressSubmit}>
                 <div className="form-row">
                   <div className="form-group">
                     <input
                       type="text"
                       placeholder="Họ và tên"
-                      value={newAddressForm.name}
-                      onChange={(e) =>
-                        handleAddressFormChange("name", e.target.value)
-                      }
-                      className="form-input"
+                      name="receiverName"
+                      value={newAddress.receiverName}
+                      onChange={handleAddressFieldChange}
+                      className="form-control"
+                      required
                     />
                   </div>
                   <div className="form-group">
                     <input
                       type="tel"
                       placeholder="Số điện thoại"
-                      value={newAddressForm.phone}
-                      onChange={(e) =>
-                        handleAddressFormChange("phone", e.target.value)
-                      }
-                      className="form-input"
+                      name="phoneNumber"
+                      value={newAddress.phoneNumber}
+                      onChange={handleAddressFieldChange}
+                      className="form-control"
+                      required
                     />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <select
+                      value={newAddress.province}
+                      onChange={handleProvinceChange}
+                      className="form-control"
+                      required
+                    >
+                      <option value="">Chọn Tỉnh/Thành phố</option>
+                      {provinces.map((province) => (
+                        <option key={province.code} value={province.name}>
+                          {province.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <select
+                      value={newAddress.district}
+                      onChange={handleDistrictChange}
+                      className="form-control"
+                      required
+                      disabled={!newAddress.province}
+                    >
+                      <option value="">Chọn Quận/Huyện</option>
+                      {districts.map((district) => (
+                        <option key={district.code} value={district.name}>
+                          {district.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
                 <div className="form-group">
                   <select
-                    value={newAddressForm.province}
-                    onChange={(e) =>
-                      handleAddressFormChange("province", e.target.value)
-                    }
-                    className="form-select"
+                    name="ward"
+                    value={newAddress.ward}
+                    onChange={handleAddressFieldChange}
+                    className="form-control"
+                    required
+                    disabled={!newAddress.district}
                   >
-                    <option value="">
-                      Tỉnh/Thành phố, Quận/Huyện, Phường/Xã
-                    </option>
-                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                    <option value="Hà Nội">Hà Nội</option>
-                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="">Chọn Phường/Xã</option>
+                    {wards.map((ward) => (
+                      <option key={ward.code} value={ward.name}>
+                        {ward.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="form-group">
                   <textarea
-                    placeholder="Địa chỉ cụ thể"
-                    value={newAddressForm.detailAddress}
-                    onChange={(e) =>
-                      handleAddressFormChange("detailAddress", e.target.value)
-                    }
-                    className="form-textarea"
+                    placeholder="Địa chỉ cụ thể (số nhà, tên đường...)"
+                    name="detail"
+                    value={newAddress.detail}
+                    onChange={handleAddressFieldChange}
+                    className="form-control address-textarea"
                     rows="3"
+                    required
                   ></textarea>
                 </div>
 
@@ -913,27 +1123,119 @@ function CheckoutPage() {
                   <label className="checkbox-label">
                     <input
                       type="checkbox"
-                      checked={newAddressForm.isDefault}
+                      checked={newAddress.status === "Default"}
                       onChange={(e) =>
-                        handleAddressFormChange("isDefault", e.target.checked)
+                        handleSetDefaultAddress(e.target.checked)
                       }
                     />
                     <span>Thiết lập làm địa chỉ mặc định</span>
                   </label>
                 </div>
+
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowAddressModal(false)}
+                  >
+                    Trở Lại
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Hoàn thành
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal danh sách địa chỉ */}
+      {showAddressListModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowAddressListModal(false)}
+        >
+          <div
+            className="modal-content address-list-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Chọn địa chỉ giao hàng</h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowAddressListModal(false)}
+              >
+                <i className="ti ti-x"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="address-list">
+                {addresses.map((address, index) => (
+                  <div
+                    key={address.id}
+                    className={`address-item ${
+                      selectedAddress === index ? "selected" : ""
+                    }`}
+                    onClick={() => handleSelectAddress(index)}
+                  >
+                    <div className="address-radio">
+                      <input
+                        type="radio"
+                        name="selectedAddress"
+                        checked={selectedAddress === index}
+                        onChange={() => handleSelectAddress(index)}
+                      />
+                    </div>
+                    <div className="address-details">
+                      <div className="address-header">
+                        <span className="address-name">{address.name}</span>
+                        <span className="address-phone">{address.phone}</span>
+                        {address.isDefault && (
+                          <span className="address-default">Mặc định</span>
+                        )}
+                      </div>
+                      <div className="address-full">
+                        {formatFullAddress(address)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowAddressListModal(false);
+                    setShowAddressModal(true);
+                  }}
+                >
+                  <i className="ti ti-plus"></i>
+                  Thêm địa chỉ mới
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowAddressListModal(false)}
+                >
+                  Xác nhận
+                </button>
               </div>
             </div>
-            <div className="modal-footer">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowAddAddressModal(false)}
-              >
-                Trở Lại
-              </button>
-              <button className="btn btn-primary" onClick={handleAddNewAddress}>
-                Hoàn thành
-              </button>
+          </div>
+        </div>
+      )}
+      {showSuccessModal && (
+        <div className="modal-overlay" style={{zIndex: 2000}}>
+          <div className="success-modal">
+            <div className="success-icon">
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="28" cy="28" r="28" fill="#eafaf1"/>
+                <path d="M18 29.5L25 36.5L39 22.5" stroke="#27ae60" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
+            <h2>Đặt hàng thành công!</h2>
+            <p>Bạn sẽ được chuyển về trang chủ sau 5 giây...</p>
+            <button className="btn btn-primary" onClick={() => window.location.href = "http://localhost:3000/Ecommerce/home"}>Về trang chủ ngay</button>
           </div>
         </div>
       )}
