@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Form, Button, Alert } from "react-bootstrap";
 import '../style/customer/ChangePasswordForm.css'
 import { BsEye, BsEyeSlash } from "react-icons/bs";
+import { useNavigate } from "react-router-dom";
 const user = JSON.parse(localStorage.getItem("user"));
 
 
@@ -19,6 +20,7 @@ try {
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
 function ChangePasswordForm({ userId }) {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         currentPassword: "",
         newPassword: "",
@@ -166,6 +168,17 @@ function ChangePasswordForm({ userId }) {
             <Button type="submit" variant="primary">
                 Confirm
             </Button>
+             <div className="mt-3">
+                <Button
+                    variant="link"
+                    onClick={() => navigate("/Ecommerce/forgot-password")}
+                    className="p-0 text-decoration-underline"
+                    style={{ color: "#A0522D" }}
+
+                >
+                    Forgot password?
+                </Button>
+            </div>
         </Form>
     );
 }
