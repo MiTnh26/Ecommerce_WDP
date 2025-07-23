@@ -7,7 +7,7 @@
     "dev": "nodemon server.js",
     "debug": "node --inspect server.js",
     "debug:dev": "nodemon --inspect server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --runInBand",
     "start": "nodemon server.js"
   },
   "keywords": [],
@@ -28,5 +28,9 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.3",
     "nodemon": "^3.1.10"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5",
+    "node-mocks-http": "^1.17.2"
   }
 }
