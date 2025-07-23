@@ -1,67 +1,57 @@
+// /pages/product/ViewListPage.jsx
 import React, { useEffect, useState } from "react";
 import styles from "../../style/product/ViewListPage.module.scss";
 
-export default function ViewListPage({ onAddProduct }) {
+export default function ViewListPage({
+  onAddProduct,
+  onEditProduct,
+  onDeleteProduct,
+  shopId,
+  reloadKey,
+}) {
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
 
-  // Mock data fallback
-  const mockData = [
-    {
-      _id: "6835ef44b151877fb3fa4a18",
-      CategoryId: { CategoryName: "Mock Category" },
-      CreatedAt: "2000-01-01T00:00:00.000Z",
-      Description: "test",
-      ProductName: "product1",
-      ShopId: "6835ef92b151877fb3fa4a19",
-      ProductVariant: [
-        {
-          _id: "6835efb1b151877fb3fa4a1b",
-          Image: "image.png",
-          Price: 100.2,
-          ProductVariantName: "variant1",
-          StockQuantity: 100,
-          Status: "Active",
-        },
-        {
-          _id: "6835efb1b151877fb3fa4a1c",
-          Image: "image.png",
-          Price: 100.2,
-          ProductVariantName: "variant1",
-          StockQuantity: 100,
-          Status: "Inactive",
-        },
-      ],
-      Status: "Active",
-      ProductImage: "https://via.placeholder.com/50",
-    },
-  ];
-
   useEffect(() => {
-    async function loadProducts() {
-      try {
-        const res = await fetch("http://localhost:5000/product");
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setProducts(data || []);
-      } catch (error) {
-        console.error("Fetch error:", error.message);
-        setProducts(mockData); // Fallback to mock data
-      }
-    }
+    try {
+      const shopIdInfo = shopId;
+      if (!shopIdInfo) return;
 
-    loadProducts();
-  }, []);
+      fetch(`http://localhost:5000/product/shop/${shopId}`)
+        .then((res) => res.json())
+        .then(setProducts)
+        .catch(() => setProducts([]));
+    } catch (error) {
+      console.error(error);
+    }
+  }, [shopId, reloadKey]);
+
+  // Normalize query once
+  const cleanQ = query.replace(/\s+/g, "").toLowerCase();
 
   const filtered = products.filter((p) => {
     try {
-      if (filter !== "All" && p.Status !== filter) return false;
-      if (query && !p.ProductName?.toLowerCase().includes(query.toLowerCase()))
+      // 1) Status filter
+      if (filter !== "All" && p.Status !== filter) {
         return false;
+      }
+
+      // 2) Text search filter
+      if (cleanQ) {
+        const cleanName = (p.ProductName || "")
+          .replace(/\s+/g, "")
+          .toLowerCase();
+        if (!cleanName.includes(cleanQ)) {
+          return false;
+        }
+      }
+
+      // 3) If we got here, it passes all filters
       return true;
-    } catch (e) {
-      console.warn("Filtering error:", e.message);
+    } catch (err) {
+      // In case of any unexpected error, exclude this item
+      console.error("Filter error on product", p._id, err);
       return false;
     }
   });
@@ -70,8 +60,8 @@ export default function ViewListPage({ onAddProduct }) {
     <>
       <h1 className={styles.title}>View list product</h1>
 
+      {/* Header row */}
       <div className={styles.headerActions}>
-        {/* Row 1: Filter + Add Button */}
         <div className={styles.row}>
           <div className={styles.filterGroup}>
             {["All", "Active", "Inactive"].map((f) => (
@@ -84,10 +74,7 @@ export default function ViewListPage({ onAddProduct }) {
               </button>
             ))}
           </div>
-          <button 
-            className={styles.addBtn}
-            onClick={onAddProduct}
-          >
+          <button className={styles.addBtn} onClick={onAddProduct}>
             Add new product
           </button>
         </div>
@@ -110,6 +97,7 @@ export default function ViewListPage({ onAddProduct }) {
         </div>
       </div>
 
+      {/* Table */}
       <table className={styles.table}>
         <thead>
           <tr>
@@ -135,16 +123,31 @@ export default function ViewListPage({ onAddProduct }) {
               <td>{p.ProductName || "—"}</td>
               <td>{p.CategoryId?.CategoryName || "—"}</td>
               <td>
-                <button className={styles.changeStatusBtn}>
-                  {p.Status || "—"}
+                <button
+                  className={styles.changeStatusBtn}
+                  onClick={() =>
+                    fetch(`http://localhost:5000/product/${p._id}/status`, {
+                      method: "PATCH",
+                    }).then(() => window.location.reload())
+                  }
+                >
+                  {p.Status}
                 </button>
               </td>
               <td>
                 <div className={styles.actionButtons}>
-                  <button className={styles.editBtn} title="Edit">
+                  <button
+                    className={styles.editBtn}
+                    title="Edit"
+                    onClick={() => onEditProduct(p)}
+                  >
                     ✎
                   </button>
-                  <button className={styles.deleteBtn} title="Delete">
+                  <button
+                    className={styles.deleteBtn}
+                    title="Delete"
+                    onClick={() => onDeleteProduct(p._id)}
+                  >
                     🗑️
                   </button>
                 </div>

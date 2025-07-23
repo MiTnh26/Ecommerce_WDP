@@ -4,12 +4,25 @@ const UserController = require("../controllers/UserController/UserController");
 const CartController = require("../controllers/UserController/CartController");
 const { sendEmailOtp, verifyOtp } = require("../service/sendEmailOtp");
 const verifyOtpMiddleware = require("../middleware/verifyOtpMiddleware");
+
+
+const multer = require("multer");
+const { storage } = require("../config/cloudinary"); 
+const upload = multer({ storage });
+
+
+
+
+
 router.get("/user", UserController.getUsers);
 router.post("/login", UserController.login);
 router.post("/register", UserController.register);
 router.post("/google-login", UserController.googleLogin);
 router.get("/profile/:id", UserController.getUserById);
-router.put("/profile/:id", UserController.updateUser);
+router.put("/profile/:id",upload.single("Image"), UserController.updateUser);
+// ADDRESS 
+
+
 router.get("/getAddress/:id", UserController.getAddressByUserId);
 // ADDRESS
 router.post("/user/:id/address", UserController.addAddress);
@@ -19,6 +32,11 @@ router.delete("/user/:userId/address/:addressId", UserController.deleteAddress);
 //order
 router.get("/orders/:userId", UserController.getOrderByUserId);
 router.get("/orderdetail/:orderId", UserController.getOrderDetails);
+router.put('/user/:userId/address/:addressId/set-default', UserController.setDefaultAddress);
+router.put("/change-password/:id",UserController.changePasswordInUser);
+router.put("/orders/cancel/:orderId", UserController.cancelOrder);
+
+
 router.put(
   "/user/:userId/address/:addressId/set-default",
   UserController.setDefaultAddress
