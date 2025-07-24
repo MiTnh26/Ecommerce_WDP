@@ -227,40 +227,39 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
           window.alert("Change quantity success");
           // cập nhat lai data
           // Sau khi gọi API thay đổi số lượng thành công:
-const filteredItems = data.Items.map(item => {
-  if (item._id === Product_id) {
-    return {
-      ...item,
-      ProductVariant: item.ProductVariant.map(variant =>
-        String(variant._id) === String(ProductVariant._id)
-          ? { ...variant, Quantity: ProductVariant.Quantity }
-          : variant
-      ),
-    };
-  }
-  return item;
-});
+          const filteredItems = data.Items.map(item => {
+            if (item._id === Product_id) {
+              return {
+                ...item,
+                ProductVariant: item.ProductVariant.map(variant =>
+                  String(variant._id) === String(ProductVariant._id)
+                    ? { ...variant, Quantity: ProductVariant.Quantity }
+                    : variant
+                ),
+              };
+            }
+            return item;
+          });
 
-// Tính lại tổng price
-const newTotalPrice = filteredItems.reduce((total, item) => {
-  return total + item.ProductVariant.reduce((sum, variant) => {
-    return sum + variant.Price * variant.Quantity;
-  }, 0);
-}, 0);
+          // Tính lại tổng price
+          const newTotalPrice = filteredItems.reduce((total, item) => {
+            return total + item.ProductVariant.reduce((sum, variant) => {
+              return sum + variant.Price * variant.Quantity;
+            }, 0);
+          }, 0);
+          // Cập nhật state
+          setData({
+            ...data,
+            Items: filteredItems,
+          });
+          setTotalPrice(newTotalPrice);
+        }
+      }
 
-// Cập nhật state
-setData({
-  ...data,
-  Items: filteredItems,
-});
-setTotalPrice(newTotalPrice);
-      }
-      }
-      
       catch (err) {
         console.log(err);
       }
-    }  
+    }
     callData();
   }
   //console.log("checkedItems", checkedItems);
@@ -377,9 +376,8 @@ setTotalPrice(newTotalPrice);
                       checkedItems.some(c => c.ProductVariant_id === v._id)
                     )
                   }
+                  disabled={item.ShopStatus === "Inactive"}
                 />
-
-
                 <div className="flex-grow-1"><p className="mb-0">Shop : {item.ShopName}</p></div>
                 {/* Đường kẻ 90% nằm dưới */}
                 <div
@@ -408,31 +406,31 @@ setTotalPrice(newTotalPrice);
                       })
                     }
                     checked={checkedItems.some(v => v.ProductVariant_id === variant._id)}
-                    disabled={variant.Status == "Inactive"}
+                    disabled={variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive"}
                   />
 
 
                   <div className="flex-grow-1 d-flex gap-3">
                     <img src={variant.Image} alt="img product" width={"80px"} height={"80px"} />
-                    <p className={`product-name text-wrap p-0 m-0 ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '50%', flexShrink: 0 }}>{item.ProductName}</p>
-                    <p className={`classification text-muted p-0 m-0 ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '20%', flexShrink: 0 }}>{variant.ProductVariantName}</p>
+                    <p className={`product-name text-wrap p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '50%', flexShrink: 0 }}>{item.ProductName}</p>
+                    <p className={`classification text-muted p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '20%', flexShrink: 0 }}>{variant.ProductVariantName}</p>
                   </div>
                   <div className="flex-shrink-0 flex-basic-15 text-center">
-                    <p className={`discount-price align-self-center p-0 m-0 ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}>{variant.Price.toLocaleString("vi-VN")}</p></div>
+                    <p className={`discount-price align-self-center p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}>{variant.Price.toLocaleString("vi-VN")}</p></div>
                   <div className="flex-shrink-0 flex-basic-15 text-center">
                     <div className="quantity-inputt d-flex justify-content-center">
                       <button 
                         className="border bg-white p-1 px-2" 
                         onClick = {() => handleChangeQuantity(item._id, {"_id": "1", "Quantity": "1"}, "decrease")} 
-                        disabled= {variant.Status == "Inactive"}>-</button>
+                        disabled= {variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive"}>-</button>
                       <input type="number" className="border bg-white py-1 px-2 text-center border-start-0 border-end-0 input-no-spinner" style={{ width: '40px' }} value={variant.Quantity} readOnly/>
                       <button 
                         className="border bg-white p-1 px-2 text-muted fw-light" 
                         onClick={() => handleChangeQuantity(item._id, {"_id": variant._id, "Quantity": variant.Quantity}, "increase")}
-                        disabled= {variant.Status == "Inactive"}>+</button>
+                        disabled= {variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive"}>+</button>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 flex-basic-15 text-center"><p className={`total-price p-0 m-0 text-danger ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}>{(variant.Price * variant.Quantity).toLocaleString("vi-VN")}</p></div>
+                  <div className="flex-shrink-0 flex-basic-15 text-center"><p className={`total-price p-0 m-0 text-danger ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}>{(variant.Price * variant.Quantity).toLocaleString("vi-VN")}</p></div>
                   <div className="flex-shrink-0 flex-basic-10 text-center" >
                     <button className="btn btn-outline-danger" onClick={() => handleDeleteProduct(item._id, variant._id)}>
                       <i className="fa-solid fa-trash"></i>

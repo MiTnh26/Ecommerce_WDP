@@ -212,7 +212,7 @@ const HomePage = () => {
          {bestSellerData && bestSellerData.length > 0  ? (<>
             <Category dataList={bestSellerData} title="Best Seller Products" Component={Card} dataLength={bestSellerData.length}/>
           </>):(<>
-            <p className="title h4">Trending Products</p>
+            <p className="title h4">Best Seller Products</p>
             <p>Data is updateing ... </p>
           </>)}
           </>

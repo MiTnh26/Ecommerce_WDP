@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { useNavigate, useSearchParams } from "react-router-dom";
-//import  "../style/HomePage.css"
 // useQuery to state Cart
 import {
   Col,
@@ -16,8 +15,7 @@ import {
   ToastContainer,
 } from "react-bootstrap";
 import image from "../assets/images/logo_page.jpg";
-import { AppContext } from "../store/Context";
-import { useContext } from "react";
+
 import axios from "axios";
 import Tooltip from 'react-bootstrap/Tooltip';
 import img_empty from "../assets/images/data-empty.png";
@@ -26,15 +24,12 @@ const Header = () => {
   const [showCanvasCart, setShowCanvasCart] = useState(false);
   // navigate
   const navigate = useNavigate();
-
-  const { filterData } = useContext(AppContext);
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [UserId, setUserId] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
-  const [category_id, setCategoryId] = useState("");
   const [owner, setOwner] = useState(null);
 
   //toast
@@ -42,11 +37,6 @@ const Header = () => {
 
    // config
   const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-
-  useEffect(() => {
-    const category = searchParams.get("category") || "";
-    setCategoryId(category);
-  }, [searchParams]); // Thêm searchParams vào dependency array
   // fetch data owner
   useEffect(() => {
     const fetchOwnerByUserId = async () => {
@@ -123,13 +113,10 @@ const handleShowCanvasCart = () => {
 };
 
 
-  const handleSubmitSearch = () => {
-    // console.log("search", category_id);
+  const handleSubmitSearch = async () => {
     const cleanedSearch = search.trim().replace(/\s+/g, ' ');
-    filterData(cleanedSearch, category_id);
-    navigate(`/Ecommerce/search?name=${encodeURIComponent(cleanedSearch)}&category=${category_id || ""}`);
-    // filterData(search, category_id);
-    // navigate(`/Ecommerce/search?name=${search || ""}&category=${category_id || ""}`);
+    //await filterData(cleanedSearch);
+    navigate(`/Ecommerce/search?name=${encodeURIComponent(cleanedSearch)}`);
   }
   
   const handleLogout = () => {
@@ -175,31 +162,32 @@ const handleShowCanvasCart = () => {
               <Col md={1} className="d-md-block d-lg-none"></Col>
 
               {/* Ô nhập liệu */}
-              <Col md={10} lg={10}>
-                <Form id="search-form">
+              <Form id="search-form" className="d-flex w-100">
+                <Col md={11} lg={10}>
                   <Form.Control
                     type="text"
                     className="border-0 bg-transparent"
                     placeholder="Search for more than 20,000 products"
                     value={search || ""}
                     onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault(); // tránh reload trang
+                        handleSubmitSearch();
+                      }
+                    }}
                   />
-                </Form>
-              </Col>
-
-              {/* Icon tìm kiếm - có thể click */}
-              <Col
-                md={1}
-                lg={2}
-                onClick={() => handleSubmitSearch()}
-                className="text-center"
-                style={{ cursor: "pointer" }}
-              >
-                <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
-              </Col>
-
-              {/* Khoảng trắng phải nếu cần ở md */}
-              <Col md={1} className="d-md-block d-lg-none"></Col>
+                </Col>
+                <Col
+                  md={1}
+                  lg={2}
+                  onClick={handleSubmitSearch}
+                  className="text-center"
+                  style={{ cursor: "pointer" }}
+                >
+                  <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
+                </Col>
+              </Form>
             </Row>
           </Col>
 
@@ -421,15 +409,15 @@ const handleShowCanvasCart = () => {
                         />
                         <div className="overflow-hidden flex-grow-1">
                           <p
-                            className={`product-name-cart two-line-truncate ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}
+                            className={`product-name-cart two-line-truncate ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}
                             style={{ fontSize: "0.8rem" }}
                           >
                             {item.ProductName}
                           </p>
                         </div>
-                          <span className={`fw-light text-muted ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`} style={{ fontSize: "0.7rem" }}>{variant.ProductVariantName}</span>
+                          <span className={`fw-light text-muted ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} style={{ fontSize: "0.7rem" }}>{variant.ProductVariantName}</span>
                         <p
-                          className={`product-price text-danger ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}
+                          className={`product-price text-danger ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}
                           style={{ fontSize: "0.8rem" }}
                         >
                           {variant.Price? variant.Price.toLocaleString("vi-VN") : "0".toLocaleString("vi-VN")}

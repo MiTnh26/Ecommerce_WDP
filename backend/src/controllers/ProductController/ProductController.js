@@ -230,7 +230,7 @@ exports.getTrendingProducts = async (req, res) => {
 
      
     
-    res.status(200).json(trendingProducts);
+    res.status(200).json({ message: "Fetching trending products..." });
     
   } catch (error) {
     console.error("Error getting trending products:", error);
@@ -350,17 +350,9 @@ exports.getBestSellerProducts = async (req, res) => {
 
 exports.getProductById = async (req, res) => {
   const { id } = req.params;
-  // if (!mongoose.Types.ObjectId.isValid(id)) {
-  //   return res.status(400).json({ message: "Invalid product ID" });
-  // }
-  //console.log("Fetching product by ID:", id);
   try {
   const product = await Product.findOne({ _id: id.toString() })
     .select('_id ProductName ProductImage Description ProductVariant Status') // chỉ gọi 1 lần duy nhất
-    // .populate({
-    //   path: 'CategoryId',
-    //   select: '_id CategoryName',
-    // })
     .populate({
       path: 'ShopId',
       select: '_id name shopAvatar description address status',
@@ -387,20 +379,14 @@ const buildSearchPatterns = (input) => {
   const words = input.trim().toLowerCase().split(/\s+/); // Tách theo khoảng trắng
   const patterns = new Set();
 
-  // 1. Toàn bộ chuỗi
   patterns.add(input.toLowerCase());
-
-  // 2. Tổ hợp 2 từ liên tiếp (có thể mở rộng thành 3 từ, v.v.)
   for (let i = 0; i < words.length - 1; i++) {
     const phrase2 = `${words[i]} ${words[i + 1]}`;
     patterns.add(phrase2);
   }
-
-  // 3. Từng từ riêng lẻ
   for (const word of words) {
     patterns.add(word);
   }
-
   return Array.from(patterns);
 }
 
@@ -458,7 +444,11 @@ exports.filterProduct = async (req, res) => {
     };
 
     if (nameRevert) {
-      matchStage.ProductName = { $regex: nameRevert, $options: "i" };
+      //matchStage.ProductName = { $regex: nameRevert, $options: "i" };
+      const patterns = buildSearchPatterns(nameRevert);
+      matchStage.$or = patterns.map((pattern) => ({
+        ProductName: { $regex: pattern, $options: "i" },
+      }));
     }
 
     if (category) {

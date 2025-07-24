@@ -1,11 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import image_default from "../../assets/images/img_default.jpg";
-import logo from "../../assets/images/logo_page.jpg";
 import styles from "../../style/ProductDetail.module.css";
 import { useState } from "react";
-import StarVoting from "../../components/public/StarVoting";
-import Pagination from "../../components/public/Pagination";
 import Card from "../../components/homePage/Card";
 import {
   fetchRelatedProducts,
@@ -13,14 +9,16 @@ import {
   fetchProductDetail,
 } from "../../api/ProductApi";
 import { useEffect } from "react";
-import { data, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from '@tanstack/react-query';
 import LazyLoad from 'react-lazyload';
 import axios from "axios";
+import { AppContext  } from "../../store/Context";
+import { useContext } from "react"; 
 const visibleCount = 5;
 const imageWidth = 82;
 const imageGap = 10;
-const rating = 4.5;
+
 
 const ProductDetail = () => {
   // 1. State declare
@@ -30,6 +28,7 @@ const ProductDetail = () => {
   const product_id = useParams().id;
   const [quantity, setQuantity] = useState(1); // quantity of product
   const queryClient = useQueryClient();
+  const { setCheckOut} = useContext(AppContext);
   // 2. inView hook for product feedback section and product related section
   const { ref: reviewRef, inView: reviewInView } = useInView({
     triggerOnce: true,
@@ -46,7 +45,7 @@ const ProductDetail = () => {
      window.scrollTo({ top: 0, behavior: 'smooth' });
     const loadData = async () => {
     const result = await fetchProductDetail(product_id);
-    console.log("result", result.data);  
+    //console.log("result", result.data);  
 
     if (result?.status === 200 && result?.data === null) {
       alert(result?.message);
@@ -154,21 +153,21 @@ const ProductDetail = () => {
         alert("This variant is inactive");
         return;      
       }
+      // const dataCheckOut = {
+      // UserId: JSON.parse(localStorage.getItem("user"))._id,
+      // Items: checkedItems,
+      // TotalPrice: calculateTotalPriceChecked()
+      // }
       const data = {
         UserId: user._id,
-        Product_id: product_id,
-        ProductName: dataProduct.ProductName,
-        ProductImage: dataProduct.ProductImage,
-        ShopID: dataProduct.ShopId._id,
-        ProductVariant: [
-          {
-            _id: dataProduct.ProductVariant[currentIndex]._id,
-            Image: dataProduct.ProductVariant[currentIndex].Image,
-            Price: dataProduct.ProductVariant[currentIndex].Price,
-            ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
-            Quantity: quantity
-          }
-        ],
+        Items: [{
+          ProductVariant_id: dataProduct.ProductVariant[currentIndex]._id,
+          Product_Id: product_id,
+          Quantity: quantity,
+          ShopId: dataProduct.ShopId._id,
+          Price: dataProduct.ProductVariant[currentIndex].Price
+        }],
+        TotalPrice: dataProduct.ProductVariant[currentIndex].Price * quantity,
       };
 
       console.log("data add to cart", data);
@@ -196,6 +195,40 @@ const ProductDetail = () => {
     console.log("add to cart");
     addToCart();
   }
+
+  const handleBuyNow = () => {
+    if(currentIndex === -1){
+      alert("Please select variant");
+      return;
+    }
+    if(dataProduct?.ProductVariant[currentIndex].Status === "Inactive"){
+        alert("This variant is inactive");
+        return;      
+    }
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user._id) {
+      navigate("/Ecommerce/login");
+    }
+    const data = {
+        UserId: user._id,
+        Product_id: product_id,
+        ProductName: dataProduct.ProductName,
+        ProductImage: dataProduct.ProductImage,
+        ShopID: dataProduct.ShopId._id,
+        ProductVariant: [
+          {
+            _id: dataProduct.ProductVariant[currentIndex]._id,
+            Image: dataProduct.ProductVariant[currentIndex].Image,
+            Price: dataProduct.ProductVariant[currentIndex].Price,
+            ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
+            Quantity: quantity
+          }
+        ],
+      };
+    setCheckOut(data);
+    console.log("data buy now", data);
+    //navigate("/Ecommerce/checkout", { state: data });
+  }
   
 
 
@@ -213,7 +246,6 @@ const ProductDetail = () => {
       ) : (
         <div className="container">
       <div className="navigate d-flex gap-2  align-items-center my-2 bg-white p-2 flex-wrap">
-        {/* Ecommerce > CategoryName > ProductName */}
         <a
           className="navigate-item text-decoration-none"
           href="/Ecommerce/home"
@@ -221,12 +253,6 @@ const ProductDetail = () => {
           Ecommerce
         </a>
         <i className="fa-solid fa-chevron-right fa-xs"></i>
-        {/* <a className="navigate-item text-decoration-none" href={`/Ecommerce/search?name=&category=${dataProduct?.CategoryId._id}`}>
-          {dataProduct?.CategoryId?.CategoryName?.trim()
-            ? dataProduct.CategoryId.CategoryName
-            : ""}
-        </a> */}
-        {/* <i className="fa-solid fa-chevron-right fa-xs"></i> */}
         <span className="navigate-item-name">
           {dataProduct?.ProductName || "Loading..."}
         </span>
@@ -375,10 +401,9 @@ const ProductDetail = () => {
                       cursor: item.Status === "Inactive" ? "not-allowed" : "pointer" }}
                     onClick={() => {
                       setCurrentIndex(index);
-                      setQuantity(0); 
+                      setQuantity(1); 
                     }}
                     disabled={item.Status === "Inactive"}
-                    //cursor={item.Status === "Inactive" ? "not-allowed" : "pointer"}
                   >
                     <img
                       src={item?.Image || ""}
@@ -432,7 +457,7 @@ const ProductDetail = () => {
               </button>
               <button
                 className={`${styles["btn-buy-now"]} border border-warning bg-warning text-white p-2`}
-                //onClick={handleAddToCart}
+                onClick={handleBuyNow}
               >
                 BUY NOW
               </button>
