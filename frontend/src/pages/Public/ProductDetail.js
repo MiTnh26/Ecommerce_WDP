@@ -28,7 +28,7 @@ const ProductDetail = () => {
   const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0); // index of thumbnail start
   const [dataProduct, setDataProduct] = useState();
   const product_id = useParams().id;
-  const [quantity, setQuantity] = useState(0); // quantity of product
+  const [quantity, setQuantity] = useState(1); // quantity of product
   const queryClient = useQueryClient();
   // 2. inView hook for product feedback section and product related section
   const { ref: reviewRef, inView: reviewInView } = useInView({
@@ -80,7 +80,7 @@ const ProductDetail = () => {
 
   //handle click scroll thumbnail
   const handleScroll = (direction) => {
-    setQuantity(0); // reset quantity to 1 when changing image
+    setQuantity(1); // reset quantity to 1 when changing image
     if (direction === "left") {
       setThumbnailStartIndex((prev) => Math.max(prev - 1, 0));
       setCurrentIndex((prev2) => Math.max(prev2 - 1, 0));
@@ -105,7 +105,7 @@ const ProductDetail = () => {
     }
     const value = e.target.value;
     if (value < 0) {
-      setQuantity(0);
+      setQuantity(1);
     } else if (
       value < dataProduct?.ProductVariant[currentIndex].StockQuantity
     ) {
@@ -124,7 +124,7 @@ const ProductDetail = () => {
         return;      
     }
     if (direction === "decrease") {
-      setQuantity((prev) => Math.max(prev - 1, 0));
+      setQuantity((prev) => Math.max(prev - 1, 1));
     } else if (direction === "increase") {
       setQuantity((prev) =>
         Math.min(
@@ -295,7 +295,7 @@ const ProductDetail = () => {
                     }`}                
                     onClick={() => {
                       setCurrentIndex(-1);
-                      setQuantity(0); 
+                      setQuantity(1); 
                     }}
                   >
                     <img
@@ -320,7 +320,7 @@ const ProductDetail = () => {
                     }`}                
                     onClick={() => {
                       setCurrentIndex(index);
-                      setQuantity(0); 
+                      setQuantity(1); 
                     }}
                   >
                     <img

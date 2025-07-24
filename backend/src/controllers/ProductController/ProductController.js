@@ -150,6 +150,9 @@ exports.getNewProducts = async (req, res) => {
   try {
     const products = await Product.aggregate([
     {
+      $match : {"Status": {$ne: "Inactive"}}
+    },
+    {
       $lookup: {
         from: "shops",
         localField: "ShopId",
@@ -204,6 +207,9 @@ exports.getBestSellerProducts = async (req, res) => {
           foreignField: "_id",
           as: "Product_detail"
         }
+      },
+      {
+        $match: {"Product_detail.Status": {$ne: "Inactive"} }
       },
       // join bang shop de lay duoc trang thai status
       {
