@@ -36,7 +36,7 @@ const Header = () => {
   });
   const [category_id, setCategoryId] = useState("");
   const [owner, setOwner] = useState(null);
-
+  console.log("owner", owner);
   //toast
   const [showToast, setShowToast] = useState(false);
 
