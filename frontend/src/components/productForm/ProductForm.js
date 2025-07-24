@@ -1,53 +1,173 @@
-// src/components/ProductForm.jsx
-import React, { useState } from 'react';
-import styles from '../../style/product/ProductForm.module.scss';
+// /components/productForm/ProductForm.jsx
+import React, { useState, useEffect } from "react";
+import styles from "../../style/product/ProductForm.module.scss";
 
-export default function ProductForm({ categories = [], onSave }) {
+export default function ProductForm({
+  categories = [],
+  onSave,
+  onCancel,
+  product = null,
+  existingProducts = [],
+}) {
   const [mainImage, setMainImage] = useState(null);
-  const [productName, setProductName] = useState('');
+  const [mainPreview, setMainPreview] = useState("");
+  const [productName, setProductName] = useState("");
   const [variants, setVariants] = useState([]);
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
 
-  const handleMainImageChange = e => {
-    setMainImage(e.target.files[0]);
+  const [nameError, setNameError] = useState("");
+  const [descError, setDescError] = useState("");
+  const [variantNameError, setVariantNameError] = useState("");
+  const [variantDetailError, setVariantDetailError] = useState("");
+
+  // Prefill on edit
+  useEffect(() => {
+    if (product) {
+      setProductName(product.ProductName || "");
+      setCategory(product.CategoryId?._id || "");
+      setDescription(product.Description || "");
+      setMainPreview(product.ProductImage || "");
+      setVariants(
+        (product.ProductVariant || []).map((v) => ({
+          id: v._id,
+          image: null,
+          imageUrl: v.Image,
+          name: v.ProductVariantName,
+          price: v.Price,
+          stock: v.StockQuantity,
+        }))
+      );
+    }
+  }, [product]);
+
+  // ─── 1) Product‑name uniqueness ──────────────────────────
+  useEffect(() => {
+    const name = productName.trim().toLowerCase();
+    const conflict = existingProducts.some(
+      (p) =>
+        p.ProductName.trim().toLowerCase() === name &&
+        (!product || p._id !== product._id)
+    );
+    setNameError(conflict ? "A product with this name already exists." : "");
+  }, [productName, existingProducts, product]);
+
+  // ─── 2) Description length ──────────────────────────────
+  useEffect(() => {
+    if (!description || description.length < 50) {
+      setDescError("Description must be at least 50 characters.");
+    } else {
+      setDescError("");
+    }
+  }, [description]);
+
+  // ─── 3) Variant‑name uniqueness ──────────────────────────
+  useEffect(() => {
+    const seen = new Set();
+    let conflict = false;
+    const existingNames = (product?.ProductVariant || []).map((v) =>
+      v.ProductVariantName.trim().toLowerCase()
+    );
+
+    variants.forEach((v) => {
+      const nm = v.name.trim().toLowerCase();
+      if (!nm) return;
+      if (existingNames.includes(nm) || seen.has(nm)) {
+        conflict = true;
+      }
+      seen.add(nm);
+    });
+    setVariantNameError(conflict ? "Variant names must be unique." : "");
+  }, [variants, product]);
+
+  // ─── 4) Variant‑detail (price/stock) validity ────────────
+  useEffect(() => {
+    let bad = false;
+    variants.forEach((v) => {
+      const price = parseFloat(v.price);
+      const stock = parseInt(v.stock, 10);
+      if (isNaN(price) || price <= 0 || isNaN(stock) || stock < 0) {
+        bad = true;
+      }
+    });
+    setVariantDetailError(
+      bad ? "Each variant must have price > 0 and stock ≥ 0." : ""
+    );
+  }, [variants]);
+
+  const handleMainImageChange = (e) => {
+    const file = e.target.files[0];
+    setMainImage(file);
+    setMainPreview(URL.createObjectURL(file));
   };
 
-  const handleVariantChange = (index, field, value) => {
-    const copy = [...variants];
-    copy[index][field] = value;
-    setVariants(copy);
+  const handleVariantChange = (i, field, val) => {
+    const c = [...variants];
+    c[i][field] = val;
+    setVariants(c);
   };
 
   const addVariant = () => {
-    setVariants([...variants, { image: null, name: '', price: '', stock: '' }]);
+    setVariants((vs) => [
+      ...vs,
+      { id: null, image: null, imageUrl: "", name: "", price: "", stock: "" },
+    ]);
   };
 
-  const removeVariant = index => {
-    const copy = variants.filter((_, i) => i !== index);
-    setVariants(copy);
+  const removeVariant = (i) => {
+    setVariants((vs) => vs.filter((_, idx) => idx !== i));
   };
 
-  const handleSave = async e => {
+  const handleSave = async (e) => {
     e.preventDefault();
+
+    if (
+      nameError ||
+      descError ||
+      variantNameError ||
+      variantDetailError ||
+      variants.length === 0
+    ) {
+      return;
+    }
+
     const data = new FormData();
-    if (mainImage) data.append('ProductImage', mainImage);
-    data.append('ProductName', productName);
-    data.append('CategoryId', category);
-    data.append('Description', description);
+
+    if (mainImage) {
+      data.append("ProductImage", mainImage);
+    } else if (mainPreview) {
+      data.append("ProductImage", mainPreview);
+    }
+
+    data.append("ProductName", productName);
+    data.append("CategoryId", category);
+    data.append("Description", description);
+    if (product?.Status) {
+      data.append("Status", product.Status);
+    }
+
     variants.forEach((v, i) => {
-      if (v.image) data.append(`VariantImage[${i}]`, v.image);
       data.append(`ProductVariant[${i}][ProductVariantName]`, v.name);
       data.append(`ProductVariant[${i}][Price]`, v.price);
       data.append(`ProductVariant[${i}][StockQuantity]`, v.stock);
+      if (v.id) data.append(`ProductVariant[${i}][_id]`, v.id);
+      if (v.image) {
+        data.append("VariantImage", v.image);
+      } else {
+        data.append(`ProductVariant[${i}][Image]`, v.imageUrl || "");
+      }
     });
+
     await onSave(data);
   };
 
   return (
     <form className={styles.form} onSubmit={handleSave}>
-      <h2 className={styles.title}>Add New Product</h2>
+      <h2 className={styles.title}>
+        {product ? "Edit Product" : "Add New Product"}
+      </h2>
 
+      {/* Product image */}
       <div className={styles.fieldGroup}>
         <label className={styles.label}>*Product image</label>
         <div className={styles.uploadBox}>
@@ -58,124 +178,183 @@ export default function ProductForm({ categories = [], onSave }) {
             className={styles.fileInput}
           />
           <span className={styles.uploadText}>
-            {mainImage ? mainImage.name : 'Add image (0/9)'}
+            {mainImage
+              ? mainImage.name
+              : mainPreview
+              ? "Current image"
+              : "Add image (0/9)"}
           </span>
         </div>
+        {mainPreview && (
+          <img src={mainPreview} className={styles.preview} alt="" />
+        )}
       </div>
 
+      {/* Name */}
       <div className={styles.fieldGroup}>
-        <label className={styles.label}>*Product Name (0/100)</label>
+        <label className={styles.label}>*Product Name</label>
         <input
           type="text"
           value={productName}
-          onChange={e => setProductName(e.target.value)}
+          onChange={(e) => setProductName(e.target.value)}
           className={styles.input}
-          placeholder="Enter the product name"
           maxLength={100}
           required
         />
+        {nameError && <p className={styles.errorText}>{nameError}</p>}
       </div>
 
+      {/* Variants */}
       <div className={styles.variantSection}>
         <label className={styles.label}>*Product Variant</label>
-        <button type="button" className={styles.addVariantBtn} onClick={addVariant}>
+        <button
+          type="button"
+          className={styles.addVariantBtn}
+          onClick={addVariant}
+        >
           Add more product variant
         </button>
-        {/* Uncomment to enable scrolling */}
-        {/* <div className={styles.variantScroll}> */}
-          {variants.length > 0 && (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Product Variant Image</th>
-                  <th>Product Variant Name</th>
-                  <th>Price</th>
-                  <th>Stock Quantity</th>
-                  <th>Action</th>
+        {variantNameError && (
+          <p className={styles.errorText}>{variantNameError}</p>
+        )}
+        {variantDetailError && (
+          <p className={styles.errorText}>{variantDetailError}</p>
+        )}
+        {variants.length > 0 && (
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Product Variant Image</th>
+                <th>Product Variant Name</th>
+                <th>Price</th>
+                <th>Stock Quantity</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {variants.map((v, i) => (
+                <tr key={i}>
+                  <td>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        handleVariantChange(i, "image", e.target.files[0])
+                      }
+                      className={styles.variantFile}
+                    />
+                    {!v.image && v.imageUrl && (
+                      <img
+                        src={v.imageUrl}
+                        className={styles.variantThumb}
+                        alt=""
+                      />
+                    )}
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      value={v.name}
+                      onChange={(e) =>
+                        handleVariantChange(i, "name", e.target.value)
+                      }
+                      className={styles.input}
+                      required
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={v.price}
+                      onChange={(e) =>
+                        handleVariantChange(i, "price", e.target.value)
+                      }
+                      className={styles.input}
+                      step="0.01"
+                      required
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={v.stock}
+                      onChange={(e) =>
+                        handleVariantChange(i, "stock", e.target.value)
+                      }
+                      className={styles.input}
+                      required
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      onClick={() => removeVariant(i)}
+                    >
+                      🗑️
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {variants.map((v, i) => (
-                  <tr key={i}>
-                    <td>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handleVariantChange(i, 'image', e.target.files[0])}
-                        className={styles.variantFile}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={v.name}
-                        onChange={e => handleVariantChange(i, 'name', e.target.value)}
-                        placeholder="Enter product variant name"
-                        className={styles.input}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={v.price}
-                        onChange={e => handleVariantChange(i, 'price', e.target.value)}
-                        placeholder="Enter the price"
-                        className={styles.input}
-                        step="0.01"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        value={v.stock}
-                        onChange={e => handleVariantChange(i, 'stock', e.target.value)}
-                        placeholder="Enter stock quantity"
-                        className={styles.input}
-                      />
-                    </td>
-                    <td>
-                      <button type="button" className={styles.deleteBtn} onClick={() => removeVariant(i)}>
-                        🗑️
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        {/* </div> */}
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
+      {/* Category */}
       <div className={styles.fieldGroup}>
         <label className={styles.label}>*Category</label>
         <select
           value={category}
-          onChange={e => setCategory(e.target.value)}
+          onChange={(e) => setCategory(e.target.value)}
           className={styles.select}
           required
         >
           <option value="">Select category</option>
-          {categories.map(c => (
-            <option key={c._id} value={c._id}>{c.name}</option>
+          {categories.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.CategoryName}
+            </option>
           ))}
         </select>
       </div>
 
+      {/* Description */}
       <div className={styles.fieldGroup}>
-        <label className={styles.label}>*Description (0/3000)</label>
+        <label className={styles.label}>*Description</label>
         <textarea
           value={description}
-          onChange={e => setDescription(e.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
           className={styles.textarea}
           maxLength={3000}
-          placeholder="Enter product description"
           required
         />
+        {descError && <p className={styles.errorText}>{descError}</p>}
       </div>
 
-      <button type="submit" className={styles.submitBtn}>
-        Add Product
-      </button>
+      {/* Buttons */}
+      <div className={styles.buttonRow}>
+        <button type="button" className={styles.cancelBtn} onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className={styles.submitBtn}
+          disabled={
+            variants.length === 0 ||
+            Boolean(nameError) ||
+            Boolean(descError) ||
+            Boolean(variantNameError) ||
+            Boolean(variantDetailError)
+          }
+        >
+          {variants.length === 0
+            ? "Add ≥ 1 Variant"
+            : product
+            ? "Update Product"
+            : "Add Product"}
+        </button>
+      </div>
     </form>
   );
 }

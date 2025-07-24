@@ -12,22 +12,23 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import '../style/customer/PurchaseOrders.css';
 
-const orange = "#ff5722";
-
-const PurchaseOrders = () => {
+const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-
-
   const user = JSON.parse(localStorage.getItem("user"));
-  const userId = user._id;
+  // const userId = user._id;
   const fallbackImg = "../assets/images/no-image.png";
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!userId) navigate("/login");
+  }, []);
 
   const statusList = Array.from(new Set(orders.map((o) => o.Status))).filter(
     Boolean
@@ -56,7 +57,7 @@ const PurchaseOrders = () => {
   }, []);
 
   useEffect(() => {
-    let result = orders;
+    let result = [...orders];
 
     if (statusFilter) {
       result = result.filter((order) => order.Status === statusFilter);
@@ -66,26 +67,24 @@ const PurchaseOrders = () => {
       const lower = search.toLowerCase();
       result = result.filter((order) => {
         const orderId = (order._id || "").toLowerCase();
-
-        const hasMatch = (order.Items || []).some((item) =>
-          (item.Product || []).some(
-            (p) =>
-              p.ProductName?.toLowerCase().includes(lower) ||
-              (p.ProductVariant || []).some((v) =>
-                v.ProductVariantName?.toLowerCase().includes(lower)
-              )
-          )
-        );
+        const hasMatch = (order.Items || []).some((item) => {
+          return (item.Product || []).some((p) => {
+            const productMatch = p.ProductName?.toLowerCase().includes(lower);
+            const variantMatch = (p.ProductVariant || []).some((v) =>
+              v.ProductVariantName?.toLowerCase().includes(lower)
+            );
+            return productMatch || variantMatch;
+          });
+        });
 
         return (
-  orderId.includes(lower) ||
-  (order.ShopId?.name || "").toLowerCase().includes(lower) ||
-  (order.ShippingAddress || "").toLowerCase().includes(lower) ||
-  (order.PaymentId || "").toLowerCase().includes(lower) ||
-  (order.Status || "").toLowerCase().includes(lower) ||
-  hasMatch
-);
-
+          orderId.includes(lower) ||
+          (order.ShopId?.name || "").toLowerCase().includes(lower) ||
+          (order.ShippingAddress || "").toLowerCase().includes(lower) ||
+          (order.PaymentMethod || "").toLowerCase().includes(lower) ||
+          (order.Status || "").toLowerCase().includes(lower) ||
+          hasMatch
+        );
       });
     }
 
@@ -95,11 +94,32 @@ const PurchaseOrders = () => {
   const handleBuyAgain = (order) => {
     alert("Buy again clicked for order " + order._id);
   };
+  const handleCancelOrder = (order) => {
+    const orderId = order._id;
+
+    fetch(`http://localhost:5000/customer/orders/cancel/${orderId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o._id === orderId ? { ...o, Status: "Cancelled" } : o
+          )
+        );
+      })
+      .catch((error) => {
+        console.error("Lỗi khi huỷ đơn:", error);
+      });
+  };
 
   if (loading) {
     return (
       <Container className="mt-5 text-center">
-        <Spinner animation="border" style={{ color: orange }} />
+        <Spinner animation="border" className="purchaseorders-spinner" />
       </Container>
     );
   }
@@ -112,89 +132,41 @@ const PurchaseOrders = () => {
     );
   }
 
-  const blue = "#1976d2";
-  const blueLight = "#e3f2fd";
-  const blueBorder = "#bbdefb";
-  const blueText = "#1565c0";
-
   return (
-    <Container className="mt-4" style={{ maxWidth: 950 }}>
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 4,
-          border: `1px solid ${blueBorder}`,
-          padding: "18px 24px 10px 24px",
-          marginBottom: 18,
-          boxShadow: "0 1px 2px rgba(25, 118, 210, 0.06)",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        <i className="bi bi-bag" style={{ fontSize: 28, color: blue }} />
-        <span style={{ fontSize: 22, fontWeight: 700, color: blueText }}>
+    <Container className="purchaseorders-container">
+      <div className="purchaseorders-header">
+        <i className="bi bi-bag purchaseorders-header-icon" />
+        <span className="purchaseorders-header-title">
           My Orders
         </span>
-        <div style={{ flex: 1 }} />
-        <InputGroup style={{ maxWidth: 320 }}>
+        <div className="purchaseorders-header-spacer" />
+        <InputGroup className="purchaseorders-search-group">
           <Form.Control
             type="text"
-            placeholder="Search product, shop, order"
+            placeholder="Search product, variant, shop, status"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ borderColor: blueBorder, borderRadius: 20, fontSize: 15 }}
+            className="purchaseorders-search-input"
           />
-          <InputGroup.Text style={{ background: "#fff", border: "none" }}>
-            <i className="bi bi-search" style={{ color: blueText }} />
+          <InputGroup.Text className="purchaseorders-search-icon">
+            <i className="bi bi-search" />
           </InputGroup.Text>
         </InputGroup>
       </div>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 4,
-          border: `1px solid ${blueBorder}`,
-          marginBottom: 18,
-          padding: "0 24px",
-          display: "flex",
-          alignItems: "center",
-          gap: 32,
-          height: 56,
-        }}
-      >
+      <div className="purchaseorders-tabs">
         <div
+          className={`order-tab ${!statusFilter ? "active" : ""}`}
           onClick={() => setStatusFilter("")}
-          style={{
-            cursor: "pointer",
-            color: !statusFilter ? blue : "#555",
-            fontWeight: !statusFilter ? 700 : 500,
-            borderBottom: !statusFilter
-              ? `2.5px solid ${blue}`
-              : "2.5px solid transparent",
-            padding: "16px 0",
-            fontSize: 16,
-          }}
         >
           All
         </div>
         {statusList.map((status) => (
           <div
             key={status}
+            className={`order-tab ${statusFilter === status ? "active" : ""}`}
             onClick={() => setStatusFilter(status)}
-            style={{
-              cursor: "pointer",
-              color: statusFilter === status ? blue : "#555",
-              fontWeight: statusFilter === status ? 700 : 500,
-              borderBottom:
-                statusFilter === status
-                  ? `2.5px solid ${blue}`
-                  : "2.5px solid transparent",
-              padding: "16px 0",
-              fontSize: 16,
-              textTransform: "capitalize",
-            }}
+            style={{ textTransform: "capitalize" }}
           >
             {status}
           </div>
@@ -202,25 +174,11 @@ const PurchaseOrders = () => {
       </div>
 
       {filteredOrders.length === 0 ? (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 4,
-            border: `1px solid ${blueBorder}`,
-            padding: "48px 0",
-            textAlign: "center",
-            color: blueText,
-            fontSize: 17,
-          }}
-        >
+        <div className="purchaseorders-empty">
           <img
             src="https://deo.shopeemobile.com/shopee/shopee-pcmall-live-sg/order/empty-order.png"
             alt="empty"
-            style={{
-              width: 90,
-              marginBottom: 12,
-              filter: "hue-rotate(180deg)",
-            }}
+            className="purchaseorders-empty-img"
           />
           <div>No orders yet</div>
         </div>
@@ -228,124 +186,53 @@ const PurchaseOrders = () => {
         filteredOrders.map((order) => (
           <div
             key={order._id}
-            style={{
-              background: "#fff",
-              borderRadius: 4,
-              border: `1px solid ${blueBorder}`,
-              marginBottom: 18,
-              boxShadow: "0 1px 2px rgba(25, 118, 210, 0.06)",
-              overflow: "hidden",
-            }}
+            className="purchaseorders-order-card"
           >
-            <div
-              style={{
-                background: blueLight,
-                borderBottom: `1px solid ${blueBorder}`,
-                padding: "14px 24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <i
-                  className="bi bi-shop"
-                  style={{ color: blue, fontSize: 18 }}
-                />
-                <span
-                  style={{ fontWeight: 600, fontSize: 15, color: blueText }}
-                >
+            <div className="purchaseorders-order-header">
+              <div className="purchaseorders-order-shop">
+                <i className="bi bi-shop purchaseorders-order-shop-icon" />
+                <span className="purchaseorders-order-shop-name">
                   {order.ShopId?.name || "Shop"}
                 </span>
-                <Button
+                {/* <Button
                   size="sm"
                   variant="link"
-                  style={{
-                    color: blue,
-                    textDecoration: "none",
-                    fontWeight: 600,
-                    padding: 0,
-                    marginLeft: 8,
-                  }}
+                  className="purchaseorders-contact-seller-btn"
                   onClick={() => alert(`Contact seller: ${order.ShopId?.name}`)}
                 >
                   Contact seller
-                </Button>
+                </Button> */}
               </div>
-              <span
-                style={{
-                  color: blue,
-                  fontWeight: 700,
-                  fontSize: 15,
-                  textTransform: "capitalize",
-                }}
-              >
+              <span className="purchaseorders-order-status">
                 {order.Status}
               </span>
             </div>
 
-            {(order.Items || []).flatMap((item) =>
-              (item.Product || []).flatMap((product) => {
-                if (
-                  !product.ProductVariant ||
-                  product.ProductVariant.length === 0
-                ) {
+            {Array.isArray(order.Items) ? order.Items.flatMap((item) => {
+              return (item.Product || []).flatMap((product) => {
+                if (!product.ProductVariant || product.ProductVariant.length === 0) {
                   return (
                     <div
+                      className="order-item-row"
                       key={`${item._id}-${product._id}-no-variant`}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "18px 24px",
-                        borderBottom: `1px solid ${blueBorder}`,
-                        gap: 16,
-                      }}
                     >
                       <img
                         src={product.ProductImage || fallbackImg}
                         alt=""
-                        style={{
-                          width: 80,
-                          height: 80,
-                          objectFit: "cover",
-                          border: `1px solid ${blueBorder}`,
-                          borderRadius: 4,
-                          background: blueLight,
-                        }}
+                        className="order-item-img"
                       />
-                      <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            fontWeight: 500,
-                            fontSize: 15,
-                            color: blueText,
-                          }}
-                        >
+                      <div className="order-item-info">
+                        <div className="order-item-name">
                           {product.ProductName}
                         </div>
-                        <div
-                          style={{ color: "#888", fontSize: 13, marginTop: 2 }}
-                        >
+                        <div className="order-item-variant">
                           none
                         </div>
                       </div>
-                      <div
-                        style={{
-                          minWidth: 80,
-                          textAlign: "center",
-                          color: "#555",
-                        }}
-                      >
+                      <div className="order-item-qty">
                         x{product.Quantity || "N/A"}
                       </div>
-                      <div
-                        style={{
-                          minWidth: 120,
-                          textAlign: "right",
-                          color: blue,
-                          fontWeight: 600,
-                        }}
-                      >
+                      <div className="order-item-price">
                         ₫{Number(product.Price || 0).toLocaleString("vi-VN")}
                       </div>
                     </div>
@@ -354,164 +241,138 @@ const PurchaseOrders = () => {
 
                 return product.ProductVariant.map((variant, i) => (
                   <div
+                    className="order-item-row"
                     key={`${item._id}-${product._id}-${i}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      padding: "18px 24px",
-                      borderBottom: `1px solid ${blueBorder}`,
-                      gap: 16,
-                    }}
                   >
-                    <img
+                    {/* <img
                       src={product.ProductImage || fallbackImg}
                       alt=""
-                      style={{
-                        width: 80,
-                        height: 80,
-                        objectFit: "cover",
-                        border: `1px solid ${blueBorder}`,
-                        borderRadius: 4,
-                        background: blueLight,
-                      }}
+                      className="order-item-img"
+                    /> */}
+                    <img
+                      src={variant.Image || fallbackImg}
+                      alt=""
+                      className="order-item-img"
                     />
-                    <div style={{ flex: 1 }}>
-                      <div
-                        style={{
-                          fontWeight: 500,
-                          fontSize: 15,
-                          color: blueText,
-                        }}
-                      >
+                    <div className="order-item-info">
+                      <div className="order-item-name">
                         {product.ProductName}
                       </div>
-                      <div
-                        style={{ color: "#888", fontSize: 13, marginTop: 2 }}
-                      >
+                      <div className="order-item-variant">
                         {variant.ProductVariantName}
                       </div>
                     </div>
-                    <div
-                      style={{
-                        minWidth: 80,
-                        textAlign: "center",
-                        color: "#555",
-                      }}
-                    >
+                    <div className="order-item-qty">
                       x{variant.Quantity}
                     </div>
-                    <div
-                      style={{
-                        minWidth: 120,
-                        textAlign: "right",
-                        color: blue,
-                        fontWeight: 600,
-                      }}
-                    >
+                    <div className="order-item-price">
                       ₫{Number(variant.Price || 0).toLocaleString("vi-VN")}
                     </div>
                   </div>
                 ));
               })
-            )}
+            })
+              : null}
 
-            <div
-              style={{
-                background: blueLight,
-                padding: "16px 24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderTop: `1px solid ${blueBorder}`,
-              }}
-            >
-              <div style={{ color: "#888", fontSize: 14 }}>
+            <div className="purchaseorders-order-footer">
+              <div className="purchaseorders-order-footer-info">
                 <div>
                   <span>Order date: </span>
-                  <span style={{ color: blueText }}>
+                  <span className="purchaseorders-order-footer-highlight">
                     {new Date(order.OrderDate).toLocaleDateString()}
                   </span>
                 </div>
                 <div>
                   <span>Address: </span>
-                  <span style={{ color: blueText }}>
+                  <span className="purchaseorders-order-footer-highlight">
                     {order.ShippingAddress}
                   </span>
                 </div>
                 <div>
                   <span>Payment: </span>
-                  <span style={{ color: blueText }}>
-                    {order.PaymentId || "N/A"}
+                  <span className="purchaseorders-order-footer-highlight">
+                    {order.PaymentId?.Type || "unknow"}
                   </span>
                 </div>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 15, color: "#555" }}>
+              <div className="purchaseorders-order-footer-actions">
+                <div className="purchaseorders-order-footer-total">
                   Total amount:{" "}
-                  <span style={{ color: blue, fontWeight: 700, fontSize: 20 }}>
+                  <span className="purchaseorders-order-footer-total-value">
                     ₫{Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
                   </span>
                 </div>
-                <div
-                  style={{
-                    marginTop: 10,
-                    display: "flex",
-                    gap: 10,
-                    justifyContent: "flex-end",
-                  }}
-                >
+                <div className="purchaseorders-order-footer-btns">
                   <Button
-                    variant="outline-secondary"
+
                     size="sm"
                     style={{
-                      borderColor: blue,
-                      color: blueText,
-                      fontWeight: 600,
-                      borderRadius: 2,
-                      minWidth: 120,
+                      background: "linear-gradient(90deg, #ff7a00 0%, #ffae42 100%)",
+                      color: "white",
+                      border: "none",
+                      padding: "0.4rem 1rem",
+                      borderRadius: "8px",
+                      fontWeight: 500,
+                      boxShadow: "0 4px 12px rgba(255, 122, 0, 0.3)",
+                      transition: "all 0.3s ease",
+                      cursor: "pointer",
                     }}
-                    onClick={() =>
-                      navigate(
-                        `/orderdetail/${order._id}${
-                          order.Status === "Đã hủy" ? "?cancelled=true" : ""
-                        }`
-                      )
-                    }
-                  >
-                    {order.Status === "Đã hủy"
-                      ? "Cancellation details"
-                      : "View details"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    style={{
-                      background: blue,
-                      borderColor: blue,
-                      color: "#fff",
-                      fontWeight: 600,
-                      borderRadius: 2,
-                      minWidth: 120,
+                    className="purchaseorders-detail-btn"
+                    onClick={() => {
+                      setSelectedOrderId(order._id)
+                      setActiveTab("orderdetail");
+
+
                     }}
-                    onClick={() => handleBuyAgain(order)}
                   >
-                    Buy again
+                    {order.Status === "Cancelled" ? "Cancellation details" : "View details"}
                   </Button>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    style={{
-                      borderColor: blue,
-                      color: blue,
-                      fontWeight: 600,
-                      borderRadius: 2,
-                      minWidth: 120,
-                    }}
-                    onClick={() =>
-                      alert(`View shop reviews: ${order.ShopId?.name}`)
-                    }
-                  >
-                    Rate shop
-                  </Button>
+                  {["Delivered", "Cancelled"].includes(order.Status) && (
+                    <Button
+                      size="sm"
+                      style={{
+                        background: "linear-gradient(90deg, #a259ff 0%, #c084fc 100%)",
+                        color: "white",
+                        border: "none",
+                        padding: "0.4rem 1rem",
+                        borderRadius: "8px",
+                        fontWeight: 500,
+                        boxShadow: "0 4px 12px rgba(162, 89, 255, 0.3)",
+                        transition: "all 0.3s ease",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => handleBuyAgain(order)}
+                    >
+                      Buy again
+                    </Button>
+
+
+                  )}
+                  {["Pending"].includes(order.Status) && (
+                    <Button
+                      size="sm"
+                      style={{
+                        background: "linear-gradient(90deg, #ff4d4f 0%, #ff7875 100%)",
+                        color: "white",
+                        border: "none",
+                        padding: "0.4rem 1rem",
+                        borderRadius: "8px",
+                        fontWeight: 500,
+                        boxShadow: "0 4px 12px rgba(255, 77, 79, 0.3)",
+                        transition: "all 0.3s ease",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        if (window.confirm("Bạn chắc chắn muốn huỷ đơn hàng này?")) {
+                          handleCancelOrder(order);
+                        }
+                      }}
+                    >
+                      Cancel Order
+                    </Button>
+
+
+                  )}
                 </div>
               </div>
             </div>

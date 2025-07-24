@@ -1,6 +1,6 @@
-// ✅ Shopee-style Address Form tích hợp với AddressForm chính
+// ✅ Shopee-style Address Form integrated with main AddressForm
 import React, { useEffect, useState } from "react";
-import {BsPencil, BsTrash, BsStar} from "react-icons/bs";
+import { BsPencil, BsTrash, BsStar } from "react-icons/bs";
 import PropTypes from "prop-types";
 import {
   Card,
@@ -15,9 +15,11 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
+import "../style/customer/AddressForm.css";
 
-function AddressForm({ userId }) {
-  const [user, setUser] = useState(null);
+function AddressForm({ userId,user: userProp }) {
+   const [user, setUser] = useState(userProp || null);
+
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState(null);
@@ -36,13 +38,15 @@ function AddressForm({ userId }) {
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
   const [errors, setErrors] = useState({});
-
+   useEffect(() => {
+    if (userProp) setUser(userProp);
+  }, [userProp]);
   useEffect(() => {
     if (!userId) return;
     fetch(`http://localhost:5000/customer/profile/${userId}`)
       .then(res => res.json())
       .then(setUser)
-      .catch(err => alert("Không thể tải dữ liệu người dùng"));
+      .catch(err => alert("Unable to load user data"));
   }, [userId]);
 
   useEffect(() => {
@@ -51,7 +55,6 @@ function AddressForm({ userId }) {
       .then(setProvinces);
   }, []);
 
-  // Khi chọn tỉnh
   const handleProvinceChange = async (e) => {
     const name = e.target.value;
     const selected = provinces.find(p => p.name === name);
@@ -69,9 +72,6 @@ function AddressForm({ userId }) {
     setWards([]);
   };
 
-
-
-
   const handleDistrictChange = async (e) => {
     const name = e.target.value;
     const selected = districts.find(d => d.name === name);
@@ -86,6 +86,7 @@ function AddressForm({ userId }) {
     const data = await res.json();
     setWards(data.wards || []);
   };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -103,38 +104,20 @@ function AddressForm({ userId }) {
     }
   };
 
-
-
-  // const handleChange = (e) => {
-  //   const { name, value } = e.target;
-  //   if (name === "ward") {
-  //     const selected = wards.find(w => w.code.toString() === value);
-  //     setFormData(prev => ({ ...prev, ward: selected?.name || "" }));
-  //   } else {
-  //     setFormData(prev => ({ ...prev, [name]: value }));
-  //   }
-  // };
-
-
   const validate = () => {
     const newErrors = {};
-    if (!formData.receiverName.trim()) newErrors.receiverName = "Tên người nhận không được để trống";
-    if (!formData.phoneNumber.match(/^\d{10,11}$/)) newErrors.phoneNumber = "Số điện thoại không hợp lệ";
-    if (!formData.province) newErrors.province = "Chọn tỉnh/thành";
-    if (!formData.district) newErrors.district = "Chọn quận/huyện";
-    if (!formData.ward) newErrors.ward = "Chọn phường/xã";
-    if (!formData.detail.trim()) newErrors.detail = "Nhập địa chỉ chi tiết";
+    if (!formData.receiverName.trim()) newErrors.receiverName = "Receiver name is required";
+    if (!formData.phoneNumber.match(/^\d{10,11}$/)) newErrors.phoneNumber = "Invalid phone number";
+    if (!formData.province) newErrors.province = "Please select a province";
+    if (!formData.district) newErrors.district = "Please select a district";
+    if (!formData.ward) newErrors.ward = "Please select a ward";
+    if (!formData.detail.trim()) newErrors.detail = "Detailed address is required";
     return newErrors;
   };
 
   const handleSubmit = async () => {
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) return setErrors(newErrors);
-
-
-
-
-
 
     const payload = {
       receiverName: formData.receiverName,
@@ -145,10 +128,6 @@ function AddressForm({ userId }) {
       detail: formData.detail,
       status: formData.status || "Inactive",
     };
-
-
-
-
 
     const url = isEditing
       ? `http://localhost:5000/customer/user/${userId}/address/${editingAddressId}`
@@ -162,7 +141,7 @@ function AddressForm({ userId }) {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error("Lỗi khi gửi địa chỉ");
+      if (!res.ok) throw new Error("Failed to submit address");
 
       const updatedUser = await (await fetch(`http://localhost:5000/customer/profile/${userId}`)).json();
       setUser(updatedUser);
@@ -170,9 +149,9 @@ function AddressForm({ userId }) {
       setIsEditing(false);
       setEditingAddressId(null);
       setFormData({ receiverName: "", phoneNumber: "", province: "", district: "", ward: "", detail: "", status: "Inactive" });
-      alert(isEditing ? "Cập nhật địa chỉ thành công" : "Thêm địa chỉ thành công");
+      alert(isEditing ? "Address updated successfully" : "Address added successfully");
     } catch (err) {
-      alert("Lỗi khi gửi địa chỉ");
+      alert("Failed to submit address");
     }
   };
 
@@ -181,13 +160,8 @@ function AddressForm({ userId }) {
     setEditingAddressId(addr._id);
 
     let phone = addr.phoneNumber?.toString() || "";
-    // if (!phone.startsWith("0") && phone.length === 9) {
-    //   phone = "0" + phone;
-    // }
-
 
     if (!addr.province) {
-      // Nếu chưa có tỉnh thì không cần fetch
       setFormData({
         receiverName: addr.receiverName,
         phoneNumber: phone,
@@ -205,17 +179,14 @@ function AddressForm({ userId }) {
     }
 
     try {
-      // ✅ Tìm tỉnh đúng object để lấy code
       const provinceObj = provinces.find(p => p.name === addr.province);
-      if (!provinceObj) throw new Error("Không tìm thấy tỉnh");
+      if (!provinceObj) throw new Error("Province not found");
 
-      // ✅ Fetch tỉnh kèm danh sách quận
       const resP = await fetch(`https://provinces.open-api.vn/api/p/${provinceObj.code}?depth=2`);
       const dataP = await resP.json();
       const fetchedDistricts = dataP.districts || [];
       setDistricts(fetchedDistricts);
 
-      // ✅ Tìm đúng object quận theo tên
       const districtObj = fetchedDistricts.find(d => d.name === addr.district);
       let wardsList = [];
       if (districtObj) {
@@ -225,7 +196,6 @@ function AddressForm({ userId }) {
       }
       setWards(wardsList);
 
-      // ✅ Set formData lại đầy đủ
       setTimeout(() => {
         setFormData({
           receiverName: addr.receiverName,
@@ -255,16 +225,10 @@ function AddressForm({ userId }) {
     }
   };
 
-
-
-
-
-
-
   const handleDelete = async (id) => {
     const target = user.ShippingAddress.find(a => a._id === id);
-    if (target?.status === "Default") return alert("Không thể xoá địa chỉ mặc định");
-    if (!window.confirm("Xác nhận xoá địa chỉ?")) return;
+    if (target?.status === "Default") return alert("Cannot delete default address");
+    if (!window.confirm("Confirm delete address?")) return;
 
     await fetch(`http://localhost:5000/customer/user/${userId}/address/${id}`, { method: "DELETE" });
     const updatedUser = await (await fetch(`http://localhost:5000/customer/profile/${userId}`)).json();
@@ -280,6 +244,7 @@ function AddressForm({ userId }) {
     const updatedUser = await (await fetch(`http://localhost:5000/customer/profile/${userId}`)).json();
     setUser(updatedUser);
   };
+
   useEffect(() => {
     if (showModal) {
       setErrors({});
@@ -302,13 +267,13 @@ function AddressForm({ userId }) {
         </Card.Header>
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5>Địa chỉ giao hàng</h5>
+            <h5>Shipping Addresses</h5>
             <Button onClick={() => {
               setErrors({});
               setFormData({ receiverName: "", phoneNumber: "", province: "", district: "", ward: "", detail: "", status: "Inactive" });
               setIsEditing(false);
               setShowModal(true);
-            }}>+ Thêm địa chỉ</Button>
+            }}>+ Add Address</Button>
           </div>
           <ListGroup>
             {user.ShippingAddress?.map(addr => (
@@ -319,11 +284,9 @@ function AddressForm({ userId }) {
                     <div className="text-break">
                       {[addr.detail, addr.ward, addr.district, addr.province].filter(Boolean).join(', ')}
                     </div>
-
                     <div>{addr.phoneNumber}</div>
                     {addr.status === "Default" && <Badge bg="primary">Default</Badge>}
                   </div>
-           
 
                   <div className="text-end d-flex flex-wrap gap-2">
                     <Button size="sm" variant="outline-primary" onClick={() => handleEdit(addr)}>
@@ -346,81 +309,75 @@ function AddressForm({ userId }) {
                       <BsStar />
                     </Button>
                   </div>
-
                 </div>
               </ListGroup.Item>
             ))}
           </ListGroup>
-
-
         </Card.Body>
       </Card>
 
       {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{isEditing ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}</Modal.Title>
+          <Modal.Title>{isEditing ? "Update Address" : "Add New Address"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group className="mb-2">
-              <Form.Label>Họ tên người nhận</Form.Label>
+              <Form.Label>Receiver Name</Form.Label>
               <Form.Control name="receiverName" value={formData.receiverName} onChange={handleChange} isInvalid={!!errors.receiverName} />
               <Form.Control.Feedback type="invalid">{errors.receiverName}</Form.Control.Feedback>
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>Số điện thoại</Form.Label>
+              <Form.Label>Phone Number</Form.Label>
               <Form.Control name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} isInvalid={!!errors.phoneNumber} />
               <Form.Control.Feedback type="invalid">{errors.phoneNumber}</Form.Control.Feedback>
             </Form.Group>
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-2">
-                  <Form.Label>Tỉnh/Thành</Form.Label>
+                  <Form.Label>Province</Form.Label>
                   <Form.Select name="province" value={formData.province} onChange={handleProvinceChange} isInvalid={!!errors.province}>
-                    <option value="">Chọn</option>
+                    <option value="">Select</option>
                     {provinces.map(p => (
                       <option key={p.code} value={p.name}>{p.name}</option>
                     ))}
                   </Form.Select>
-
                   <Form.Control.Feedback type="invalid">{errors.province}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-2">
-                  <Form.Label>Quận/Huyện</Form.Label>
+                  <Form.Label>District</Form.Label>
                   <Form.Select name="district" value={formData.district} onChange={handleDistrictChange} isInvalid={!!errors.district}>
-                    <option value="">Chọn</option>
+                    <option value="">Select</option>
                     {districts.map(d => (
                       <option key={d.code} value={d.name}>{d.name}</option>
                     ))}
                   </Form.Select>
-
                   <Form.Control.Feedback type="invalid">{errors.district}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-2">
-                  <Form.Label>Phường/Xã</Form.Label>
+                  <Form.Label>Ward</Form.Label>
                   <Form.Select name="ward" value={formData.ward} onChange={handleChange} isInvalid={!!errors.ward}>
-                    <option value="">Chọn</option>
+                    <option value="">Select</option>
                     {wards.map(w => (
                       <option key={w.code} value={w.name}>{w.name}</option>
                     ))}
                   </Form.Select>
-
                   <Form.Control.Feedback type="invalid">{errors.ward}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
             <Form.Group className="mb-2">
-              <Form.Label>Địa chỉ chi tiết</Form.Label>
+              <Form.Label>Detailed Address</Form.Label>
               <Form.Control name="detail" value={formData.detail} onChange={handleChange} isInvalid={!!errors.detail} />
               <Form.Control.Feedback type="invalid">{errors.detail}</Form.Control.Feedback>
             </Form.Group>
             <Form.Group className="mb-2">
-              <Form.Label>Trạng thái</Form.Label>
+              <Form.Label>Status</Form.Label>
               <Form.Select name="status" value={formData.status} onChange={handleChange}>
                 <option value="Inactive">Not Default</option>
                 <option value="Default">Default</option>
@@ -429,8 +386,8 @@ function AddressForm({ userId }) {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Huỷ</Button>
-          <Button variant="success" onClick={handleSubmit}>{isEditing ? "Cập nhật" : "Lưu"}</Button>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button variant="success" onClick={handleSubmit}>{isEditing ? "Update" : "Save"}</Button>
         </Modal.Footer>
       </Modal>
     </Container>
