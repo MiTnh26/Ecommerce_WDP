@@ -1,4 +1,3 @@
-// /components/productForm/ProductForm.jsx
 import React, { useState, useEffect } from "react";
 import styles from "../../style/product/ProductForm.module.scss";
 
@@ -16,12 +15,16 @@ export default function ProductForm({
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
 
+  const [submitAttempt, setSubmitAttempt] = useState(false);
+
+  // validation errors
   const [nameError, setNameError] = useState("");
   const [descError, setDescError] = useState("");
   const [variantNameError, setVariantNameError] = useState("");
   const [variantDetailError, setVariantDetailError] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [variantImageError, setVariantImageError] = useState("");
 
-  // Prefill on edit
   useEffect(() => {
     if (product) {
       setProductName(product.ProductName || "");
@@ -41,7 +44,6 @@ export default function ProductForm({
     }
   }, [product]);
 
-  // ─── 1) Product‑name uniqueness ──────────────────────────
   useEffect(() => {
     const name = productName.trim().toLowerCase();
     const conflict = existingProducts.some(
@@ -52,7 +54,6 @@ export default function ProductForm({
     setNameError(conflict ? "A product with this name already exists." : "");
   }, [productName, existingProducts, product]);
 
-  // ─── 2) Description length ──────────────────────────────
   useEffect(() => {
     if (!description || description.length < 50) {
       setDescError("Description must be at least 50 characters.");
@@ -61,7 +62,6 @@ export default function ProductForm({
     }
   }, [description]);
 
-  // ─── 3) Variant‑name uniqueness ──────────────────────────
   useEffect(() => {
     const seen = new Set();
     let conflict = false;
@@ -80,7 +80,6 @@ export default function ProductForm({
     setVariantNameError(conflict ? "Variant names must be unique." : "");
   }, [variants, product]);
 
-  // ─── 4) Variant‑detail (price/stock) validity ────────────
   useEffect(() => {
     let bad = false;
     variants.forEach((v) => {
@@ -93,6 +92,22 @@ export default function ProductForm({
     setVariantDetailError(
       bad ? "Each variant must have price > 0 and stock ≥ 0." : ""
     );
+  }, [variants]);
+
+  useEffect(() => {
+    if (!mainImage && !mainPreview) {
+      setImageError("Product image is required.");
+    } else {
+      setImageError("");
+    }
+  }, [mainImage, mainPreview]);
+
+  useEffect(() => {
+    let missing = false;
+    variants.forEach((v) => {
+      if (!v.image && !v.imageUrl) missing = true;
+    });
+    setVariantImageError(missing ? "Each variant must include an image." : "");
   }, [variants]);
 
   const handleMainImageChange = (e) => {
@@ -120,12 +135,15 @@ export default function ProductForm({
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSubmitAttempt(true);
 
     if (
       nameError ||
       descError ||
       variantNameError ||
       variantDetailError ||
+      imageError ||
+      variantImageError ||
       variants.length === 0
     ) {
       return;
@@ -142,9 +160,7 @@ export default function ProductForm({
     data.append("ProductName", productName);
     data.append("CategoryId", category);
     data.append("Description", description);
-    if (product?.Status) {
-      data.append("Status", product.Status);
-    }
+    if (product?.Status) data.append("Status", product.Status);
 
     variants.forEach((v, i) => {
       data.append(`ProductVariant[${i}][ProductVariantName]`, v.name);
@@ -167,7 +183,6 @@ export default function ProductForm({
         {product ? "Edit Product" : "Add New Product"}
       </h2>
 
-      {/* Product image */}
       <div className={styles.fieldGroup}>
         <label className={styles.label}>*Product image</label>
         <div className={styles.uploadBox}>
@@ -185,12 +200,11 @@ export default function ProductForm({
               : "Add image"}
           </span>
         </div>
-        {mainPreview && (
-          <img src={mainPreview} className={styles.preview} alt="" />
+        {submitAttempt && imageError && (
+          <p className={styles.errorText}>{imageError}</p>
         )}
       </div>
 
-      {/* Name */}
       <div className={styles.fieldGroup}>
         <label className={styles.label}>*Product Name</label>
         <input
@@ -201,10 +215,11 @@ export default function ProductForm({
           maxLength={100}
           required
         />
-        {nameError && <p className={styles.errorText}>{nameError}</p>}
+        {submitAttempt && nameError && (
+          <p className={styles.errorText}>{nameError}</p>
+        )}
       </div>
 
-      {/* Variants */}
       <div className={styles.variantSection}>
         <label className={styles.label}>*Product Variant</label>
         <button
@@ -214,11 +229,14 @@ export default function ProductForm({
         >
           Add more product variant
         </button>
-        {variantNameError && (
+        {submitAttempt && variantNameError && (
           <p className={styles.errorText}>{variantNameError}</p>
         )}
-        {variantDetailError && (
+        {submitAttempt && variantDetailError && (
           <p className={styles.errorText}>{variantDetailError}</p>
+        )}
+        {submitAttempt && variantImageError && (
+          <p className={styles.errorText}>{variantImageError}</p>
         )}
         {variants.length > 0 && (
           <table className={styles.table}>
@@ -301,7 +319,6 @@ export default function ProductForm({
         )}
       </div>
 
-      {/* Category */}
       <div className={styles.fieldGroup}>
         <label className={styles.label}>*Category</label>
         <select
@@ -319,7 +336,6 @@ export default function ProductForm({
         </select>
       </div>
 
-      {/* Description */}
       <div className={styles.fieldGroup}>
         <label className={styles.label}>*Description</label>
         <textarea
@@ -329,10 +345,11 @@ export default function ProductForm({
           maxLength={3000}
           required
         />
-        {descError && <p className={styles.errorText}>{descError}</p>}
+        {submitAttempt && descError && (
+          <p className={styles.errorText}>{descError}</p>
+        )}
       </div>
 
-      {/* Buttons */}
       <div className={styles.buttonRow}>
         <button type="button" className={styles.cancelBtn} onClick={onCancel}>
           Cancel
@@ -341,11 +358,14 @@ export default function ProductForm({
           type="submit"
           className={styles.submitBtn}
           disabled={
-            variants.length === 0 ||
-            Boolean(nameError) ||
-            Boolean(descError) ||
-            Boolean(variantNameError) ||
-            Boolean(variantDetailError)
+            variants.length === 0 
+            // ||
+            // Boolean(nameError) ||
+            // Boolean(descError) ||
+            // Boolean(variantNameError) ||
+            // Boolean(variantDetailError) ||
+            // Boolean(imageError) ||
+            // Boolean(variantImageError)
           }
         >
           {variants.length === 0
