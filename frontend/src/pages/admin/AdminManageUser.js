@@ -365,28 +365,6 @@ function UserManagement() {
                     </span>
                   </div>
                 </div>
-
-                <div className="user-activity">
-                  <h5>Hoạt động gần đây</h5>
-                  <div className="activity-list">
-                    {selectedUser.recentActivities?.map((activity, index) => (
-                      <div key={index} className="activity-item">
-                        <div className="activity-icon">
-                          <i className={activity.icon}></i>
-                        </div>
-                        <div className="activity-content">
-                          <span className="activity-text">{activity.text}</span>
-                          <span className="activity-time">{activity.time}</span>
-                        </div>
-                      </div>
-                    )) || (
-                      <div className="no-activity">
-                        <i className="ti ti-info-circle"></i>
-                        <span>Chưa có hoạt động nào</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
           </div>

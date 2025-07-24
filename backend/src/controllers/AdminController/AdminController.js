@@ -364,7 +364,7 @@ const setDefaultPaymentMethod = async (req, res) => {
 };
 const getAllOrder = async (req, res) => {
   try {
-    const orders = await Orders.find().populate("Items").populate("PaymentId");
+    const orders = await Orders.find().populate("Items").populate("PaymentId").populate("BuyerId");
 
     const totalTransactions = orders.length;
 
@@ -421,6 +421,28 @@ const getAllProduct = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const updateData = req.body;
+
+    // Nếu có file được upload (ảnh đại diện)
+    if (req.file && req.file.path) {
+      updateData.Image = req.file.path; // Gán link Cloudinary vào trường Image
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    res.json(updatedUser);
+  } catch (err) {
+    console.error("Lỗi khi cập nhật người dùng:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   getAllUser,
   getAllShop,
@@ -437,4 +459,5 @@ module.exports = {
   getAllOrder,
   getAllProduct,
   acceptRegisterShopRequest,
+  updateProfile,
 };
