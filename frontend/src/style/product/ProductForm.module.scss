@@ -5,6 +5,7 @@ $bg-light: #f9fafb;      // gray-100
 $btn-yellow: #facc15;    // yellow-400
 $btn-blue: #3b82f6;      // blue-500
 $btn-red: #ef4444;       // red-500
+$btn-green:  #00FF00; 
 
 .form {
   max-width: 1200px;
@@ -95,6 +96,18 @@ $btn-red: #ef4444;       // red-500
   width: 100%;
 }
 
+.cancelBtn {
+  display: block;
+  padding: 0.75rem 1.5rem;
+  background: $btn-green;
+  border: none;
+  border-radius: $input-radius;
+  color:  #111827;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
 .deleteBtn {
   background: none;
   border: none;
@@ -124,4 +137,27 @@ $btn-red: #ef4444;       // red-500
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.errorText {
+  color: $btn-red;
+  font-style: italic;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.preview {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.variantThumb {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-top: 0.5rem;
 }

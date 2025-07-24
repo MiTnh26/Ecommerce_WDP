@@ -1,4 +1,4 @@
-const { User, Payment } = require("../../models");
+const { User, Payment, Products } = require("../../models");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
@@ -9,7 +9,9 @@ const nodemailer = require("nodemailer");
 // const  {Order,OrderItem}  = require("../../models/index");
 const Order = require("../../models/Orders");
 const OrderItem = require("../../models/OrderItems");
-const Shop = require("../../models/Shops")
+
+const Shops = require("../../models/Shops");
+
 
 const client = new OAuth2Client(process.env.O2Auth_Key);
 
@@ -170,22 +172,48 @@ const getUserById = async (req, res) => {
   }
 };
 
+// const updateUser = async (req, res) => {
+//   try {
+//     const updateData = req.body;
+//     const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+//     res.json(updatedUser);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 const updateUser = async (req, res) => {
   try {
     const updateData = req.body;
+
+    // Nếu có file được upload (ảnh đại diện)
+    if (req.file && req.file.path) {
+      updateData.Image = req.file.path; // Gán link Cloudinary vào trường Image
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       updateData,
       { new: true }
     );
+
     res.json(updatedUser);
   } catch (err) {
+    console.error("Lỗi khi cập nhật người dùng:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 const addAddress = async (req, res) => {
   const { id } = req.params; // user id
-  const { phoneNumber, receiverName, status, province, district, ward, detail } = req.body;
+  const {
+    phoneNumber,
+    receiverName,
+    status,
+    province,
+    district,
+    ward,
+    detail,
+  } = req.body;
 
   try {
     const user = await User.findById(id);
@@ -209,7 +237,6 @@ const addAddress = async (req, res) => {
       detail,
     };
 
-
     user.ShippingAddress.push(newAddress);
     await user.save();
 
@@ -222,7 +249,15 @@ const addAddress = async (req, res) => {
 };
 const updateAddress = async (req, res) => {
   const { userId, addressId } = req.params;
-  const { phoneNumber, receiverName, status, province, district, ward, detail } = req.body;
+  const {
+    phoneNumber,
+    receiverName,
+    status,
+    province,
+    district,
+    ward,
+    detail,
+  } = req.body;
 
   try {
     const user = await User.findById(userId);
@@ -279,7 +314,7 @@ const getAddressById = async (req, res) => {
       _id: address._id,
       receiverName: address.receiverName,
       phoneNumber: address.phoneNumber,
-      
+
       status: address.status,
       province: address.province,
       district: address.district,
@@ -352,15 +387,24 @@ const getOrderByUserId = async (req, res) => {
     const orders = await Order.find({ BuyerId: userId })
       .populate({
         path: "Items",
-        select: "-__v -createdAt -updatedAt", // bỏ bớt trường phụ nếu cần
+        select: "-__v -createdAt -updatedAt",
       })
       .populate({
         path: "ShopId",
       })
+      .populate({
+        path: "PaymentId",
+        select: "-__v -createdAt -updatedAt",
+      })
       .sort({ createdAt: -1 })
       .lean();
 
-    res.status(200).json(orders);
+    const fixedOrders = orders.map((order) => ({
+      ...order,
+      Items: order.Items ? [order.Items] : [],
+    }));
+
+    res.status(200).json(fixedOrders);
   } catch (error) {
     console.error("Error when getting orders by user:", error);
     res
@@ -370,17 +414,27 @@ const getOrderByUserId = async (req, res) => {
 };
 
 const getOrderDetails = async (req, res) => {
+  const rawOrderId = req.params.orderId;
+  const orderId = rawOrderId?.trim();
+  console.log("Raw orderId param:", orderId);
   try {
-    const { orderId } = req.params;
+    // const { orderId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return res.status(400).json({ message: "Invalid orderId format" });
     }
 
-    // Tìm đơn hàng và populate các OrderItem
     const order = await Order.findById(orderId)
       .populate({
-        path: "Items", // ref trong Order schema
+        path: "Items",
+        select: "-__v -createdAt -updatedAt",
+      })
+      .populate({
+        path: "PaymentId",
+        select: "-__v -createdAt -updatedAt",
+      })
+      .populate({
+        path: "BuyerId",
         select: "-__v -createdAt -updatedAt",
       })
       .lean();
@@ -389,7 +443,13 @@ const getOrderDetails = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    res.status(200).json(order);
+    // Wrap Items thành mảng nếu cần
+    const fixedOrder = {
+      ...order,
+      Items: order.Items ? [order.Items] : [],
+    };
+
+    res.status(200).json(fixedOrder);
   } catch (error) {
     console.error("Error fetching order details:", error);
     res
@@ -447,8 +507,219 @@ const findOwnerByUserId = async (req, res) => {
     res.status(500).json({ message: "Failed to find owner", error });
   }
 }
+const changePasswordInUser = async (req, res) => {
+  const { id } = req.params;
+  const { currentPassword, newPassword } = req.body;
+  console.log("id", id);
+  console.log("currentPassword", currentPassword);
+
+  try {
+    const user = await User.findById(id);
+    if (!user)
+      return res.status(404).json({ message: "Người dùng không tồn tại" });
+    console.log("user.Password", user.Password);
+    const isMatch = await bcrypt.compare(currentPassword, user.Password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+    user.Password = hashedNewPassword;
+    await user.save();
+
+    res.json({ message: "Đổi mật khẩu thành công" });
+  } catch (err) {
+    console.error("Error changing password:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+const cancelOrder = async (req, res) => {
+  const { orderId } = req.params;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: "Invalid orderId" });
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.Status === "Cancelled") {
+      return res.status(400).json({ message: "Order is already cancelled" });
+    }
+
+    order.Status = "Cancelled";
+    await order.save();
+
+    res.status(200).json({ message: "Order cancelled successfully", order });
+  } catch (error) {
+    console.error("❌ Error cancelling order:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+const getAddressByUserId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(id).select("ShippingAddress");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      addresses: user.ShippingAddress || [],
+    });
+  } catch (error) {
+    console.error("❌ Error get address by userId:", error);
+    res.status(500).json({ message: "Failed get address by userId", error });
+  }
+};
+const getShopById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const shop = await Shops.findById(id);
+    if (!shop) {
+      return res.status(404).json({ message: "Shop not fount" });
+    }
+    res.status(200).json(shop);
+  } catch (error) {
+    res.status(500).json({ message: "Fail get shop by Id", error });
+  }
+};
+const getProductById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await Products.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not fount" });
+    }
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ message: "Fail get product by Id", error });
+  }
+};
+const getProductVariantById = async (req, res) => {
+  const { productId, productVariantId } = req.params;
+
+  try {
+    const product = await Products.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const productVariant = product.ProductVariant.id(productVariantId);
+    if (!productVariant)
+      return res.status(404).json({ message: "ProductVariant not found" });
+
+    // Trả về object đầy đủ rõ ràng để tránh mất trường nào
+    const result = {
+      _id: productVariant._id,
+      Image: productVariant.Image,
+      Price: productVariant.Price,
+
+      ProductVariantName: productVariant.ProductVariantName,
+      StockQuantity: productVariant.StockQuantity,
+      Status: productVariant.Status,
+    };
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to get address", error });
+  }
+};
+const getPaymentMethod = async (req, res) => {
+  try {
+    const paymentMethod = await Payment.find();
+
+    if (!paymentMethod || paymentMethod.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy phương thức thanh toán nào." });
+    }
+
+    res.status(200).json(paymentMethod);
+  } catch (error) {
+    console.error("❌ Lỗi khi lấy phương thức thanh toán:", error);
+    res
+      .status(500)
+      .json({ message: "Lấy phương thức thanh toán thất bại", error });
+  }
+};
+const createOrderItems = async (req, res) => {
+  try {
+    // Lấy dữ liệu từ body
+    const { Product, Total, Status } = req.body;
+    if (!Product || !Array.isArray(Product) || Product.length === 0) {
+      return res.status(400).json({ message: "Product array is required" });
+    }
+    // Tạo order item mới
+    const newOrderItem = new OrderItem({
+      Product,
+      Total,
+      Status: Status || "Pending",
+    });
+    await newOrderItem.save();
+    res.status(201).json({
+      message: "Order item created successfully",
+      orderItem: newOrderItem,
+    });
+  } catch (error) {
+    console.error("Error creating order item:", error);
+    res.status(500).json({ message: "Failed to create order item", error });
+  }
+};
+const checkout = async (req, res) => {
+  try {
+    const {
+      OrderDate,
+      PaymentId,
+      ShippingAddress,
+      Status,
+      TotalAmount,
+      BuyerId,
+      ShopId,
+      Items,
+    } = req.body;
+
+    if (
+      !PaymentId ||
+      !ShippingAddress ||
+      !TotalAmount ||
+      !BuyerId ||
+      !ShopId ||
+      !Items
+    ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const newOrder = new Order({
+      OrderDate: OrderDate || Date.now(),
+      PaymentId,
+      ShippingAddress,
+      Status: Status || "Pending",
+      TotalAmount,
+      BuyerId,
+      ShopId,
+      Items,
+    });
+    await newOrder.save();
+    res
+      .status(201)
+      .json({ message: "Order created successfully", order: newOrder });
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ message: "Failed to create order", error });
+  }
+};
 module.exports = {
   setDefaultAddress,
+  changePasswordInUser,
   getOrderDetails,
   getOrderByUserId,
   addAddress,
@@ -463,5 +734,13 @@ module.exports = {
   getUserById,
   updateUser,
   getPaymentForCheckout,
+  cancelOrder,
+  getAddressByUserId,
+  getShopById,
+  getProductById,
+  getProductVariantById,
+  getPaymentMethod,
+  createOrderItems,
+  checkout,
   findOwnerByUserId
 };

@@ -48,10 +48,13 @@ export default function CategoryList() {
     // eslint-disable-next-line
   }, []);
 
+  // Giả sử shopId lấy từ localStorage
+  const shopId = localStorage.getItem('shopId');
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/seller/categories");
+      const res = await axios.get(`http://localhost:5000/seller/categories?shopId=${shopId}`);
       setCategories(res.data);
     } catch (err) {
       setError("Error fetching categories");
@@ -87,12 +90,14 @@ export default function CategoryList() {
           await axios.put(`http://localhost:5000/seller/categories/${editCategory._id}`, {
             CategoryName: values.name,
             Status: values.status,
+            shopId: shopId
           });
         } else {
           // Add new category
           await axios.post("http://localhost:5000/seller/categories", {
             CategoryName: values.name,
             Status: values.status,
+            shopId: shopId
           });
         }
         await fetchCategories();
@@ -110,7 +115,7 @@ export default function CategoryList() {
   // Handle status change
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/seller/categories/${id}`, { Status: newStatus });
+      await axios.put(`http://localhost:5000/seller/categories/${id}`, { Status: newStatus, shopId: shopId });
       await fetchCategories();
     } catch (err) {
       setError("Error updating status");
@@ -121,7 +126,7 @@ export default function CategoryList() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this category?")) return;
     try {
-      await axios.delete(`http://localhost:5000/seller/categories/${id}`);
+      await axios.delete(`http://localhost:5000/seller/categories/${id}?shopId=${shopId}`);
       await fetchCategories();
     } catch (err) {
       setError("Error deleting category");
@@ -130,7 +135,7 @@ export default function CategoryList() {
 
   // Filter and sort categories
   const filteredCategories = categories.filter((category) => {
-    const matchesSearch = category.CategoryName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = category.CategoryName.toLowerCase().includes(searchTerm.toLowerCase().trim().replace(/\s+/g, ' '));
     const matchesTab = activeTab === "All" || category.Status === activeTab;
     return matchesSearch && matchesTab;
   });

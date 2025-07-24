@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const Cart = require("../../models/Cart");
 const User = require("../../models/Users");
 const { Shop } = require("../../models");
+const Order = require("../../models/Orders");
+const OrderItem = require("../../models/OrderItems");
+
 
 // helper to calculate total quantity in cart
 const calculateTotalQuantity = (items) => {
@@ -401,3 +404,69 @@ exports.getToTalItemInCart = async (req, res) => {
     });
   }
 };
+exports.buyAgain = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const cleanedOrderId = orderId.trim(); 
+    const userId = req.body.UserId;
+
+    if (!userId) return res.status(400).json({ message: "Thiếu UserId" });
+
+    // Lấy đơn hàng và populate OrderItem
+    const order = await Order.findById(cleanedOrderId).populate({
+      path: "Items",
+      model: "OrderItem",
+    });
+
+    if (!order || !order.Items) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng hoặc không có sản phẩm" });
+    }
+
+    const orderItem = order.Items; // Vì chỉ là 1 object chứ không phải mảng
+
+    if (!orderItem.Product || orderItem.Product.length === 0) {
+      return res.status(400).json({ message: "Không có sản phẩm trong OrderItem" });
+    }
+
+    // Tìm giỏ hàng người dùng
+    const cart = await Cart.findOne({ UserId: userId });
+    if (!cart) {
+      return res.status(404).json({ message: "Không tìm thấy giỏ hàng người dùng" });
+    }
+
+    let totalProductCount = 0;
+
+    // Lặp qua từng product trong OrderItem
+    for (const product of orderItem.Product) {
+      const newCartItem = {
+        ProductName: product.ProductName,
+        ProductImage: product.ProductImage,
+        ShopID: order.ShopId,
+        ProductVariant: product.ProductVariant.map((variant) => ({
+          _id: variant._id,
+          Image: variant.Image,
+          Price: variant.Price,
+          ProductVariantName: variant.ProductVariantName,
+          Quantity: variant.Quantity,
+        })),
+      };
+
+      cart.Items.push(newCartItem);
+      totalProductCount += 1;
+    }
+
+    if (totalProductCount === 0) {
+      return res.status(400).json({ message: "Không có sản phẩm hợp lệ để mua lại" });
+    }
+
+    cart.Quantity += totalProductCount;
+    await cart.save();
+
+    res.status(200).json({ message: "Mua lại thành công", cart });
+  } catch (err) {
+    console.error("Buy Again Error:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
+

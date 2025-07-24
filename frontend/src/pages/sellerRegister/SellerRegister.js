@@ -9,61 +9,193 @@ import { useNavigate } from "react-router-dom";
 
 function SellerRegistrationWizard() {
   const navigate = useNavigate();
-
-  // We’re on step 2 (Shop Setup) in your wizard
   const step = 2;
 
-  // 1) All possible fields in the updated Shop schema:
+  // form state
   const [formData, setFormData] = useState({
     shopName: "",
-    shopAvatar: null, // file input
+    shopAvatar: null,
     shopDescription: "",
     province: "",
     district: "",
     ward: "",
-    // status is not set manually; defaults to "Pending"
   });
 
-  // 2) Logged-in owner's ObjectId (read from localStorage)
+  const [nameTouched, setNameTouched] = useState(false);
+  const [descTouched, setDescTouched] = useState(false);
+
+  // validation errors
+  const [nameError, setNameError] = useState("");
+  const [descError, setDescError] = useState("");
+  const [avatarError, setAvatarError] = useState("");
+  const [addressError, setAddressError] = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // address dropdown data
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  // pull ownerId from localStorage
   const [ownerId, setOwnerId] = useState("");
+
+  const plainDesc = formData.shopDescription.replace(/<[^>]+>/g, "").trim();
+  const truncatedDesc =
+    plainDesc.length > 30 ? plainDesc.slice(0, 30) + "…" : plainDesc;
+
   useEffect(() => {
     const raw = window.localStorage.getItem("user");
     if (raw) {
       try {
         const user = JSON.parse(raw);
-        if (user && user._id) {
-          setOwnerId(user._id);
-        }
-      } catch {
-        console.warn("Could not parse stored user");
-      }
+        if (user._id) setOwnerId(user._id);
+      } catch {}
     }
   }, []);
 
-  // 3) handleChange for text + file inputs
-  const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
-    if (type === "file") {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+  // fetch provinces once
+  useEffect(() => {
+    fetch("https://provinces.open-api.vn/api/p/")
+      .then((res) => res.json())
+      .then(setProvinces)
+      .catch(console.error);
+  }, []);
+
+  // validate shopName
+  useEffect(() => {
+    const trimmed = formData.shopName.trim();
+    if (trimmed.length === 0 && submitAttempted) {
+      setNameError("Shop name is required.");
+    } else if (trimmed.length > 0 && trimmed.length < 10) {
+      setNameError("Shop name must be at least 10 characters.");
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setNameError("");
     }
+  }, [formData.shopName, submitAttempted]);
+
+  // validate shopDescription
+  useEffect(() => {
+    const text = formData.shopDescription.replace(/<[^>]+>/g, "").trim();
+    if (text.length === 0 && submitAttempted) {
+      setDescError("Description is required.");
+    } else if (text.length > 0 && text.length < 50) {
+      setDescError("Description must be at least 50 characters.");
+    } else {
+      setDescError("");
+    }
+  }, [formData.shopDescription, submitAttempted]);
+
+  // avatar required
+  useEffect(() => {
+    if (submitAttempted) {
+      if (!formData.shopAvatar) {
+        setAvatarError("Shop avatar is required.");
+      } else {
+        setAvatarError("");
+      }
+    }
+  }, [formData.shopAvatar, submitAttempted]);
+
+  // address required
+  useEffect(() => {
+    if (submitAttempted) {
+      if (!formData.province || !formData.district || !formData.ward) {
+        setAddressError("Please select province, district & ward.");
+      } else {
+        setAddressError("");
+      }
+    }
+  }, [formData.province, formData.district, formData.ward, submitAttempted]);
+
+  // handle generic input changes
+  const handleChange = (e) => {
+    const { name, type, value, files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "file" ? files[0] : value,
+    }));
   };
 
-  // 4) handleDescriptionChange for ReactQuill
   const handleDescriptionChange = (value) => {
     setFormData((prev) => ({ ...prev, shopDescription: value }));
   };
 
-  // 5) handleSave → build FormData and POST to /seller/registerShop
-  const handleSave = async () => {
-    try {
-      if (!ownerId) {
-        alert("Error: You must be logged in to register a shop.");
-        return;
-      }
+  // when user selects a province
+  const handleProvinceChange = async (e) => {
+    const name = e.target.value;
+    const selected = provinces.find((p) => p.name === name);
+    setFormData((prev) => ({
+      ...prev,
+      province: selected?.name || "",
+      district: "",
+      ward: "",
+    }));
 
-      // Build FormData
+    if (!selected) {
+      setDistricts([]);
+      setWards([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/p/${selected.code}?depth=2`
+      );
+      const data = await res.json();
+      setDistricts(data.districts || []);
+      setWards([]);
+    } catch (err) {
+      console.error(err);
+      setDistricts([]);
+      setWards([]);
+    }
+  };
+
+  // when user selects a district
+  const handleDistrictChange = async (e) => {
+    const name = e.target.value;
+    const selected = districts.find((d) => d.name === name);
+    setFormData((prev) => ({
+      ...prev,
+      district: selected?.name || "",
+      ward: "",
+    }));
+
+    if (!selected) {
+      setWards([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/d/${selected.code}?depth=2`
+      );
+      const data = await res.json();
+      setWards(data.wards || []);
+    } catch (err) {
+      console.error(err);
+      setWards([]);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!ownerId) {
+      alert("You must be logged in to register a shop.");
+      return;
+    }
+
+    setSubmitAttempted(true);
+
+    if (
+      !formData.shopName.trim() ||
+      !formData.shopDescription.replace(/<[^>]+>/g, "").trim() ||
+      nameError ||
+      descError
+    ) {
+      return;
+    }
+
+    try {
       const data = new FormData();
       data.append("shopName", formData.shopName);
       data.append("shopDescription", formData.shopDescription);
@@ -71,29 +203,22 @@ function SellerRegistrationWizard() {
       data.append("province", formData.province);
       data.append("district", formData.district);
       data.append("ward", formData.ward);
-      // Append the file under the field name "shopAvatar" to match Multer config
-      if (formData.shopAvatar) {
-        data.append("shopAvatar", formData.shopAvatar);
-      }
+      if (formData.shopAvatar) data.append("shopAvatar", formData.shopAvatar);
 
-      // POST to back end
       const response = await fetch(
         "http://localhost:5000/seller/registerShop",
-        {
-          method: "POST",
-          body: data,
-          // Do NOT set Content-Type; browser will set multipart/form-data boundary
-        }
+        { method: "POST", body: data }
       );
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to register shop.");
+        const err = await response.json();
+        throw new Error(err.message || "Failed to register shop.");
       }
 
       const newShop = await response.json();
-      console.log("Shop registered:", newShop);
+
       alert("Shop registered successfully!");
+      // Lưu shopId vào localStorage
+      localStorage.setItem("shopId", newShop._id);
       // Optionally, clear form or navigate:
       setFormData({
         shopName: "",
@@ -104,9 +229,10 @@ function SellerRegistrationWizard() {
         ward: "",
       });
 
-      navigate("/Ecommerce/product/product-page");
+      // navigate("/Ecommerce/product/product-page");
+      navigate("/Ecommerce/home");
     } catch (err) {
-      console.error("Error registering shop:", err);
+      console.error(err);
       alert("Error: " + err.message);
     }
   };
@@ -114,12 +240,11 @@ function SellerRegistrationWizard() {
   return (
     <div className={styles.container}>
       <h2 className={styles.header}>Seller Registration – Shop Setup</h2>
-
       <form>
         {step === 2 && (
           <div className={styles.fieldset}>
             {/* Shop Name */}
-            <div>
+            <div className={styles.fieldGroup}>
               <label className={styles.label} htmlFor="shopName">
                 Shop Name
               </label>
@@ -127,14 +252,20 @@ function SellerRegistrationWizard() {
                 id="shopName"
                 name="shopName"
                 type="text"
-                required
                 className={styles.input}
                 value={formData.shopName}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  if (!nameTouched) setNameTouched(true);
+                }}
+                onBlur={() => setNameTouched(true)}
               />
+              {(nameTouched || submitAttempted) && nameError && (
+                <p className={styles.errorText}>{nameError}</p>
+              )}
             </div>
 
-            {/* Shop Avatar (file upload) */}
+            {/* Shop Avatar */}
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
               <div style={{ flex: 1 }}>
                 <label className={styles.label} htmlFor="shopAvatar">
@@ -148,19 +279,30 @@ function SellerRegistrationWizard() {
                   className={styles.fileInput}
                   onChange={handleChange}
                 />
+                {avatarError && (
+                  <p className={styles.errorText}>{avatarError}</p>
+                )}
               </div>
             </div>
 
-            {/* Shop Description (Rich‐text) */}
+            {/* Shop Description */}
             <div style={{ marginTop: "1rem" }}>
               <label className={styles.label}>Shop Description</label>
               <ReactQuill
                 theme="snow"
                 value={formData.shopDescription}
-                onChange={handleDescriptionChange}
+                onChange={(value) => {
+                  handleDescriptionChange(value);
+                  if (!descTouched) setDescTouched(true);
+                }}
+                onBlur={() => setDescTouched(true)}
               />
+              {(descTouched || submitAttempted) && descError && (
+                <p className={styles.errorText}>{descError}</p>
+              )}
             </div>
 
+            {/* Address Dropdowns */}
             <div className={styles.addressSection}>
               <div className={styles.addressLabel}>Address</div>
               <div className={styles.addressInputs}>
@@ -168,45 +310,68 @@ function SellerRegistrationWizard() {
                   <label className={styles.label} htmlFor="province">
                     Province
                   </label>
-                  <input
+                  <select
                     id="province"
                     name="province"
-                    type="text"
                     className={styles.input}
                     value={formData.province}
-                    onChange={handleChange}
-                  />
+                    onChange={handleProvinceChange}
+                  >
+                    <option value="">Select province</option>
+                    {provinces.map((p) => (
+                      <option key={p.code} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div className={styles.addressField}>
                   <label className={styles.label} htmlFor="district">
                     District
                   </label>
-                  <input
+                  <select
                     id="district"
                     name="district"
-                    type="text"
                     className={styles.input}
                     value={formData.district}
-                    onChange={handleChange}
-                  />
+                    onChange={handleDistrictChange}
+                  >
+                    <option value="">Select district</option>
+                    {districts.map((d) => (
+                      <option key={d.code} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div className={styles.addressField}>
                   <label className={styles.label} htmlFor="ward">
                     Ward
                   </label>
-                  <input
+                  <select
                     id="ward"
                     name="ward"
-                    type="text"
                     className={styles.input}
                     value={formData.ward}
                     onChange={handleChange}
-                  />
+                  >
+                    <option value="">Select ward</option>
+                    {wards.map((w) => (
+                      <option key={w.code} value={w.name}>
+                        {w.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
+              {addressError && (
+                <p className={styles.errorText}>{addressError}</p>
+              )}
             </div>
 
-            {/* Preview Section */}
+            {/* Preview */}
             <div style={{ marginTop: "1rem" }}>
               <label className={styles.label}>Preview</label>
               <div className={styles.previewBox}>
@@ -220,25 +385,31 @@ function SellerRegistrationWizard() {
                   )}
                   <h3>{formData.shopName || "Your Shop Name"}</h3>
                 </div>
-                <div
-                  className={styles.previewDesc}
-                  dangerouslySetInnerHTML={{
-                    __html: formData.shopDescription,
-                  }}
-                />
+                <div className={styles.previewDesc}>
+                  {truncatedDesc || "Your shop description preview…"}
+                </div>
                 <div className={styles.previewAddress}>
-                  {formData.province || formData.district || formData.ward ? (
+                  {(formData.province ||
+                    formData.district ||
+                    formData.ward) && (
                     <p>
-                      {formData.province}, {formData.district}, {formData.ward}
+                      {[
+                        formData.detail,
+                        formData.ward,
+                        formData.district,
+                        formData.province,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
                     </p>
-                  ) : null}
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Navigation / Save Button */}
+        {/* Save Button */}
         <div className={styles.navRow} style={{ marginTop: "1.5rem" }}>
           <button
             type="button"
