@@ -186,6 +186,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
       TotalPrice: calculateTotalPriceChecked()
     }
     console.log("dataCheckOut", dataCheckOut);
+    localStorage.setItem("checkOut", JSON.stringify(dataCheckOut));
     setCheckOut(dataCheckOut);
     navigate("/Ecommerce/user/checkout")
   }

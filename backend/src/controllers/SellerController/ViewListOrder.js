@@ -37,7 +37,7 @@ exports.getOrdersByShop = async (req, res) => {
 
     console.log("Querying orders for shopId:", shopObjectId);
     const orders = await Order.find({ ShopId: shopObjectId })
-      .populate("BuyerId", "Username")
+      .populate("BuyerId", "Username ShippingAddress")
       .lean()
       .sort({ createdAt: 1 });
 
@@ -50,14 +50,31 @@ exports.getOrdersByShop = async (req, res) => {
         shopId: shopId,
       });
     }
-    
-    const result = orders.map((order) => ({
-      _id: order._id,
-      customerName: order.BuyerId.Username || "N/A",
-      dateAdd: order.OrderDate ,
-      status: order.Status,
-      totalAmount: order.TotalAmount,
-    }));
+
+    const result = orders.map((order) => {
+      let customerName = "N/A";
+      if (order.BuyerId && Array.isArray(order.BuyerId.ShippingAddress)) {
+        // Ưu tiên lấy receiverName của địa chỉ mặc định
+        const defaultAddr = order.BuyerId.ShippingAddress.find(
+          (addr) => addr.status === "Default"
+        );
+        if (defaultAddr && defaultAddr.receiverName) {
+          customerName = defaultAddr.receiverName;
+        } else if (
+          order.BuyerId.ShippingAddress.length > 0 &&
+          order.BuyerId.ShippingAddress[0].receiverName
+        ) {
+          customerName = order.BuyerId.ShippingAddress[0].receiverName;
+        }
+      }
+      return {
+        _id: order._id,
+        customerName,
+        dateAdd: order.OrderDate,
+        status: order.Status,
+        totalAmount: order.TotalAmount,
+      };
+    });
 
     console.log("Successfully processed all orders");
     res.json(result);
