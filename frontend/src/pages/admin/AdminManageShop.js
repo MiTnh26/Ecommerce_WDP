@@ -81,7 +81,7 @@ function ShopManagement() {
 
   const handleApproveShop = async (shopId) => {
     const confirmAction = window.confirm(
-      "Are You Sure To Update This Shop Status ?"
+      "Are You Sure To Accept This Shop Open Request ?"
     );
     if (confirmAction) {
       try {

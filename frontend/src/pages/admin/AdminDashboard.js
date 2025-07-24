@@ -10,6 +10,8 @@ function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -148,15 +150,15 @@ function AdminDashboard() {
             let priceCount = 0;
 
             product.ProductVariant.forEach((variant) => {
-              if (variant.Status === "Active") {
-                activeVariants++;
-                totalStock += variant.StockQuantity || 0;
-                if (variant.Price) {
-                  totalPrice += variant.Price;
-                  priceCount++;
-                }
-              }
-            });
+  if (variant.Status === "Active") {
+    activeVariants++;
+    totalStock += variant.StockQuantity || 0;
+    if (variant.Price) {
+      totalPrice += variant.Price;
+      priceCount++;
+    }
+  }
+});
 
             // Calculate average price from active variants
             if (priceCount > 0) {
@@ -318,9 +320,9 @@ function AdminDashboard() {
       .map((order) => {
         // Find user info for this order
         const user = usersData.find((u) => u._id === order.BuyerId);
-        const customerName = user
-          ? user.Username
-          : `Buyer ${order.BuyerId?.slice(-4) || "Unknown"}`;
+        const customerName = order.BuyerId
+  ? `${order.BuyerId.FirstName || ""} ${order.BuyerId.LastName || ""}`.trim()
+  : "N/A";
 
         // Get first product name from order
         let productName = "Sản phẩm";
@@ -454,6 +456,16 @@ function AdminDashboard() {
 
   const handleRetry = () => {
     fetchDashboardData();
+  };
+
+  const handleOrderClick = (order) => {
+    setSelectedOrder(order);
+    setShowOrderModal(true);
+  };
+
+  const handleCloseOrderModal = () => {
+    setShowOrderModal(false);
+    setSelectedOrder(null);
   };
 
   if (loading) {
@@ -733,7 +745,11 @@ function AdminDashboard() {
                   {recentOrders.map((order, index) => (
                     <tr key={order.id || index}>
                       <td>
-                        <span className="fw-bold text-primary">
+                        <span
+                          className="fw-bold text-primary"
+                          style={{ cursor: "pointer", textDecoration: "underline" }}
+                          onClick={() => handleOrderClick(order)}
+                        >
                           #{order.orderId}
                         </span>
                       </td>
@@ -782,6 +798,64 @@ function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Order Detail Modal */}
+      {showOrderModal && selectedOrder && (
+        <div className="modal fade show" style={{ display: "block", background: "rgba(0,0,0,0.4)" }} tabIndex="-1" role="dialog">
+          <div className="modal-dialog" role="document">
+            <div className="modal-content" style={{ borderRadius: 16, overflow: 'hidden' }}>
+              <div className="modal-header" style={{ background: '#fff7ea', borderBottom: 'none' }}>
+                <h5 className="modal-title" style={{ fontWeight: 700 }}>Chi tiết đơn hàng</h5>
+                <button type="button" className="close" onClick={handleCloseOrderModal}>
+                  <span>&times;</span>
+                </button>
+              </div>
+              <div className="modal-body" style={{ background: '#fff', padding: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+                  {/* Avatar sản phẩm hoặc khách hàng nếu có */}
+                  {selectedOrder.BuyerId?.Image && (
+                    <img src={selectedOrder.BuyerId.Image} alt="avatar" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #eee' }} />
+                  )}
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 20 }}>#{selectedOrder.orderId}</div>
+                    <div style={{ color: '#888', fontSize: 14 }}>{selectedOrder.customerName}</div>
+                    <div style={{ marginTop: 4 }}>
+                      <span style={{ background: '#e0f7fa', color: '#007bff', borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 500, marginRight: 8 }}>{selectedOrder.BuyerId?.UserRole?.toUpperCase() || 'USER'}</span>
+                      {selectedOrder.status && (
+                        <span style={{ background: selectedOrder.status === 'delivered' ? '#e6f9ec' : '#ffeaea', color: selectedOrder.status === 'delivered' ? '#22c55e' : '#f87171', borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 500 }}>
+                          {selectedOrder.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                  <div style={{ flex: 1, background: '#f8fafc', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+                    <div style={{ color: '#888', fontSize: 13 }}>Ngày đặt</div>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>{selectedOrder.date ? new Date(selectedOrder.date).toLocaleDateString('vi-VN') : 'N/A'}</div>
+                  </div>
+                  <div style={{ flex: 1, background: '#f8fafc', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+                    <div style={{ color: '#888', fontSize: 13 }}>Tổng tiền</div>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>{formatCurrency(selectedOrder.totalAmount)}</div>
+                  </div>
+                </div>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>Thông tin đơn hàng</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                  <div><i className="ti ti-user" style={{ marginRight: 8 }}></i>{selectedOrder.customerName}</div>
+                  <div><i className="ti ti-package" style={{ marginRight: 8 }}></i>{selectedOrder.productName}</div>
+                  <div><i className="ti ti-map-pin" style={{ marginRight: 8 }}></i>{selectedOrder.shippingAddress || 'N/A'}</div>
+                  <div><i className="ti ti-credit-card" style={{ marginRight: 8 }}></i>{selectedOrder.PaymentId?.Name || 'N/A'}</div>
+                </div>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>Hoạt động gần đây</div>
+                <div style={{ background: '#f8fafc', borderRadius: 8, padding: 16, textAlign: 'center', color: '#888' }}>
+                  <i className="ti ti-info-circle" style={{ fontSize: 20, marginBottom: 4 }}></i>
+                  <div>Chưa có hoạt động nào</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
