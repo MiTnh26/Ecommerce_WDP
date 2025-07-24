@@ -7,7 +7,7 @@ import { useSearchParams , useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AppContext  } from "../../store/Context";
 import { useContext } from "react"; 
-
+import img_empty from "../../assets/images/data-empty.png";
 const ProductList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams] = useSearchParams();
@@ -20,6 +20,7 @@ const ProductList = () => {
   const [whereToBuyFilter, setWhereToBuyFilter] = useState([]);
   const [fromPrice, setFromPrice] = useState();
   const [toPrice, setToPrice] = useState();
+  const [showAllWTB, setShowAllWTB] = useState(false);
 
   const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
@@ -31,18 +32,16 @@ const ProductList = () => {
 
     // fetch data where to buy
     const loadData = async () => {
-            try {
-                const res = await axios.get(`${baseURL}/seller/getShopProvince`, {
-                    withCredentials: true,
-                });
-                //console.log(res.data)
-                setWhereToBuy(res.data);
-            } catch (error) {
-                console.error("Lỗi khi load province:", error);
-            }
-        };
-        loadData();
-}, [searchParams]);
+      try {
+        const res = await axios.get("https://provinces.open-api.vn/api/p/");
+        //console.log(res.data);
+        setWhereToBuy(res.data);
+      } catch (error) {
+        console.error("Lỗi khi load province:", error);
+      }
+    };
+    loadData();
+  }, [searchParams]);
 
   //handle change where to buy
   const handleWhereToBuyChange = (event) => {
@@ -70,14 +69,23 @@ const ProductList = () => {
 
  // search, category, fromPrice, toPrice, whereToBuyFilter
     const handleSubmitSearch = () => {
+      if(fromPrice > toPrice){
+        alert("From price must be less than to price");
+        setFromPrice(0);
+        setToPrice(0);
+        return;
+      }
+      console.log("before", nameSearch);
+      console.log("after",  nameSearch.trim().replace(/\s+/g, " "));
   filterData(
-    nameSearch,
+    nameSearch.trim().replace(/\s+/g, " "),
     category,
     fromPrice || undefined,  // Nếu fromPrice là "" hoặc null/undefined → truyền undefined
     toPrice || undefined,    // Tương tự với toPrice
     whereToBuyFilter
   );
 };
+ const displayed = showAllWTB ? whereToBuy : whereToBuy.slice(0, 6);
 
   return (
     <div className="container-fluid py-3">
@@ -92,16 +100,21 @@ const ProductList = () => {
               <Card.Body className="p-0">
                 <Card.Title className="fs-6 text-muted mb-2">Where to buy</Card.Title>
                 <div className="list-group list-group-flush">
-                  {whereToBuy.map((item, index) => (
+                  {displayed.map((item, index) => (
                     <div key={index} className="list-group-item px-0 py-1 border-0">
                       <Form.Check
                         type="checkbox"
-                        label={<span className="ms-1 small">{item}</span>}
-                        value={item}
+                        label={<span className="ms-1 small">{item.name}</span>}
+                        value={item.name}
                         onChange={handleWhereToBuyChange}
                       />
                     </div>
                   ))}
+                  <div className="d-flex justify-content-center" onClick={() => setShowAllWTB(!showAllWTB)}>
+                    <hr className='flex-grow-1'></hr>
+                    <i className="bi bi-chevron-down mt-2" ></i>
+                    <hr className='flex-grow-1'></hr>
+                  </div>
                 </div>
               </Card.Body>
             </Card>
@@ -135,6 +148,18 @@ const ProductList = () => {
 
         {/* Main content */}
         <div className="col-md-10">
+          {dataProductFilter !== null && dataProductFilter.length ==0 && (
+                <div>
+                  <img
+                    src={img_empty}
+                    alt="no data"
+                    className="object-fit-cover opacity-50 mx-auto d-block"></img>
+                  <p className="text-center text-muted" style={{ fontSize: "0.8rem" }}>Cart is empty</p>
+                </div>
+              )}
+          {dataProductFilter !== null  && dataProductFilter.length > 0 &&
+          (
+          <div>
           <main className="bg-white p-3 rounded shadow-sm">
             <div className="row g-2">
               {dataProductFilter?.map((item, index) => (
@@ -170,6 +195,8 @@ const ProductList = () => {
               }}
             />
           </div>
+          </div>
+          )}
         </div>
       </div>
     </div>

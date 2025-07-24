@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const Cart = require("../../models/Cart");
 const User = require("../../models/Users");
 const { Shop } = require("../../models");
+const Order = require("../../models/Orders");
+const OrderItem = require("../../models/OrderItems");
+
 
 // helper to calculate total quantity in cart
 const calculateTotalQuantity = (items) => {
@@ -245,20 +248,121 @@ exports.getCartByUserId = async (req, res) => {
   try {
     const {UserId} = req.body;
     if(!UserId){
-      return res.status(400).json({ message: "All fields are requiredc" });
+      return res.status(400).json({ message: "All fields are required" });
     }
-    console.log("userId",UserId);
-    const cart = await Cart.findOne({ UserId: new mongoose.Types.ObjectId(UserId) })
-                            .populate({
-                                path: "Items.ShopID",
-                                select: "_id name"
-                            });
+    console.log("userId", UserId);
 
-    //console.log("cart",cart);
-    if (!cart) {
+    const cart = await Cart.aggregate([
+      { $match: { UserId: new mongoose.Types.ObjectId(UserId) } },
+      
+      // Tách từng item trong cart
+      { $unwind: "$Items" },
+      
+      // Lấy thông tin shop cho từng item
+      {
+        $lookup: {
+          from: "shops",
+          localField: "Items.ShopID",
+          foreignField: "_id",
+          as: "ShopDetail"
+        }
+      },
+      { $unwind: { path: "$ShopDetail", preserveNullAndEmptyArrays: true } },
+      
+      // Lấy thông tin product cho từng item
+      {
+        $lookup: {
+          from: "products",
+          localField: "Items._id",
+          foreignField: "_id",
+          as: "ProductDetail"
+        }
+      },
+      { $unwind: { path: "$ProductDetail", preserveNullAndEmptyArrays: true } },
+      
+      // Tách từng variant trong item (nếu có nhiều variants)
+      { $unwind: "$Items.ProductVariant" },
+      
+      // Tìm status của variant trong ProductDetail
+      {
+        $addFields: {
+          "Items.ProductVariant.Status": {
+            $let: {
+              vars: {
+                matchedVariant: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$ProductDetail.ProductVariant",
+                        cond: { $eq: ["$$this._id", "$Items.ProductVariant._id"] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              },
+              in: "$$matchedVariant.Status"
+            }
+          },
+          "Items.ShopStatus": "$ShopDetail.status",
+          "Items.ProductStatus": "$ProductDetail.Status"
+        }
+      },
+      
+      // Gom lại từng item với các variants của nó
+      {
+        $group: {
+          _id: {
+            cartId: "$_id",
+            itemId: "$Items._id"
+          },
+          UserId: { $first: "$UserId" },
+          Quantity: { $first: "$Quantity" },
+          ProductName: { $first: "$Items.ProductName" },
+          ProductImage: { $first: "$Items.ProductImage" },
+          ShopID: { $first: "$Items.ShopID" },
+          ShopName: { $first: "$ShopDetail.name" },
+          ShopStatus: { $first: "$Items.ShopStatus" },
+          ProductStatus: { $first: "$Items.ProductStatus" },
+          ProductVariants: { $push: "$Items.ProductVariant" }
+        }
+      },
+      
+      // Gom lại thành cart hoàn chỉnh
+      {
+        $group: {
+          _id: "$_id.cartId",
+          UserId: { $first: "$UserId" },
+          Quantity: { $first: "$Quantity" },
+          Items: {
+            $push: {
+              _id: "$_id.itemId",
+              ProductName: "$ProductName",
+              ProductImage: "$ProductImage",
+              ShopID: "$ShopID",
+              ShopName: "$ShopName",
+              ShopStatus: "$ShopStatus",
+              ProductStatus: "$ProductStatus",
+              ProductVariant: "$ProductVariants"
+            }
+          }
+        }
+      },
+      {
+        $sort: {
+          "Items._id": 1,
+          "Items.ProductVariant._id": 1
+        }
+      }
+
+    ]);
+if (!cart || cart.length === 0) {
       return res.status(404).json({ message: "Cart not found" });
     }
-    res.status(200).json(cart);
+    
+    // Chỉ gửi response 1 lần duy nhất
+    return res.status(200).json(cart[0]); // Lấy cart đầu tiên vì aggregate trả về array
+    
   } catch (error) {
     console.error("Get cart error:", error);
     return res.status(500).json({
@@ -266,7 +370,7 @@ exports.getCartByUserId = async (req, res) => {
       error: error.message || error,
     });
   }
-}
+};
 exports.getToTalItemInCart = async (req, res) => {
   try {
     const { UserId } = req.body;
@@ -300,3 +404,69 @@ exports.getToTalItemInCart = async (req, res) => {
     });
   }
 };
+exports.buyAgain = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const cleanedOrderId = orderId.trim(); 
+    const userId = req.body.UserId;
+
+    if (!userId) return res.status(400).json({ message: "Thiếu UserId" });
+
+    // Lấy đơn hàng và populate OrderItem
+    const order = await Order.findById(cleanedOrderId).populate({
+      path: "Items",
+      model: "OrderItem",
+    });
+
+    if (!order || !order.Items) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng hoặc không có sản phẩm" });
+    }
+
+    const orderItem = order.Items; // Vì chỉ là 1 object chứ không phải mảng
+
+    if (!orderItem.Product || orderItem.Product.length === 0) {
+      return res.status(400).json({ message: "Không có sản phẩm trong OrderItem" });
+    }
+
+    // Tìm giỏ hàng người dùng
+    const cart = await Cart.findOne({ UserId: userId });
+    if (!cart) {
+      return res.status(404).json({ message: "Không tìm thấy giỏ hàng người dùng" });
+    }
+
+    let totalProductCount = 0;
+
+    // Lặp qua từng product trong OrderItem
+    for (const product of orderItem.Product) {
+      const newCartItem = {
+        ProductName: product.ProductName,
+        ProductImage: product.ProductImage,
+        ShopID: order.ShopId,
+        ProductVariant: product.ProductVariant.map((variant) => ({
+          _id: variant._id,
+          Image: variant.Image,
+          Price: variant.Price,
+          ProductVariantName: variant.ProductVariantName,
+          Quantity: variant.Quantity,
+        })),
+      };
+
+      cart.Items.push(newCartItem);
+      totalProductCount += 1;
+    }
+
+    if (totalProductCount === 0) {
+      return res.status(400).json({ message: "Không có sản phẩm hợp lệ để mua lại" });
+    }
+
+    cart.Quantity += totalProductCount;
+    await cart.save();
+
+    res.status(200).json({ message: "Mua lại thành công", cart });
+  } catch (err) {
+    console.error("Buy Again Error:", err);
+    res.status(500).json({ message: "Lỗi server", error: err.message });
+  }
+};
+
+

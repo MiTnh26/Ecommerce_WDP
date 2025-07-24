@@ -44,35 +44,74 @@ function UpdateProfileForm({ userId, onUpdateSuccess }) {
   };
 
   const validate = () => {
-    const newErrors = {};
+  const newErrors = {};
 
-    if (!formData.FirstName.trim()) newErrors.FirstName = "First name is required";
-    if (!formData.LastName.trim()) newErrors.LastName = "Last name is required";
-    if (!formData.Username.trim()) newErrors.Username = "Username is required";
-    if (!formData.Gender) newErrors.Gender = "Gender is required";
-    if (!formData.DateOfBirth) {
-      newErrors.DateOfBirth = "Date of birth is required";
-    } else {
-      const selectedDate = new Date(formData.DateOfBirth);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // reset giờ để so sánh chính xác theo ngày
-      if (selectedDate > today) {
-        newErrors.DateOfBirth = "Date of birth cannot be in the future";
-      }
+  // First Name
+  if (!formData.FirstName.trim()) {
+    newErrors.FirstName = "First name is required.";
+  } else if (formData.FirstName.length < 2) {
+    newErrors.FirstName = "First name must be at least 2 characters.";
+  }
+
+  // Last Name
+  if (!formData.LastName.trim()) {
+    newErrors.LastName = "Last name is required.";
+  } else if (formData.LastName.length < 2) {
+    newErrors.LastName = "Last name must be at least 2 characters.";
+  }
+
+  // Username
+  if (!formData.Username.trim()) {
+    newErrors.Username = "Username is required.";
+  } else if (/\s/.test(formData.Username)) {
+    newErrors.Username = "Username must not contain spaces.";
+  } else if (!/^[a-zA-Z0-9._-]+$/.test(formData.Username)) {
+    newErrors.Username = "Username can only contain letters, numbers, dots, underscores, or dashes.";
+  } else if (formData.Username.length < 4) {
+    newErrors.Username = "Username must be at least 4 characters.";
+  }
+
+  // Gender
+  if (!formData.Gender) {
+    newErrors.Gender = "Gender is required.";
+  }
+
+  // Date of Birth
+  if (!formData.DateOfBirth) {
+    newErrors.DateOfBirth = "Date of birth is required.";
+  } else {
+    const selectedDate = new Date(formData.DateOfBirth);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate > today) {
+      newErrors.DateOfBirth = "Date of birth cannot be in the future.";
     }
-    if (!formData.PhoneNumber.match(/^\d{10,11}$/)) newErrors.PhoneNumber = "Phone must be 10–11 digits";
-    // if (formData.Image && !formData.Image.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|png)/i)) {
-    //   newErrors.Image = "Image must be a valid image URL";
-    // }
-    if (!formData.Email.trim()) {
-      newErrors.Email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.Email)) {
-      newErrors.Email = "Invalid email address";
+  }
+
+  // Phone Number
+  if (!formData.PhoneNumber.trim()) {
+    newErrors.PhoneNumber = "Phone number is required.";
+  } else if (!/^0\d{9,10}$/.test(formData.PhoneNumber)) {
+    newErrors.PhoneNumber = "Phone number must be 10–11 digits and start with 0.";
+  }
+
+  // Email
+  if (!formData.Email.trim()) {
+    newErrors.Email = "Email is required.";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.Email)) {
+    newErrors.Email = "Invalid email format.";
+  }
+
+  // Image (optional - nếu muốn kiểm tra định dạng file ảnh)
+  if (formData.Image && typeof formData.Image === "string") {
+    if (!formData.Image.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)) {
+      newErrors.Image = "Image URL must be a valid image link.";
     }
+  }
 
+  return newErrors;
+};
 
-    return newErrors;
-  };
   const handleUpdate = async (e) => {
     e.preventDefault();
 

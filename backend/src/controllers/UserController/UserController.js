@@ -9,7 +9,9 @@ const nodemailer = require("nodemailer");
 // const  {Order,OrderItem}  = require("../../models/index");
 const Order = require("../../models/Orders");
 const OrderItem = require("../../models/OrderItems");
+
 const Shops = require("../../models/Shops");
+
 
 const client = new OAuth2Client(process.env.O2Auth_Key);
 
@@ -480,7 +482,31 @@ const setDefaultAddress = async (req, res) => {
     console.error("❌ Error setting default address:", error);
     res.status(500).json({ message: "Failed to set default address", error });
   }
-};
+}
+const findOwnerByUserId = async (req, res) => {
+  try{
+    const {UserId} = req.body;
+    if(!UserId){
+      return res.status(400).json({ message: "Not find UserID" });  
+    }
+  
+    const owner = await Shop.findOne({ owner: new mongoose.Types.ObjectId(UserId) })
+    if(!owner){
+      return res.status(200).json({ 
+        message: "No shop found for this user",
+        owner: null 
+      });
+    }
+    
+    res.status(200).json({
+      message: "Shop found successfully", 
+      owner: owner
+    });
+    
+  }catch(error){
+    res.status(500).json({ message: "Failed to find owner", error });
+  }
+}
 const changePasswordInUser = async (req, res) => {
   const { id } = req.params;
   const { currentPassword, newPassword } = req.body;
@@ -716,4 +742,5 @@ module.exports = {
   getPaymentMethod,
   createOrderItems,
   checkout,
+  findOwnerByUserId
 };

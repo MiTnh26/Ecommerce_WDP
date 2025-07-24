@@ -83,9 +83,11 @@ export const fetchProductDetail = async (product_id) => {
     const res = await axios.get(`${baseURL}/product/${product_id}`, {
       withCredentials: true,
     });
-    const data = res.data;
-    //console.log("fetchProductDetail data", data);
-    return data;
+    const data = res.data.product; // ✅ Sửa lại đúng key
+    const status = res.status; // ✅ status là HTTP status, không phải res.data.status
+    const message = res.data.message;
+    console.log("fetchProductDetail data", data, status, message);
+    return { data, message, status };
   } catch (err) {
     console.log("fetchProductDetail err", err);
   }
@@ -96,18 +98,19 @@ export const fetchProductDetail = async (product_id) => {
     console.log("Fetching reviews...");
     return [1, 2, 3, 4, 5, 6];
   };
-  export const fetchRelatedProducts = async (category_id) => {
-    try{
-      const res = await axios.get(`${baseURL}/product/related-products/${category_id}`, {
-        withCredentials: true,
-      });
-      const data = res.data;
-      //console.log("fetchRelatedProducts data", res.data);
-      return data;
-    } catch (err) {
-      console.log("fetchRelatedProducts err", err);   
-    }
-  };
+  export const fetchRelatedProducts = async (name) => {
+  try {
+    const res = await axios.post(
+      `${baseURL}/product/related-products`,
+      { name_product: name }, // body
+      { withCredentials: true }
+    );
+    return res.data;
+  } catch (err) {
+    console.error("fetchRelatedProducts err", err);
+    throw err;
+  }
+};
   
   export const filterData = async (whereToBuyFilter, toPrice, fromPrice, search, category) => {
         console.log("filterData", "1", search, "2",category, "3",fromPrice, toPrice, "4",whereToBuyFilter);

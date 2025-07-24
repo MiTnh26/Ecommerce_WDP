@@ -106,7 +106,13 @@ function AddressForm({ userId,user: userProp }) {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.receiverName.trim()) newErrors.receiverName = "Receiver name is required";
+    if (!formData.receiverName.trim()) {
+    newErrors.receiverName = "Please enter the receiver's full name.";
+  } else if (formData.receiverName.length < 2) {
+    newErrors.receiverName = "Name must be at least 2 characters.";
+  }else if (!/^[a-zA-ZÀ-ỹ\s']{2,50}$/.test(formData.receiverName.trim())) {
+  newErrors.receiverName = "Invalid name (cannot contain special characters, numbers)";
+}
     if (!formData.phoneNumber.match(/^\d{10,11}$/)) newErrors.phoneNumber = "Invalid phone number";
     if (!formData.province) newErrors.province = "Please select a province";
     if (!formData.district) newErrors.district = "Please select a district";

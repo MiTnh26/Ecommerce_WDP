@@ -52,12 +52,13 @@ router.get("/get-new", ctrl.getNewProducts);
 // 9) GET /products/best-seller
 router.get("/best-seller", ctrl.getBestSellerProducts);
 
-// 10) GET /products/:id
-router.get("/:id", ctrl.getProductById);
-
-// 11) GET /products/:id/variants
-router.get("/related-products/:category_id", ctrl.fetchProductsRelatedToCategory);
+// 11) GET /products/
+router.post("/related-products", ctrl.fetchProductsRelated);
 
 //12) POST /products/filter-product
 router.post("/filter-product", ctrl.filterProduct);
+
+// 10) GET /products/:id
+router.get("/:id", ctrl.getProductById);
+
 module.exports = router;
