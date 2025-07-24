@@ -248,20 +248,121 @@ exports.getCartByUserId = async (req, res) => {
   try {
     const {UserId} = req.body;
     if(!UserId){
-      return res.status(400).json({ message: "All fields are requiredc" });
+      return res.status(400).json({ message: "All fields are required" });
     }
-    console.log("userId",UserId);
-    const cart = await Cart.findOne({ UserId: new mongoose.Types.ObjectId(UserId) })
-                            .populate({
-                                path: "Items.ShopID",
-                                select: "_id name"
-                            });
+    console.log("userId", UserId);
 
-    //console.log("cart",cart);
-    if (!cart) {
+    const cart = await Cart.aggregate([
+      { $match: { UserId: new mongoose.Types.ObjectId(UserId) } },
+      
+      // Tách từng item trong cart
+      { $unwind: "$Items" },
+      
+      // Lấy thông tin shop cho từng item
+      {
+        $lookup: {
+          from: "shops",
+          localField: "Items.ShopID",
+          foreignField: "_id",
+          as: "ShopDetail"
+        }
+      },
+      { $unwind: { path: "$ShopDetail", preserveNullAndEmptyArrays: true } },
+      
+      // Lấy thông tin product cho từng item
+      {
+        $lookup: {
+          from: "products",
+          localField: "Items._id",
+          foreignField: "_id",
+          as: "ProductDetail"
+        }
+      },
+      { $unwind: { path: "$ProductDetail", preserveNullAndEmptyArrays: true } },
+      
+      // Tách từng variant trong item (nếu có nhiều variants)
+      { $unwind: "$Items.ProductVariant" },
+      
+      // Tìm status của variant trong ProductDetail
+      {
+        $addFields: {
+          "Items.ProductVariant.Status": {
+            $let: {
+              vars: {
+                matchedVariant: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$ProductDetail.ProductVariant",
+                        cond: { $eq: ["$$this._id", "$Items.ProductVariant._id"] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              },
+              in: "$$matchedVariant.Status"
+            }
+          },
+          "Items.ShopStatus": "$ShopDetail.status",
+          "Items.ProductStatus": "$ProductDetail.Status"
+        }
+      },
+      
+      // Gom lại từng item với các variants của nó
+      {
+        $group: {
+          _id: {
+            cartId: "$_id",
+            itemId: "$Items._id"
+          },
+          UserId: { $first: "$UserId" },
+          Quantity: { $first: "$Quantity" },
+          ProductName: { $first: "$Items.ProductName" },
+          ProductImage: { $first: "$Items.ProductImage" },
+          ShopID: { $first: "$Items.ShopID" },
+          ShopName: { $first: "$ShopDetail.name" },
+          ShopStatus: { $first: "$Items.ShopStatus" },
+          ProductStatus: { $first: "$Items.ProductStatus" },
+          ProductVariants: { $push: "$Items.ProductVariant" }
+        }
+      },
+      
+      // Gom lại thành cart hoàn chỉnh
+      {
+        $group: {
+          _id: "$_id.cartId",
+          UserId: { $first: "$UserId" },
+          Quantity: { $first: "$Quantity" },
+          Items: {
+            $push: {
+              _id: "$_id.itemId",
+              ProductName: "$ProductName",
+              ProductImage: "$ProductImage",
+              ShopID: "$ShopID",
+              ShopName: "$ShopName",
+              ShopStatus: "$ShopStatus",
+              ProductStatus: "$ProductStatus",
+              ProductVariant: "$ProductVariants"
+            }
+          }
+        }
+      },
+      {
+        $sort: {
+          "Items._id": 1,
+          "Items.ProductVariant._id": 1
+        }
+      }
+
+    ]);
+if (!cart || cart.length === 0) {
       return res.status(404).json({ message: "Cart not found" });
     }
-    res.status(200).json(cart);
+    
+    // Chỉ gửi response 1 lần duy nhất
+    return res.status(200).json(cart[0]); // Lấy cart đầu tiên vì aggregate trả về array
+    
   } catch (error) {
     console.error("Get cart error:", error);
     return res.status(500).json({
@@ -269,7 +370,7 @@ exports.getCartByUserId = async (req, res) => {
       error: error.message || error,
     });
   }
-}
+};
 exports.getToTalItemInCart = async (req, res) => {
   try {
     const { UserId } = req.body;
