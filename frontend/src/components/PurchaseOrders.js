@@ -21,7 +21,8 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const user = JSON.parse(localStorage.getItem("user"));
+   const [message, setMessage] = useState(null);
+  // const user = JSON.parse(localStorage.getItem("user"));
   // const userId = user._id;
   const fallbackImg = "../assets/images/no-image.png";
   const navigate = useNavigate();
@@ -91,8 +92,26 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
     setFilteredOrders(result);
   }, [search, orders, statusFilter]);
 
-  const handleBuyAgain = (order) => {
-    alert("Buy again clicked for order " + order._id);
+   const handleBuyAgain = async (orderId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/customer/buy-again/${orderId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ UserId: userId }),
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+         navigate('/Ecommerce/user/cart');
+        setMessage({ type: "success", text: "Đã thêm lại sản phẩm vào giỏ hàng." });
+      } else {
+        throw new Error(data.message || "Mua lại thất bại");
+      }
+    } catch (err) {
+      setMessage({ type: "danger", text: err.message });
+    }
   };
   const handleCancelOrder = (order) => {
     const orderId = order._id;
@@ -341,7 +360,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                         transition: "all 0.3s ease",
                         cursor: "pointer",
                       }}
-                      onClick={() => handleBuyAgain(order)}
+                      onClick={() => handleBuyAgain(order._id)}
                     >
                       Buy again
                     </Button>

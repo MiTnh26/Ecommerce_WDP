@@ -74,5 +74,6 @@ router.delete(
   CartController.deleteProductVariantInCart
 );
 router.post("/get-cart", CartController.getCartByUserId);
+router.post("/buy-again/:orderId", CartController.buyAgain)
 //router.post("/get-total-cart-item", CartController.getToTalItemInCart);
 module.exports = router;
