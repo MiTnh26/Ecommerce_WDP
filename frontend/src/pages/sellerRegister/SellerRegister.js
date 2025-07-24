@@ -214,7 +214,22 @@ function SellerRegistrationWizard() {
         throw new Error(err.message || "Failed to register shop.");
       }
 
+      const newShop = await response.json();
+
       alert("Shop registered successfully!");
+      // Lưu shopId vào localStorage
+      localStorage.setItem("shopId", newShop._id);
+      // Optionally, clear form or navigate:
+      setFormData({
+        shopName: "",
+        shopAvatar: null,
+        shopDescription: "",
+        province: "",
+        district: "",
+        ward: "",
+      });
+
+      // navigate("/Ecommerce/product/product-page");
       navigate("/Ecommerce/home");
     } catch (err) {
       console.error(err);

@@ -768,7 +768,7 @@ function CheckoutPage() {
                         className="shop-avatar-img"
                         onError={(e) => {
                           if (!e.target.src.includes("/placeholder.svg")) {
-                            e.target.src = "/placeholder.svg";
+                          e.target.src = "/placeholder.svg";
                           }
                         }}
                       />
@@ -803,7 +803,7 @@ function CheckoutPage() {
                           className="product-image"
                           onError={(e) => {
                             if (!e.target.src.includes("/placeholder.svg")) {
-                              e.target.src = "/placeholder.svg";
+                            e.target.src = "/placeholder.svg";
                             }
                           }}
                         />
@@ -917,8 +917,8 @@ function CheckoutPage() {
                               className="payment-option"
                               style={{ marginBottom: 0 }}
                             >
-                              <input
-                                type="radio"
+                  <input
+                    type="radio"
                                 name="payment"
                                 value={method._id}
                                 checked={selectedPayment === method._id}
@@ -949,17 +949,17 @@ function CheckoutPage() {
                                 }}
                               >
                                 {method.Provider}
-                              </span>
+                      </span>
                               {method.Default && (
                                 <span className="payment-default">
                                   Mặc định
                                 </span>
                               )}
-                            </label>
-                          ))}
-                        </div>
+                </label>
+              ))}
+            </div>
                       )}
-                    </div>
+          </div>
                   );
                 })
               )}
