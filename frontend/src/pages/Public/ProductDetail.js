@@ -14,7 +14,7 @@ import {
 } from "../../api/ProductApi";
 import { useEffect } from "react";
 import { data, useNavigate, useParams } from "react-router-dom";
-
+import { useQueryClient } from '@tanstack/react-query';
 import LazyLoad from 'react-lazyload';
 import axios from "axios";
 const visibleCount = 5;
@@ -28,8 +28,8 @@ const ProductDetail = () => {
   const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0); // index of thumbnail start
   const [dataProduct, setDataProduct] = useState();
   const product_id = useParams().id;
-  const [quantity, setQuantity] = useState(1); // quantity of product
-
+  const [quantity, setQuantity] = useState(0); // quantity of product
+  const queryClient = useQueryClient();
   // 2. inView hook for product feedback section and product related section
   const { ref: reviewRef, inView: reviewInView } = useInView({
     triggerOnce: true,
@@ -45,13 +45,20 @@ const ProductDetail = () => {
   useEffect(() => {
      window.scrollTo({ top: 0, behavior: 'smooth' });
     const loadData = async () => {
-      const productDetail = await fetchProductDetail(product_id);
-      const testdata = await fetchRelatedProducts(productDetail?.CategoryId?._id)
-      //console.log("testdata", testdata);
-      console.log("productDetail", productDetail);
-      setDataProduct(productDetail);
+    const result = await fetchProductDetail(product_id);
+    console.log("result", result.data);  
+
+    if (result?.status === 200 && result?.data === null) {
+      alert(result?.message);
+      navigate("/Ecommerce/home");
+      return;
+    }
+    const productDetail = result.data;
+    if (!productDetail) return;
+    setDataProduct(productDetail);
     };
     loadData();
+
   }, [product_id]);
 
   // sử dụng useQuery để fectch khi inView
@@ -64,7 +71,7 @@ const ProductDetail = () => {
   });
   const { data: relatedProductsData, isLoading: relatedLoading } = useQuery({
     queryKey: ["relatedProducts"],
-    queryFn: () => fetchRelatedProducts(dataProduct?.CategoryId?._id),
+    queryFn: () => fetchRelatedProducts(dataProduct?.ProductName),
     enabled: relatedInView, // chỉ fetch khi phần related đang hiển thị
   });
 
@@ -92,6 +99,10 @@ const ProductDetail = () => {
       alert("Please select variant");
       return;
     }
+    if(dataProduct?.ProductVariant[currentIndex].Status === "Inactive"){
+        alert("This variant is inactive");
+        return;      
+    }
     const value = e.target.value;
     if (value < 0) {
       setQuantity(0);
@@ -107,6 +118,10 @@ const ProductDetail = () => {
     if(currentIndex === -1){
       alert("Please select variant");
       return;
+    }
+    if(dataProduct?.ProductVariant[currentIndex].Status === "Inactive"){
+        alert("This variant is inactive");
+        return;      
     }
     if (direction === "decrease") {
       setQuantity((prev) => Math.max(prev - 1, 0));
@@ -134,6 +149,10 @@ const ProductDetail = () => {
       if (quantity === 0) {
         alert("Please select quantity");
         return;
+      }
+      if(dataProduct?.ProductVariant[currentIndex].Status === "Inactive"){
+        alert("This variant is inactive");
+        return;      
       }
       const data = {
         UserId: user._id,
@@ -173,6 +192,8 @@ const ProductDetail = () => {
         alert("Add to cart successfully");
       }
     }
+    queryClient.invalidateQueries(["cart"]);
+    console.log("add to cart");
     addToCart();
   }
   
@@ -200,12 +221,12 @@ const ProductDetail = () => {
           Ecommerce
         </a>
         <i className="fa-solid fa-chevron-right fa-xs"></i>
-        <a className="navigate-item text-decoration-none" href={`/Ecommerce/search?name=&category=${dataProduct?.CategoryId._id}`}>
+        {/* <a className="navigate-item text-decoration-none" href={`/Ecommerce/search?name=&category=${dataProduct?.CategoryId._id}`}>
           {dataProduct?.CategoryId?.CategoryName?.trim()
             ? dataProduct.CategoryId.CategoryName
             : ""}
-        </a>
-        <i className="fa-solid fa-chevron-right fa-xs"></i>
+        </a> */}
+        {/* <i className="fa-solid fa-chevron-right fa-xs"></i> */}
         <span className="navigate-item-name">
           {dataProduct?.ProductName || "Loading..."}
         </span>
@@ -349,11 +370,15 @@ const ProductDetail = () => {
                     className={`color-item border ${
                       currentIndex === index ? "border-warning border-2" : "border-muted"
                     } bg-white p-1 pe-2`}
-                    style={{ maxHeight: "38px" }}
+                    style={{ 
+                      maxHeight: "38px",
+                      cursor: item.Status === "Inactive" ? "not-allowed" : "pointer" }}
                     onClick={() => {
                       setCurrentIndex(index);
                       setQuantity(0); 
                     }}
+                    disabled={item.Status === "Inactive"}
+                    //cursor={item.Status === "Inactive" ? "not-allowed" : "pointer"}
                   >
                     <img
                       src={item?.Image || ""}

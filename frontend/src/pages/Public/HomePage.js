@@ -17,6 +17,8 @@ const HomePage = () => {
   // 1. State declare
   const [dataCategory, setDataCategory] = useState([]);
   const [maxLengthCategory, setMaxLengthCategory] = useState(0);
+  const [user, setUser] = useState(localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")) : null);
+  //console.log("user", user);
   const navigate = useNavigate();
 
   // 2. Refs 
@@ -145,9 +147,9 @@ const HomePage = () => {
           </div>
         </Col>
       </Row>
-      <div className="category mt-5 bg-white rounded-3 shadow-sm py-2 px-1 ">
+      {/* <div className="category mt-5 bg-white rounded-3 shadow-sm py-2 px-1 ">
         {dataCategory && <Category dataList={dataCategory} title="Category" dataLength={maxLengthCategory} onClickNext={handleCategoryClickNext} />}
-      </div>
+      </div> */}
       {/* Trending */}
       <div className="nav-trending-product mt-5 bg-white rounded-3 shadow-sm py-2 px-1" ref={trendingRef}>
         {isLoadingTrending ? (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { useNavigate, useSearchParams } from "react-router-dom";
+//import  "../style/HomePage.css"
 // useQuery to state Cart
 import {
   Col,
@@ -10,11 +11,16 @@ import {
   Form,
   Offcanvas,
   ListGroup,
+  OverlayTrigger,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import image from "../assets/images/logo_page.jpg";
 import { AppContext } from "../store/Context";
 import { useContext } from "react";
 import axios from "axios";
+import Tooltip from 'react-bootstrap/Tooltip';
+import img_empty from "../assets/images/data-empty.png";
 const Header = () => {
   const [popUpSearch, setPopUpSearch] = useState(false);
   const [showCanvasCart, setShowCanvasCart] = useState(false);
@@ -29,15 +35,43 @@ const Header = () => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const [category_id, setCategoryId] = useState("");
+  const [owner, setOwner] = useState(null);
+  console.log("owner", owner);
+  //toast
+  const [showToast, setShowToast] = useState(false);
+
+   // config
+  const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     const category = searchParams.get("category") || "";
     setCategoryId(category);
   }, [searchParams]); // Thêm searchParams vào dependency array
-
-
-  // config
-  const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  // fetch data owner
+  useEffect(() => {
+    const fetchOwnerByUserId = async () => {
+      try {
+        if (!UserId._id) {
+          return;
+        }
+        const res = await axios.post(`http://localhost:5000/customer/find-owner-by-user-id`, {
+          UserId: UserId._id
+        },
+          { withCredentials: true },
+        );
+        if (res.status === 200) {
+          if (res.data.owner) {
+            setOwner(res.data.owner); // Có shop
+          } else {
+            setOwner(null); // User chưa có shop
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    fetchOwnerByUserId()
+  }, [UserId]);
 
 
   //inview hook for cart
@@ -48,6 +82,7 @@ const Header = () => {
   //fetch cart data
   const fetchCartData = async () => {
     try {
+      console.log("Fetch cart data");
       if (!UserId._id) {
         return;
       }
@@ -58,7 +93,7 @@ const Header = () => {
         { withCredentials: true },
       );
       const data = res.data;
-      //console.log("data", data);
+      console.log("cartdata", data);
       return data;
     } catch (err) {
       console.log(err);
@@ -67,26 +102,48 @@ const Header = () => {
   const { data: cartData, isLoading: cartLoading } = useQuery({
     queryKey: ["cart"],
     queryFn: fetchCartData,
-    enabled: cartInView,
+    enabled: showCanvasCart,
     staleTime: 1000 * 60 * 10,
     cacheTime: 1000 * 60 * 30,
   });
 
   const handlePopUpSearch = () => {
+    console.log("popUpSearch", popUpSearch);
     setPopUpSearch(!popUpSearch);
   };
-  const handleShowCanvasCart = () => {
-    if (UserId._id) {
-      setShowCanvasCart(!showCanvasCart);
-    }
-  };
+const handleShowCanvasCart = () => {
+  if (!UserId) {
+    setShowToast(true); 
+    setTimeout(() => {
+    navigate("/Ecommerce/login");
+  }, 2000); // 2 giây = 2000 ms
+  return;
+  }
+  setShowCanvasCart(!showCanvasCart);
+};
+
 
   const handleSubmitSearch = () => {
-    console.log("search", category_id);
-    filterData(search, category_id);
-    navigate(`/Ecommerce/search?name=${search || ""}&category=${category_id || ""}`);
+    // console.log("search", category_id);
+    const cleanedSearch = search.trim().replace(/\s+/g, ' ');
+    filterData(cleanedSearch, category_id);
+    navigate(`/Ecommerce/search?name=${encodeURIComponent(cleanedSearch)}&category=${category_id || ""}`);
+    // filterData(search, category_id);
+    // navigate(`/Ecommerce/search?name=${search || ""}&category=${category_id || ""}`);
   }
-  //console.log("hello")
+  
+  const handleLogout = () => {
+    //console.log("logout");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/Ecommerce/home");
+    window.location.reload();
+  }
+  const renderTooltip = (name) => (props) => (
+    <Tooltip id="button-tooltip" {...props}>
+      {name}
+    </Tooltip>
+  );
   return (
     <>
       <Container fluid>
@@ -154,35 +211,112 @@ const Header = () => {
           >
             <ul className="d-flex justify-content-end list-unstyled m-0 gap-2">
               <li>
-                <a
-                  href="/Ecommerce/login"
-                  className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                  style={{ width: "50px", height: "50px" }}
-                >
-                  <i className="fa-solid fa-right-to-bracket text-black fs-4"></i>
-                </a>
+
+                {UserId && UserId  ? (
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Logout")}
+                  >
+                    <a
+                      onClick={handleLogout}
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="bi bi-box-arrow-left text-danger fs-4 pe-1 fw-bold "></i>
+                    </a>
+                  </OverlayTrigger>
+                ) : (
+                    <OverlayTrigger
+                      placement="bottom"
+                      delay={{ show: 250, hide: 400 }}
+                      overlay={renderTooltip("Login")}
+                    >
+                      <a
+                        href="/Ecommerce/login"
+                        className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                        style={{ width: "50px", height: "50px" }}
+                      >
+                        <i className="fa-solid fa-right-to-bracket text-black fs-4"></i>
+                      </a>
+                    </OverlayTrigger> 
+                )}
               </li>
+              {UserId && UserId._id && (
+                <li>
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Profile")}
+                  >
+
+                  <a
+                    href="/Ecommerce/user/profile"
+                    className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                    style={{ width: "50px", height: "50px" }}
+                    >
+                    <i className="fa-regular fa-user text-black fs-4"></i>
+                  </a>
+                  </OverlayTrigger>
+                </li>
+              )}
               <li>
-                <a
-                  href="/Ecommerce/user/profile"
-                  className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                  style={{ width: "50px", height: "50px" }}
+                {/* owner null => hiện thỉ nút dăng kí */}
+                {/* owner not null và status "pending" => click vào hiển thị alert : "Shop đang được duyệt" */}
+                {/* owner not null và status "active" => click vào chuyển sang seller */}
+                {owner == null && UserId &&(
+                  <OverlayTrigger
+                  placement="bottom"
+                  delay={{ show: 250, hide: 400 }}
+                  overlay={renderTooltip("Go to Page Seller register")}
                 >
-                  <i className="fa-regular fa-user text-black fs-4"></i>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/Ecommerce/seller/seller-register"
-                  className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                  style={{ width: "50px", height: "50px" }}
-                >
-                  <i className="fa-solid fa-shop text-black fs-4"></i>
-                </a>
+                  <a
+                    href="/Ecommerce/seller/seller-register"
+                    className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                    style={{ width: "50px", height: "50px" }}
+                  >
+                    <i className="fa-solid fa-shop text-black fs-4"></i>
+                  </a>
+                </OverlayTrigger>
+                )}
+                {
+                  owner && owner.status == "Pending" && (
+                    <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Pending")}
+                  >
+                    <a
+                      onClick={() => alert("Shop is being approved")}
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="fa-solid fa-shop text-primary fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
+                  )}
+                  {
+                    owner && owner.status == "Active" && (
+                      <OverlayTrigger
+                      placement="bottom"
+                      delay={{ show: 250, hide: 400 }}
+                      overlay={renderTooltip("Go to page seller")}
+                    >
+                      <a
+                        href="/Ecommerce/seller"
+                        className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                        style={{ width: "50px", height: "50px" }}
+                      >
+                        <i className="fa-solid fa-shop text-success fs-4"></i>
+                      </a>
+                    </OverlayTrigger>
+                    )
+                  }
+
+
               </li>
               <li className="d-md-none" onClick={handlePopUpSearch}>
                 <a
-                  href="/Ecommerce/search/hello"
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -215,27 +349,21 @@ const Header = () => {
             <Row className="d-block d-md-none">
               <div className=" row search-bar p-2 my-2 rounded-3">
                 <Col xs={1} className="d-block d-lg-none"></Col>
-                <Col xs={3} className=" bg-light p-2">
-                  {/* <Form.Select className="bg-transparent border-0 ">
-                    <option>All Categories</option>
-                    <option>Groceries</option>
-                    <option>Drinks</option>
-                    <option>Chocolates</option>
-                  </Form.Select> */}
-                </Col>
-                <Col xs={6} className=" bg-light p-2">
+                <Col xs={9} className=" bg-light p-2">
                   <Form id="search-form" className="text-center">
                     <Form.Control
                       type="text"
                       className="border-0 bg-transparent"
                       placeholder="Search for more than 20,000 products"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
                     />
                   </Form>
                 </Col>
                 <Col
                   xs={1}
                   className=" bg-light p-2"
-                  onClick={() => navigate("/Ecommerce/search/hello")}
+                  onClick={() => navigate(`/Ecommerce/search?name=${search}`)}
                 >
                   <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
                 </Col>
@@ -266,7 +394,15 @@ const Header = () => {
                 <p>Loading Cart Items .. </p>
               ) : (
                 <>
-                 {(cartData?.Items || []).map((item, itemIndex) => (
+                  {cartData?.Items && cartData?.Items.length == 0 ? (
+                    <>
+                    <img 
+                      src={img_empty}
+                      alt="no data"
+                      className="object-fit-cover"></img>
+                      <p className="text-center text-muted">Your cart is empty</p>
+                      </>
+                  ) : ((cartData?.Items || []).map((item, itemIndex) => (
                     (item.ProductVariant || []).map((variant, variantIndex) => (
                       <ListGroup.Item
                         className="px-1 border-0 border-bottom"
@@ -283,16 +419,17 @@ const Header = () => {
                             objectFit: "cover",
                           }}
                         />
-                        <div className="overflow-hidden flex-1">
+                        <div className="overflow-hidden flex-grow-1">
                           <p
-                            className="product-name text-nowrap text-truncate"
+                            className={`product-name-cart two-line-truncate ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}
                             style={{ fontSize: "0.8rem" }}
                           >
-                            {item.ProductName} : <span className="fw-light text-muted">{variant.ProductVariantName}</span>
+                            {item.ProductName}
                           </p>
                         </div>
+                          <span className={`fw-light text-muted ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`} style={{ fontSize: "0.7rem" }}>{variant.ProductVariantName}</span>
                         <p
-                          className="product-price"
+                          className={`product-price text-danger ${variant.Status == "Inactive" ? "text-decoration-line-through" : ""}`}
                           style={{ fontSize: "0.8rem" }}
                         >
                           {variant.Price? variant.Price.toLocaleString("vi-VN") : "0".toLocaleString("vi-VN")}
@@ -301,8 +438,7 @@ const Header = () => {
                       </ListGroup.Item>
                     )
                     )
-                  ))}
-
+                  )))}          
                 </>
               )}
             </ListGroup>
@@ -317,6 +453,20 @@ const Header = () => {
           </div>
         </Offcanvas.Body>
       </Offcanvas>
+      <ToastContainer position="top-center" className="p-3">
+  <Toast
+    onClose={() => setShowToast(false)}
+    show={showToast}
+    delay={2000}
+    autohide
+    bg="warning"
+  >
+    <Toast.Header>
+      <strong className="me-auto">Thông báo</strong>
+    </Toast.Header>
+    <Toast.Body>Vui lòng đăng nhập trước!</Toast.Body>
+  </Toast>
+</ToastContainer>
     </>
   );
 };
