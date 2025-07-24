@@ -490,7 +490,7 @@ const findOwnerByUserId = async (req, res) => {
       return res.status(400).json({ message: "Not find UserID" });  
     }
   
-    const owner = await Shop.findOne({ owner: new mongoose.Types.ObjectId(UserId) })
+    const owner = await Shops.findOne({ owner: new mongoose.Types.ObjectId(UserId) })
     if(!owner){
       return res.status(200).json({ 
         message: "No shop found for this user",
