@@ -303,7 +303,7 @@ const handleShowCanvasCart = () => {
                       overlay={renderTooltip("Go to page seller")}
                     >
                       <a
-                        href="/Ecommerce/seller"
+                        href="/Ecommerce/seller/statistic"
                         className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                         style={{ width: "50px", height: "50px" }}
                       >

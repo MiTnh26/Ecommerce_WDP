@@ -143,8 +143,9 @@ const ProductDetail = () => {
     }
     const addToCart = async () => {
       const user = JSON.parse(localStorage.getItem("user"));
-      if (!user._id) {
+      if (!user) {
         navigate("/Ecommerce/login");
+        return;
       }
       if (quantity === 0) {
         alert("Please select quantity");
