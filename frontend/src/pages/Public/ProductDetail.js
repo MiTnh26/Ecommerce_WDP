@@ -250,7 +250,7 @@ const loadDataCart = async () => {
     addToCart();
   }
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if(currentIndex === -1){
       alert("Please select variant");
       return;
@@ -264,20 +264,73 @@ const loadDataCart = async () => {
       navigate("/Ecommerce/login");
       return;
     }
-    const data = {
+    if (quantity === 0) {
+      alert("Please select quantity");
+      return;
+    }
+    // Check cart for quantity overflow (reuse logic from handleAddToCart)
+    if (cart) {
+      const currentVariantId = dataProduct?.ProductVariant[currentIndex]?._id;
+      let findProductVariantInCart = null;
+      if (cart?.Items && currentVariantId) {
+        for (const item of cart.Items) {
+          const variant = item.ProductVariant.find(
+            v => String(v._id) === String(currentVariantId)
+          );
+          if (variant) {
+            findProductVariantInCart = variant;
+            break;
+          }
+        }
+      }
+      if (findProductVariantInCart) {
+        if (findProductVariantInCart.Quantity + quantity > dataProduct.ProductVariant[currentIndex].StockQuantity) {
+          alert("The quantity in the cart plus the added quantity exceeds the limit");
+          return;
+        }
+      }
+    }
+    // Add to cart first
+    try {
+      const res = await axios.post(`${URL}/customer/add-to-cart`, {
         UserId: user._id,
-        Items: [{
-          ProductVariant_id: dataProduct.ProductVariant[currentIndex]._id,
-          Product_Id: product_id,
-          Quantity: quantity,
-          ShopId: dataProduct.ShopId._id,
-          Price: dataProduct.ProductVariant[currentIndex].Price
-        }],
-        TotalPrice: dataProduct.ProductVariant[currentIndex].Price * quantity,
-      };
-    localStorage.removeItem("checkOut");
-    localStorage.setItem("checkOut", JSON.stringify(data));
-    navigate("/Ecommerce/user/checkout")
+        Product_id: product_id,
+        ProductName: dataProduct.ProductName,
+        ProductImage: dataProduct.ProductImage,
+        ShopID: dataProduct.ShopId._id,
+        ProductVariant: [
+          {
+            _id: dataProduct.ProductVariant[currentIndex]._id,
+            Image: dataProduct.ProductVariant[currentIndex].Image,
+            Price: dataProduct.ProductVariant[currentIndex].Price,
+            ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
+            Quantity: quantity
+          }
+        ],
+      }, { withCredentials: true });
+      if (res.status === 200) {
+        // After successful add to cart, set checkOut and navigate
+        const data = {
+          UserId: user._id,
+          Items: [{
+            ProductVariant_id: dataProduct.ProductVariant[currentIndex]._id,
+            Product_Id: product_id,
+            Quantity: quantity,
+            ShopId: dataProduct.ShopId._id,
+            Price: dataProduct.ProductVariant[currentIndex].Price
+          }],
+          TotalPrice: dataProduct.ProductVariant[currentIndex].Price * quantity,
+        };
+        localStorage.removeItem("checkOut");
+        localStorage.setItem("checkOut", JSON.stringify(data));
+        queryClient.invalidateQueries(["cart"]);
+        navigate("/Ecommerce/user/checkout");
+      } else {
+        alert("Failed to add to cart. Please try again.");
+      }
+    } catch (err) {
+      alert("An error occurred while adding to cart: " + (err?.message || ""));
+    }
   }
   
 

@@ -78,7 +78,7 @@ function StatisticPage({ shopId }) {
 
             <Row className="mb-4">
                 <Col md={3}><StatCard title="Total Orders" value={stats.totalOrders} variant="primary" /></Col>
-                <Col md={3}><StatCard title="Total Revenue" value={stats.totalRevenue.toLocaleString() + " đ"} variant="success" /></Col>
+                <Col md={3}><StatCard title="Total Revenue" value={stats.totalRevenue.toLocaleString('en-US', { style: 'currency', currency: 'USD' })} variant="success" /></Col>
                 <Col md={3}><StatCard title="Delivered" value={stats.statusCount.Delivered} variant="info" /></Col>
                 <Col md={3}><StatCard title="Cancelled Orders" value={stats.statusCount.Cancelled} variant="danger" /></Col>
             </Row>

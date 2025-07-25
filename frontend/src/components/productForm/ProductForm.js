@@ -112,10 +112,14 @@ export default function ProductForm({
 
   const handleMainImageChange = (e) => {
     const file = e.target.files[0];
-    setMainImage(file);
-    setMainPreview(URL.createObjectURL(file));
+    if (file) {
+      setMainImage(file);
+      setMainPreview(URL.createObjectURL(file));
+    } else {
+      setMainImage(null);
+      setMainPreview("");
+    }
   };
-
   const handleVariantChange = (i, field, val) => {
     setVariants((vs) => {
       const newVs = [...vs];
