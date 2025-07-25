@@ -15,8 +15,11 @@
     "bootstrap": "^5.3.6",
     "bootstrap-icons": "^1.13.1",
     "formik": "^2.4.6",
+    "grep": "^0.1.0",
+    "identity-obj-proxy": "^3.0.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.511.0",
+    "msw": "^2.10.4",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^18.2.0",
@@ -33,7 +36,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "jest --config=./jest.integration.config.js --env=jsdom",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -55,6 +58,14 @@
     ]
   },
   "devDependencies": {
-    "sass": "^1.89.0"
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-react": "^7.27.1",
+    "babel-jest": "^30.0.5",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "jest-fetch-mock": "^3.0.3",
+    "sass": "^1.89.0",
+    "web-streams-polyfill": "^4.1.0",
+    "whatwg-fetch": "^3.6.20"
   }
 }

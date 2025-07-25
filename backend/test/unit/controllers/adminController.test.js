@@ -321,21 +321,32 @@ describe("AdminController", () => {
         },
         { Status: "Pending", TotalAmount: 5, PaymentId: null },
       ];
-      const chain = {
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockResolvedValue(orders),
-        }),
-      };
+
+      // Create a fake query object whose populate() is called three times:
+      // 1) .populate("Items") → returns self
+      // 2) .populate("PaymentId") → returns self
+      // 3) .populate("BuyerId") → returns a Promise resolving to our orders array
+      const chain = { populate: jest.fn() };
+      chain.populate
+        .mockReturnValueOnce(chain) // first populate
+        .mockReturnValueOnce(chain) // second populate
+        .mockResolvedValueOnce(orders); // third populate → resolves to orders
+
       Orders.find.mockReturnValue(chain);
 
       await ctrl.getAllOrder(req, res);
 
+      // Assert the three populates happened
       expect(Orders.find).toHaveBeenCalled();
       expect(chain.populate).toHaveBeenCalledWith("Items");
+      expect(chain.populate).toHaveBeenCalledWith("PaymentId");
+      expect(chain.populate).toHaveBeenCalledWith("BuyerId");
+
+      // Finally, we should get the correct stats object back
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          totalTransactions: 2,
-          totalAmount: 10,
+          totalTransactions: 2, // two orders total
+          totalAmount: 10, // only count Delivered
           paymentStats: expect.any(Array),
         })
       );

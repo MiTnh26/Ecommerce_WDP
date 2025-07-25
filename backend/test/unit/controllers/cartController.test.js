@@ -1,5 +1,6 @@
 // test/unit/controllers/cartController.test.js
 
+const mongoose = require("mongoose");
 beforeAll(() => {
   // Silence console.error
   jest.spyOn(console, "error").mockImplementation(() => {});
@@ -12,14 +13,12 @@ afterAll(() => {
 });
 
 const httpMocks = require("node-mocks-http");
-const mongoose = require("mongoose");
 
 // Mock models
 jest.mock("../../../src/models/Users", () => ({ findById: jest.fn() }));
 jest.mock("../../../src/models/Cart", () => {
-  // Make Cart itself a jest.fn so you can do `new Cart()` and spy on it
   const C = Object.assign(
-    jest.fn(), // the constructor
+    jest.fn(), // constructor
     {
       findOne: jest.fn(),
       aggregate: jest.fn(),
@@ -169,7 +168,6 @@ describe("UserController › CartController", () => {
       Cart.findOne.mockResolvedValue(cart);
       req.body = body;
       await changeQuantity(req, res);
-      expect(cart.ProductVariant).toBeUndefined(); // irrelevant
       expect(cart.Items[0].ProductVariant[0].Quantity).toBe(5);
       expect(cart.save).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
@@ -246,29 +244,27 @@ describe("UserController › CartController", () => {
       await getCartByUserId(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: "All fields are requiredc",
+        message: "All fields are required",
       });
     });
+
     it("404 when no cart", async () => {
-      Cart.findOne.mockReturnValue({
-        populate: jest.fn().mockResolvedValue(null),
-      });
+      Cart.aggregate.mockResolvedValue([]);
       req.body = { UserId: "u1" };
       await getCartByUserId(req, res);
+      expect(Cart.aggregate).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ message: "Cart not found" });
     });
+
     it("200 on success", async () => {
-      const chain = { populate: jest.fn().mockResolvedValue({ _id: "c1" }) };
-      Cart.findOne.mockReturnValue(chain);
+      const fakeCart = { _id: "c1", Items: [] };
+      Cart.aggregate.mockResolvedValue([fakeCart]);
       req.body = { UserId: "u1" };
       await getCartByUserId(req, res);
-      expect(chain.populate).toHaveBeenCalledWith({
-        path: "Items.ShopID",
-        select: "_id name",
-      });
+      expect(Cart.aggregate).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ _id: "c1" });
+      expect(res.json).toHaveBeenCalledWith(fakeCart);
     });
   });
 

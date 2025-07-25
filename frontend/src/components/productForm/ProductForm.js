@@ -182,6 +182,7 @@ export default function ProductForm({
     });
 
     await onSave(data);
+    onCancel();
   };
 
   return (
@@ -218,8 +219,12 @@ export default function ProductForm({
       </div>
 
       <div className={styles.fieldGroup}>
-        <label className={styles.label}>*Product Name</label>
+        <label htmlFor="productName" className={styles.label}>
+          *Product Name
+        </label>
         <input
+          id="productName"
+          name="ProductName"
           type="text"
           value={productName}
           onChange={(e) => setProductName(e.target.value)}
@@ -233,7 +238,9 @@ export default function ProductForm({
       </div>
 
       <div className={styles.variantSection}>
-        <label className={styles.label}>*Product Variant</label>
+        <label className={styles.label}>
+          *Product Variant
+        </label>
         <button
           type="button"
           className={styles.addVariantBtn}
@@ -283,6 +290,9 @@ export default function ProductForm({
                   </td>
                   <td>
                     <input
+                      id={`variantName-${i}`}
+                      name={`ProductVariantName-${i}`} 
+                      aria-label="Product Variant Name"
                       type="text"
                       value={v.name}
                       onChange={(e) =>
@@ -332,8 +342,12 @@ export default function ProductForm({
       </div>
 
       <div className={styles.fieldGroup}>
-        <label className={styles.label}>*Category</label>
+        <label htmlFor="category" className={styles.label}>
+          *Category
+        </label>
         <select
+          id="category"
+          name="CategoryId"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className={styles.select}
@@ -349,8 +363,12 @@ export default function ProductForm({
       </div>
 
       <div className={styles.fieldGroup}>
-        <label className={styles.label}>*Description</label>
+        <label htmlFor="description" className={styles.label}>
+          *Description
+        </label>
         <textarea
+          id="description"
+          name="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className={styles.textarea}

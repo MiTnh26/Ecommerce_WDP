@@ -15,7 +15,9 @@ const mongoose = require("mongoose");
 // Auto-mock the Order model
 jest.mock("../../../src/models/Orders", () => ({ find: jest.fn() }));
 const Order = require("../../../src/models/Orders");
-const { getOrdersByShop } = require("../../../src/controllers/SellerController/ViewListOrder");
+const {
+  getOrdersByShop,
+} = require("../../../src/controllers/SellerController/ViewListOrder");
 
 describe("SellerController › getOrdersByShop", () => {
   let req, res;
@@ -30,7 +32,6 @@ describe("SellerController › getOrdersByShop", () => {
   });
 
   it("400 when shopId missing", async () => {
-    // no req.query.shopId
     await getOrdersByShop(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
@@ -38,7 +39,7 @@ describe("SellerController › getOrdersByShop", () => {
   });
 
   it("400 when shopId not a string", async () => {
-    req.query.shopId = 12345; // number
+    req.query.shopId = 12345;
     await getOrdersByShop(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
@@ -49,26 +50,24 @@ describe("SellerController › getOrdersByShop", () => {
   });
 
   it("400 when shopId is invalid ObjectId", async () => {
-    req.query.shopId = "notAValidHex"; // length ≠ 24
+    req.query.shopId = "notAValidHex";
     await getOrdersByShop(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
     const callArg = res.json.mock.calls[0][0];
     expect(callArg.message).toBe("Invalid shopId format");
     expect(callArg.shopId).toBe("notAValidHex");
-    expect(typeof callArg.details).toBe("string"); // error message from ObjectId ctor
+    expect(typeof callArg.details).toBe("string");
   });
 
   it("404 when no orders found", async () => {
-    // valid 24-hex string
     const hex24 = "aaaaaaaaaaaaaaaaaaaaaaaa";
     req.query.shopId = hex24;
 
-    // mock the chain
     const chain = {
       populate: jest.fn().mockReturnThis(),
-      lean:     jest.fn().mockReturnThis(),
-      sort:     jest.fn().mockResolvedValue([]),
+      lean: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockResolvedValue([]),
     };
     Order.find.mockReturnValue(chain);
 
@@ -77,7 +76,10 @@ describe("SellerController › getOrdersByShop", () => {
     expect(Order.find).toHaveBeenCalledWith({
       ShopId: new mongoose.Types.ObjectId(hex24),
     });
-    expect(chain.populate).toHaveBeenCalledWith("BuyerId", "Username");
+    expect(chain.populate).toHaveBeenCalledWith(
+      "BuyerId",
+      "Username ShippingAddress"
+    );
     expect(res.status).toHaveBeenCalledWith(404);
     expect(res.json).toHaveBeenCalledWith({
       message: "No orders found for this shop",
@@ -89,18 +91,23 @@ describe("SellerController › getOrdersByShop", () => {
     const hex24 = "bbbbbbbbbbbbbbbbbbbbbbbb";
     req.query.shopId = hex24;
 
-    // two dummy orders
     const orders = [
       {
         _id: "o1",
-        BuyerId: { Username: "Alice" },
+        BuyerId: {
+          Username: "Alice",
+          ShippingAddress: [{ status: "Default", receiverName: "Alice" }],
+        },
         OrderDate: "2025-07-01",
         Status: "Delivered",
         TotalAmount: 150,
       },
       {
         _id: "o2",
-        BuyerId: { Username: "" },
+        BuyerId: {
+          Username: "Bob",
+          ShippingAddress: [],
+        },
         OrderDate: "2025-07-02",
         Status: "Pending",
         TotalAmount: 75,
@@ -108,8 +115,8 @@ describe("SellerController › getOrdersByShop", () => {
     ];
     const chain = {
       populate: jest.fn().mockReturnThis(),
-      lean:     jest.fn().mockReturnThis(),
-      sort:     jest.fn().mockResolvedValue(orders),
+      lean: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockResolvedValue(orders),
     };
     Order.find.mockReturnValue(chain);
 
@@ -137,9 +144,10 @@ describe("SellerController › getOrdersByShop", () => {
     const hex24 = "cccccccccccccccccccccccc";
     req.query.shopId = hex24;
 
-    // throw inside chain
     const err = new Error("something bad");
-    Order.find.mockImplementation(() => { throw err; });
+    Order.find.mockImplementation(() => {
+      throw err;
+    });
 
     await getOrdersByShop(req, res);
 
