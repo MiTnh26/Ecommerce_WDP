@@ -29,6 +29,7 @@ function PaymentManagement() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
+  const [orderData, setOrderData] = useState({});
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,12 +73,13 @@ function PaymentManagement() {
       }
 
       const data = await response.json();
-      console.log("✅ Order fetched successfully:", data);
-      setOrders(data);
+      setOrderData(data);
+      setOrders(data.orders || []);
       setError(null);
     } catch (err) {
       console.error("❌ Error fetching payment methods:", err);
       setError("Không thể tải danh sách phương thức thanh toán");
+      setOrderData({});
       setOrders([]);
     } finally {
       setLoading(false);
@@ -296,7 +298,8 @@ function PaymentManagement() {
             <i className="ti ti-receipt stat-icon"></i>
           </div>
           <div className="stat-content">
-            <div className="stat-number">{orders.totalTransactions}</div>
+            <div className="stat-number">{orderData.totalTransactions}</div>
+            <div className="stat-sub">Tổng tất cả: {orderData.totalTransactions}</div>
           </div>
         </div>
 
@@ -307,8 +310,9 @@ function PaymentManagement() {
           </div>
           <div className="stat-content">
             <div className="stat-number">
-              {formatCurrency(orders.totalAmount)}
+              {formatCurrency(orderData.totalAmount || 0)}
             </div>
+            <div className="stat-sub">Tổng tất cả: {formatCurrency(orderData.totalAmount || 0)}</div>
           </div>
         </div>
       </div>
@@ -390,68 +394,72 @@ function PaymentManagement() {
                   </td>
                 </tr>
               ) : (
-                filteredPayments.map((payment) => (
-                  <tr key={payment.id || payment._id}>
-                    <td>
-                      <div className="payment-info">
-                        <div className="payment-details">
-                          <div className="payment-name">{payment.Name}</div>
-                          <div className="payment-provider">
-                            {payment.Provider}
+                filteredPayments.map(payment => {
+                  // Tìm thống kê cho payment method này
+                  const stat = (orderData.paymentStats || []).find(
+                    s => s.paymentId === (payment._id || payment.id)
+                  );
+                  return (
+                    <tr key={payment.id || payment._id}>
+                      <td>
+                        <div className="payment-info">
+                          <div className="payment-details">
+                            <div className="payment-name">{payment.Name}</div>
+                            <div className="payment-provider">{payment.Provider}</div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      {getTypeBadge(payment.Type)}{" "}
-                      {payment.Default && (
-                        <span className="default-badge">Mặc định</span>
-                      )}
-                    </td>
-
-                    <td>{getStatusBadge(payment.Status)}</td>
-
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="btn-action btn-view"
-                          onClick={() => handleViewPayment(payment)}
-                          title="Xem chi tiết"
-                        >
-                          <i className="ti ti-eye"></i>
-                        </button>
-                        <button
-                          className="btn-action btn-edit"
-                          onClick={() => handleEditPayment(payment)}
-                          title="Chỉnh sửa"
-                        >
-                          <i className="ti ti-edit"></i>
-                        </button>
-
-                        {!payment.isDefault && (
-                          <button
-                            className="btn-action btn-star"
-                            onClick={() =>
-                              handleSetDefault(payment.id || payment._id)
-                            }
-                            title="Đặt làm mặc định"
-                          >
-                            <i className="ti ti-star"></i>
-                          </button>
+                      </td>
+                      <td>
+                        {getTypeBadge(payment.Type)}{" "}
+                        {payment.Default && (
+                          <span className="default-badge">Mặc định</span>
                         )}
-                        <button
-                          className="btn-action btn-delete"
-                          onClick={() =>
-                            handleDeletePayment(payment.id || payment._id)
-                          }
-                          title="Xóa"
-                        >
-                          <i className="ti ti-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      <td>{getStatusBadge(payment.Status)}</td>
+
+                      <td>
+                        <div className="action-buttons">
+                          <button
+                            className="btn-action btn-view"
+                            onClick={() => handleViewPayment(payment)}
+                            title="Xem chi tiết"
+                          >
+                            <i className="ti ti-eye"></i>
+                          </button>
+                          <button
+                            className="btn-action btn-edit"
+                            onClick={() => handleEditPayment(payment)}
+                            title="Chỉnh sửa"
+                          >
+                            <i className="ti ti-edit"></i>
+                          </button>
+
+                          {!payment.isDefault && (
+                            <button
+                              className="btn-action btn-star"
+                              onClick={() =>
+                                handleSetDefault(payment.id || payment._id)
+                              }
+                              title="Đặt làm mặc định"
+                            >
+                              <i className="ti ti-star"></i>
+                            </button>
+                          )}
+                          <button
+                            className="btn-action btn-delete"
+                            onClick={() =>
+                              handleDeletePayment(payment.id || payment._id)
+                            }
+                            title="Xóa"
+                          >
+                            <i className="ti ti-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -619,28 +627,34 @@ function PaymentManagement() {
                   </div>
                 </div>
 
-                <div className="payment-stats">
-                  <div className="stat-item">
-                    <i className="ti ti-receipt"></i>
-                    <div>
-                      <span className="stat-label">Giao dịch</span>
-                      <span className="stat-value">
-                        {(
-                          selectedPayment.totalTransactions || 0
-                        ).toLocaleString()}
-                      </span>
+                {/* Thống kê giao dịch và giá trị cho payment method này */}
+                {(() => {
+                  const stat = (orderData.paymentStats || []).find(
+                    s => s.paymentId === (selectedPayment._id || selectedPayment.id)
+                  );
+                  return (
+                    <div className="payment-stats">
+                      <div className="stat-item">
+                        <i className="ti ti-receipt"></i>
+                        <div>
+                          <span className="stat-label">Giao dịch</span>
+                          <span className="stat-value">
+                            {stat ? stat.totalTransactions.toLocaleString() : 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="stat-item">
+                        <i className="ti ti-currency-dollar"></i>
+                        <div>
+                          <span className="stat-label">Tổng giá trị</span>
+                          <span className="stat-value">
+                            {stat ? formatCurrency(stat.totalAmount) : formatCurrency(0)}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="stat-item">
-                    <i className="ti ti-currency-dollar"></i>
-                    <div>
-                      <span className="stat-label">Tổng giá trị</span>
-                      <span className="stat-value">
-                        {formatCurrency(selectedPayment.totalAmount || 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
 
                 <div className="payment-config">
                   <h5>Thông tin cấu hình</h5>
