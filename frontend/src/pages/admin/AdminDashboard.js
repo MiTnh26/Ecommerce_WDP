@@ -340,6 +340,7 @@ function AdminDashboard() {
           orderId: order._id?.slice(-8).toUpperCase() || "N/A",
           customer: customerName,
           customerName: customerName,
+          customerEmail: order.BuyerId?.Email || '',
           product: productName,
           productName: productName,
           amount: order.TotalAmount || 0,
@@ -348,6 +349,11 @@ function AdminDashboard() {
           date: order.OrderDate,
           createdAt: order.OrderDate,
           shippingAddress: order.ShippingAddress,
+          PaymentId: order.PaymentId,
+          // Lấy đúng danh sách sản phẩm từ Items[].Product[]
+          productList: Array.isArray(order.Items)
+            ? order.Items.flatMap(item => Array.isArray(item.Product) ? item.Product : [])
+            : [],
         };
       });
 
@@ -429,21 +435,21 @@ function AdminDashboard() {
   };
 
   const formatCurrency = (amount) => {
-    if (!amount) return "0 ₫";
-    return new Intl.NumberFormat("vi-VN", {
+    if (!amount) return "$0";
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "VND",
+      currency: "USD",
     }).format(amount);
   };
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      completed: { text: "Hoàn thành", class: "bg-success" },
-      processing: { text: "Đang xử lý", class: "bg-warning text-dark" },
-      shipped: { text: "Đã giao", class: "bg-info text-dark" },
-      cancelled: { text: "Đã hủy", class: "bg-danger" },
-      pending: { text: "Chờ xử lý", class: "bg-warning text-dark" },
-      delivered: { text: "Đã giao", class: "bg-success" },
+      completed: { text: "Completed", class: "bg-success" },
+      processing: { text: "Processing", class: "bg-warning text-dark" },
+      shipped: { text: "Shipped", class: "bg-info text-dark" },
+      cancelled: { text: "Cancelled", class: "bg-danger" },
+      pending: { text: "Pending", class: "bg-warning text-dark" },
+      delivered: { text: "Delivered", class: "bg-success" },
     };
     const statusInfo = statusMap[status] || {
       text: status,
@@ -475,7 +481,7 @@ function AdminDashboard() {
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-3">Đang tải dữ liệu dashboard...</p>
+          <p className="mt-3">Loading dashboard data...</p>
         </div>
       </AdminLayout>
     );
@@ -486,11 +492,11 @@ function AdminDashboard() {
       <AdminLayout currentPage="dashboard" pageTitle="Dashboard">
         <div className="d-flex flex-column align-items-center justify-content-center p-5">
           <i className="bi bi-exclamation-triangle fs-2 text-danger"></i>
-          <h3>Không thể tải dữ liệu dashboard</h3>
-          <p className="text-danger">Lỗi: {error}</p>
+          <h3>Unable to load dashboard data</h3>
+          <p className="text-danger">Error: {error}</p>
           <button onClick={handleRetry} className="btn btn-primary">
             <i className="bi bi-arrow-clockwise me-2"></i>
-            Thử lại
+            Retry
           </button>
         </div>
       </AdminLayout>
@@ -502,7 +508,7 @@ function AdminDashboard() {
       <AdminLayout currentPage="dashboard" pageTitle="Dashboard">
         <div className="d-flex flex-column align-items-center justify-content-center p-5">
           <i className="bi bi-database-dash fs-2 text-secondary"></i>
-          <p>Không có dữ liệu để hiển thị</p>
+          <p>No data to display</p>
         </div>
       </AdminLayout>
     );
@@ -523,7 +529,7 @@ function AdminDashboard() {
           <div className="card h-100 border-0 shadow-sm">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="card-title text-muted mb-0">Tổng người dùng</h6>
+                <h6 className="card-title text-muted mb-0">Total Users</h6>
                 <i className="bi bi-people fs-4 text-primary"></i>
               </div>
               <div className="h4 fw-bold text-dark mb-1">
@@ -537,7 +543,7 @@ function AdminDashboard() {
           <div className="card h-100 border-0 shadow-sm">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="card-title text-muted mb-0">Tổng đơn hàng</h6>
+                <h6 className="card-title text-muted mb-0">Total Orders</h6>
                 <i className="bi bi-cart fs-4 text-success"></i>
               </div>
               <div className="h4 fw-bold text-dark mb-1">
@@ -551,7 +557,7 @@ function AdminDashboard() {
           <div className="card h-100 border-0 shadow-sm">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="card-title text-muted mb-0">Tổng doanh thu</h6>
+                <h6 className="card-title text-muted mb-0">Total Revenue</h6>
                 <i className="bi bi-currency-dollar fs-4 text-warning"></i>
               </div>
               <div className="h4 fw-bold text-dark mb-1">
@@ -565,7 +571,7 @@ function AdminDashboard() {
           <div className="card h-100 border-0 shadow-sm">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <h6 className="card-title text-muted mb-0">Tổng sản phẩm</h6>
+                <h6 className="card-title text-muted mb-0">Total Products</h6>
                 <i className="bi bi-box fs-4 text-info"></i>
               </div>
               <div className="h4 fw-bold text-dark mb-1">
@@ -582,9 +588,9 @@ function AdminDashboard() {
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white border-0 pb-0">
-              <h5 className="card-title mb-1">Doanh thu theo tháng</h5>
+              <h5 className="card-title mb-1">Monthly Revenue</h5>
               <p className="text-muted small mb-0">
-                Biểu đồ doanh thu 6 tháng gần nhất
+                Revenue chart for the last 6 months
               </p>
             </div>
             <div className="card-body">
@@ -624,7 +630,7 @@ function AdminDashboard() {
                         className="bg-primary rounded me-2"
                         style={{ width: "12px", height: "12px" }}
                       ></div>
-                      <span className="small text-muted">Doanh thu (VNĐ)</span>
+                      <span className="small text-muted">Revenue (USD)</span>
                     </div>
                   </div>
                 </div>
@@ -639,7 +645,7 @@ function AdminDashboard() {
                   }}
                 >
                   <i className="bi bi-bar-chart-line fs-1 text-muted"></i>
-                  <p className="text-muted mt-2">Không có dữ liệu doanh thu</p>
+                  <p className="text-muted mt-2">No revenue data available</p>
                 </div>
               )}
             </div>
@@ -650,9 +656,9 @@ function AdminDashboard() {
         <div className="col-lg-4">
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white border-0 pb-0">
-              <h5 className="card-title mb-1">Sản phẩm bán chạy</h5>
+              <h5 className="card-title mb-1">Top Selling Products</h5>
               <p className="text-muted small mb-0">
-                Top 5 sản phẩm có lượt bán cao nhất
+                Top 5 products with the highest sales
               </p>
             </div>
             <div className="card-body">
@@ -681,7 +687,7 @@ function AdminDashboard() {
                         </div>
                         <div className="flex-grow-1">
                           <div className="fw-bold mb-1">
-                            {product.name || "Tên sản phẩm"}
+                            {product.name || "Product Name"}
                           </div>
 
                           {/* Shop Information
@@ -694,11 +700,7 @@ function AdminDashboard() {
                           {/* Sales and Variants Info */}
                           <div className="small text-muted mb-1">
                             <i className="bi bi-cart-check me-1"></i>
-                            Đã bán:{" "}
-                            <span className="fw-bold text-success">
-                              {product.sold || 0}
-                            </span>{" "}
-                            lượt
+                            Sold: <span className="fw-bold text-success">{product.sold || 0}</span> times
                           </div>
                         </div>
                       </div>
@@ -708,9 +710,7 @@ function AdminDashboard() {
               ) : (
                 <div className="text-center py-4">
                   <i className="bi bi-box fs-1 text-muted"></i>
-                  <p className="text-muted mt-2">
-                    Không có dữ liệu sản phẩm bán chạy
-                  </p>
+                  <p className="text-muted mt-2">No top selling product data</p>
                 </div>
               )}
             </div>
@@ -721,9 +721,9 @@ function AdminDashboard() {
       {/* Recent Orders */}
       <div className="card border-0 shadow-sm">
         <div className="card-header bg-white border-0 pb-0">
-          <h5 className="card-title mb-1">Đơn hàng gần đây</h5>
+          <h5 className="card-title mb-1">Recent Orders</h5>
           <p className="text-muted small mb-0">
-            5 đơn hàng mới nhất trong hệ thống
+            5 most recent orders in the system
           </p>
         </div>
         <div className="card-body">
@@ -732,13 +732,13 @@ function AdminDashboard() {
               <table className="table table-hover">
                 <thead className="table-light">
                   <tr>
-                    <th className="border-0">Mã đơn hàng</th>
-                    <th className="border-0">Khách hàng</th>
-                    <th className="border-0">Sản phẩm</th>
-                    <th className="border-0">Số tiền</th>
-                    <th className="border-0">Trạng thái</th>
-                    <th className="border-0">Ngày đặt</th>
-                    <th className="border-0">Địa chỉ giao hàng</th>
+                    <th className="border-0">Order ID</th>
+                    <th className="border-0">Customer</th>
+                    <th className="border-0">Product(s)</th>
+                    <th className="border-0">Amount</th>
+                    <th className="border-0">Status</th>
+                    <th className="border-0">Order Date</th>
+                    <th className="border-0">Shipping Address</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -757,11 +757,15 @@ function AdminDashboard() {
                         <span className="fw-medium">{order.customerName}</span>
                       </td>
                       <td>
-                        <span
-                          className="text-truncate"
-                          style={{ maxWidth: "150px", display: "inline-block" }}
-                        >
-                          {order.productName}
+                        <span className="text-truncate" style={{ maxWidth: "150px", display: "inline-block" }}>
+                          {order.productList && order.productList.length > 0
+                            ? order.productList.map((p, idx) => (
+                                <span key={p._id || idx}>
+                                  {p.ProductName}
+                                  {idx < order.productList.length - 1 ? ", " : ""}
+                                </span>
+                              ))
+                            : order.productName}
                         </span>
                       </td>
                       <td>
@@ -793,7 +797,7 @@ function AdminDashboard() {
           ) : (
             <div className="text-center py-5">
               <i className="bi bi-cart-x fs-1 text-muted"></i>
-              <p className="text-muted mt-2">Không có đơn hàng nào</p>
+              <p className="text-muted mt-2">No orders found</p>
             </div>
           )}
         </div>
@@ -805,7 +809,7 @@ function AdminDashboard() {
           <div className="modal-dialog" role="document">
             <div className="modal-content" style={{ borderRadius: 16, overflow: 'hidden' }}>
               <div className="modal-header" style={{ background: '#fff7ea', borderBottom: 'none' }}>
-                <h5 className="modal-title" style={{ fontWeight: 700 }}>Chi tiết đơn hàng</h5>
+                <h5 className="modal-title" style={{ fontWeight: 700 }}>Order Details</h5>
                 <button type="button" className="close" onClick={handleCloseOrderModal}>
                   <span>&times;</span>
                 </button>
@@ -831,26 +835,49 @@ function AdminDashboard() {
                 </div>
                 <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
                   <div style={{ flex: 1, background: '#f8fafc', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-                    <div style={{ color: '#888', fontSize: 13 }}>Ngày đặt</div>
+                    <div style={{ color: '#888', fontSize: 13 }}>Order Date</div>
                     <div style={{ fontWeight: 600, fontSize: 15 }}>{selectedOrder.date ? new Date(selectedOrder.date).toLocaleDateString('vi-VN') : 'N/A'}</div>
                   </div>
                   <div style={{ flex: 1, background: '#f8fafc', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-                    <div style={{ color: '#888', fontSize: 13 }}>Tổng tiền</div>
+                    <div style={{ color: '#888', fontSize: 13 }}>Total Amount</div>
                     <div style={{ fontWeight: 600, fontSize: 15 }}>{formatCurrency(selectedOrder.totalAmount)}</div>
                   </div>
                 </div>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Thông tin đơn hàng</div>
+                <div style={{ fontWeight: 600, marginBottom: 8 }}>Order Information</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                   <div><i className="ti ti-user" style={{ marginRight: 8 }}></i>{selectedOrder.customerName}</div>
-                  <div><i className="ti ti-package" style={{ marginRight: 8 }}></i>{selectedOrder.productName}</div>
+                  <div><i className="ti ti-mail" style={{ marginRight: 8 }}></i>{selectedOrder.customerEmail || 'N/A'}</div>
+                  <div>
+                    <i className="ti ti-package" style={{ marginRight: 8 }}></i>
+                    {selectedOrder.productList && selectedOrder.productList.length > 0 ? (
+                      <ul style={{ margin: 0, paddingLeft: 20 }}>
+                        {selectedOrder.productList.map((p, idx) => (
+                          <li key={p._id || idx} style={{ marginBottom: 4 }}>
+                            <span style={{ fontWeight: 500 }}>{p.ProductName}</span>
+                            {p.ProductImage && (
+                              <img src={p.ProductImage} alt={p.ProductName} style={{ width: 32, height: 32, objectFit: 'cover', marginLeft: 8, borderRadius: 4, verticalAlign: 'middle' }} />
+                            )}
+                            {Array.isArray(p.ProductVariant) && p.ProductVariant.length > 0 && (
+                              <span style={{ marginLeft: 8, color: '#888', fontSize: 12 }}>
+                                {p.ProductVariant.map((v, vIdx) => (
+                                  <span key={v._id || vIdx}>
+                                    {v.ProductVariantName} x{v.Quantity}
+                                    {vIdx < p.ProductVariant.length - 1 ? ', ' : ''}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span>{selectedOrder.productName}</span>
+                    )}
+                  </div>
                   <div><i className="ti ti-map-pin" style={{ marginRight: 8 }}></i>{selectedOrder.shippingAddress || 'N/A'}</div>
                   <div><i className="ti ti-credit-card" style={{ marginRight: 8 }}></i>{selectedOrder.PaymentId?.Name || 'N/A'}</div>
                 </div>
-                <div style={{ fontWeight: 600, marginBottom: 8 }}>Hoạt động gần đây</div>
-                <div style={{ background: '#f8fafc', borderRadius: 8, padding: 16, textAlign: 'center', color: '#888' }}>
-                  <i className="ti ti-info-circle" style={{ fontSize: 20, marginBottom: 4 }}></i>
-                  <div>Chưa có hoạt động nào</div>
-                </div>
+                
               </div>
             </div>
           </div>

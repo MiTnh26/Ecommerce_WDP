@@ -7,7 +7,6 @@ import axios from "axios";
 function CheckoutPage() {
   const [selectedAddress, setSelectedAddress] = useState(0);
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [selectedShipping, setSelectedShipping] = useState("fast");
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -626,7 +625,7 @@ function CheckoutPage() {
           ShopId: shop.shopId,
           Items: orderItemsId,
           receiverName: addresses[selectedAddress]?.name, // truyền tên người nhận
-          phoneNumber: addresses[selectedAddress]?.phone,   // truyền số điện thoại
+          phoneNumber: addresses[selectedAddress]?.phone, // truyền số điện thoại
         };
 
         // 4. Gọi API tạo Order cho shop

@@ -35,9 +35,13 @@ function UserManagement() {
   }, []);
 
   const filteredUsers = userList.filter((user) => {
+    const normalize = (str) => (str || "").toLowerCase().replace(/\s+/g, "");
+    const search = normalize(searchTerm);
+    const username = normalize(user.Username);
+    const email = normalize(user.Email);
+
     const matchesSearch =
-      user.Username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.Email.toLowerCase().includes(searchTerm.toLowerCase());
+      username.includes(search) || email.includes(search);
 
     const matchesRole = roleFilter === "" || user.UserRole === roleFilter;
     const matchesStatus = statusFilter === "" || user.Status === statusFilter;
@@ -109,7 +113,7 @@ function UserManagement() {
   }, [userList]);
 
   return (
-    <AdminLayout currentPage="users" pageTitle="Quản lý người dùng">
+    <AdminLayout currentPage="users" pageTitle="Manage Users">
       {/* Stats Cards */}
 
       <div className="stats-grid">
