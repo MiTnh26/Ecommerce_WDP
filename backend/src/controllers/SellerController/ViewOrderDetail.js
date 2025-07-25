@@ -42,13 +42,13 @@ exports.getOrderDetail = async (req, res) => {
       OrderDate: order.OrderDate,
       Status: order.Status,
       TotalAmount: order.TotalAmount,
-      ReceiverName: defaultAddress?.receiverName || order.BuyerId.Username,
-      ReceiverPhone: defaultAddress?.phoneNumber || order.BuyerId.PhoneNumber,
-      ShippingAddress: order.ShippingAddress,
+      ReceiverName: order.receiverName || "N/A",
+      ReceiverPhone: order.phoneNumber || "N/A",
+      ShippingAddress: order.ShippingAddress || "N/A",
       PaymentId: order.PaymentId?.PaymentMethod || "N/A",
-      Items: order.Items ? {
-        _id: order.Items._id,
-        Product: order.Items.Product.map(product => ({
+      Items: Array.isArray(order.Items) && order.Items.length > 0 ? order.Items.map(item => ({
+        _id: item._id,
+        Product: item.Product.map(product => ({
           _id: product._id,
           ProductName: product.ProductName,
           ProductImage: product.ProductImage,
@@ -60,7 +60,7 @@ exports.getOrderDetail = async (req, res) => {
             Image: variant.Image
           }))
         }))
-      } : null
+      })) : []
     };
 
     res.json(formattedOrder);
@@ -96,6 +96,35 @@ exports.updateOrderStatus = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+
+    // If status is Delivered, update all related OrderItem statuses
+    if (Status === "Delivered" && Array.isArray(order.Items) && order.Items.length > 0) {
+      const OrderItem = require("../../models/OrderItems");
+      const Product = require("../../models/Products");
+      await OrderItem.updateMany(
+        { _id: { $in: order.Items } },
+        { $set: { Status: "Delivered" } }
+      );
+      // Trừ StockQuantity của ProductVariant
+      const orderItems = await OrderItem.find({ _id: { $in: order.Items } });
+      for (const item of orderItems) {
+        for (const product of item.Product) {
+          for (const variant of product.ProductVariant) {
+            // Trừ StockQuantity của ProductVariant trong bảng Products
+            await Product.updateOne(
+              {
+                _id: product._id,
+                "ProductVariant._id": variant._id
+              },
+              {
+                $inc: { "ProductVariant.$.StockQuantity": -variant.Quantity }
+              }
+            );
+          }
+        }
+      }
+    }
+
     console.log("Order status updated successfully:", order);
     res.json({
       message: "Order status updated successfully",

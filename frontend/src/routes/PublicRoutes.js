@@ -7,7 +7,7 @@ import {
   ForgotPasswordPage,
   ProductDetail,
   ProductList,
-} from "../pages/public/index";
+} from "../pages/Public/index";
 const PublicRoutes = [
   {
     path: "/Ecommerce",
