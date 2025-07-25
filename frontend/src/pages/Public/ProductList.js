@@ -1,9 +1,9 @@
-import { Button, Form, Card } from 'react-bootstrap';
-import CardCustom from '../../components/homePage/Card';
-import Pagination from '../../components/public/Pagination';
-import { useEffect, useState } from 'react';
-import { useSearchParams , useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Button, Form, Card } from "react-bootstrap";
+import CardCustom from "../../components/homePage/Card";
+import Pagination from "../../components/public/Pagination";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 import img_empty from "../../assets/images/data-empty.png";
 import { filterData } from "../../api/ProductApi";
 
@@ -21,16 +21,16 @@ const ProductList = () => {
   const [toPrice, setToPrice] = useState();
   const [showAllWTB, setShowAllWTB] = useState(false);
 
-  const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+  const baseURL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
 
   useEffect(() => {
     // fetch data product by search
     const fetchData = async () => {
-    const cleanedName = nameSearch.trim().replace(/\s+/g, ' ');
-    const data = await filterData(cleanedName);
-    setDataProductFilter(data.products || []); // tránh null
-    setTotalPages(data.totalPages -1);
-  };
+      const cleanedName = nameSearch.trim().replace(/\s+/g, " ");
+      const data = await filterData(cleanedName);
+      setDataProductFilter(data.products || []); // tránh null
+      setTotalPages(data.totalPages);
+    };
     // fetch data where to buy
     const loadData = async () => {
       try {
@@ -47,19 +47,23 @@ const ProductList = () => {
 
   //handle change where to buy
   const handleWhereToBuyChange = (event) => {
-    if(event.target.checked){
-    const datacheck = [...whereToBuyFilter, event.target.value];
-    console.log("datacheck", datacheck);
-    setWhereToBuyFilter([...whereToBuyFilter, event.target.value]);
-    }else{
-      const datacheck = whereToBuyFilter.filter(item => item !== event.target.value)
+    if (event.target.checked) {
+      const datacheck = [...whereToBuyFilter, event.target.value];
       console.log("datacheck", datacheck);
-      setWhereToBuyFilter(whereToBuyFilter.filter(item => item !== event.target.value));
+      setWhereToBuyFilter([...whereToBuyFilter, event.target.value]);
+    } else {
+      const datacheck = whereToBuyFilter.filter(
+        (item) => item !== event.target.value
+      );
+      console.log("datacheck", datacheck);
+      setWhereToBuyFilter(
+        whereToBuyFilter.filter((item) => item !== event.target.value)
+      );
     }
   };
   //handle change from price
   const handleFromPriceChange = (event) => {
-    console.log("datacheck",event.target.value);
+    console.log("datacheck", event.target.value);
     setFromPrice(event.target.value);
   };
   //handle change to price
@@ -69,31 +73,31 @@ const ProductList = () => {
   };
   //handle submit form
 
- // search, category, fromPrice, toPrice, whereToBuyFilter
-    const handleSubmitSearch = () => {
-      const cleanedFromPrice = fromPrice === "" ? null : Number(fromPrice);
-      const cleanedToPrice = toPrice === "" ? null : Number(toPrice);
-      if (
-        cleanedFromPrice !== null &&
-        cleanedToPrice !== null &&
-        cleanedFromPrice > cleanedToPrice
-      ) {
-        alert("From price must be less than to price");
-        return;
-      }
-      const fetchData = async () => {
-        const data = await filterData(
-          nameSearch.trim().replace(/\s+/g, " "),
-          category,
-          fromPrice || undefined,  // Nếu fromPrice là "" hoặc null/undefined → truyền undefined
-          toPrice || undefined,    // Tương tự với toPrice
-          whereToBuyFilter
-        );
-        setDataProductFilter(data);
-      };
-      fetchData();
+  // search, category, fromPrice, toPrice, whereToBuyFilter
+  const handleSubmitSearch = () => {
+    const cleanedFromPrice = fromPrice === "" ? null : Number(fromPrice);
+    const cleanedToPrice = toPrice === "" ? null : Number(toPrice);
+    if (
+      cleanedFromPrice !== null &&
+      cleanedToPrice !== null &&
+      cleanedFromPrice > cleanedToPrice
+    ) {
+      alert("From price must be less than to price");
+      return;
     }
- const displayed = showAllWTB ? whereToBuy : whereToBuy.slice(0, 6);
+    const fetchData = async () => {
+      const data = await filterData(
+        nameSearch.trim().replace(/\s+/g, " "),
+        category,
+        fromPrice || undefined, // Nếu fromPrice là "" hoặc null/undefined → truyền undefined
+        toPrice || undefined, // Tương tự với toPrice
+        whereToBuyFilter
+      );
+      setDataProductFilter(data);
+    };
+    fetchData();
+  };
+  const displayed = showAllWTB ? whereToBuy : whereToBuy.slice(0, 6);
 
   return (
     <div className="container-fluid py-3">
@@ -106,10 +110,15 @@ const ProductList = () => {
             {/* Where to buy */}
             <Card className="mb-3 border-0 border-bottom">
               <Card.Body className="p-0">
-                <Card.Title className="fs-6 text-muted mb-2">Where to buy</Card.Title>
+                <Card.Title className="fs-6 text-muted mb-2">
+                  Where to buy
+                </Card.Title>
                 <div className="list-group list-group-flush">
                   {displayed.map((item, index) => (
-                    <div key={index} className="list-group-item px-0 py-1 border-0">
+                    <div
+                      key={index}
+                      className="list-group-item px-0 py-1 border-0"
+                    >
                       <Form.Check
                         type="checkbox"
                         label={<span className="ms-1 small">{item.name}</span>}
@@ -118,10 +127,13 @@ const ProductList = () => {
                       />
                     </div>
                   ))}
-                  <div className="d-flex justify-content-center" onClick={() => setShowAllWTB(!showAllWTB)}>
-                    <hr className='flex-grow-1'></hr>
-                    <i className="bi bi-chevron-down mt-2" ></i>
-                    <hr className='flex-grow-1'></hr>
+                  <div
+                    className="d-flex justify-content-center"
+                    onClick={() => setShowAllWTB(!showAllWTB)}
+                  >
+                    <hr className="flex-grow-1"></hr>
+                    <i className="bi bi-chevron-down mt-2"></i>
+                    <hr className="flex-grow-1"></hr>
                   </div>
                 </div>
               </Card.Body>
@@ -130,15 +142,29 @@ const ProductList = () => {
             {/* Price range */}
             <Card className="mb-3 border-0 border-bottom">
               <Card.Body className="p-0">
-                <Card.Title className="fs-6 text-muted mb-2">Price range</Card.Title>
+                <Card.Title className="fs-6 text-muted mb-2">
+                  Price range
+                </Card.Title>
                 <Form>
                   <Form.Group className="mb-2">
                     <Form.Label className="form-text mb-1">From</Form.Label>
-                    <Form.Control size="sm" type="number" placeholder="VNĐ" value={fromPrice} onChange={handleFromPriceChange}/>
+                    <Form.Control
+                      size="sm"
+                      type="number"
+                      placeholder="VNĐ"
+                      value={fromPrice}
+                      onChange={handleFromPriceChange}
+                    />
                   </Form.Group>
                   <Form.Group className="mb-2">
                     <Form.Label className="form-text mb-1">Đến</Form.Label>
-                    <Form.Control size="sm" type="number" placeholder="VNĐ" value={toPrice} onChange={handleToPriceChange}/>
+                    <Form.Control
+                      size="sm"
+                      type="number"
+                      placeholder="VNĐ"
+                      value={toPrice}
+                      onChange={handleToPriceChange}
+                    />
                   </Form.Group>
                 </Form>
               </Card.Body>
@@ -156,36 +182,40 @@ const ProductList = () => {
 
         {/* Main content */}
         <div className="col-md-10">
-          {dataProductFilter !== null && dataProductFilter.length ==0 && (
-                <div>
-                  <img
-                    src={img_empty}
-                    alt="no data"
-                    className="object-fit-cover opacity-50 mx-auto d-block"></img>
-                  <p className="text-center text-muted" style={{ fontSize: "0.8rem" }}>Cart is empty</p>
-                </div>
-              )}
-          {dataProductFilter !== null  && dataProductFilter.length > 0 &&
-          (
-          <main className="bg-white p-3 rounded shadow-sm">
-            <div className="row g-2">
-              {dataProductFilter?.map((item, index) => (
-                <div
-                  key={index}
-                  className="col-12 col-sm-6 col-md-4 col-lg-3"
-                >
-                  <div className="product-item-list bg-white border rounded text-center p-2 h-100 w-100">
-                    <CardCustom item={item} />
-
-                  </div>
-                  {/* <div className="w-100 bg-dark">
+          {dataProductFilter !== null && dataProductFilter.length == 0 && (
+            <div>
+              <img
+                src={img_empty}
+                alt="no data"
+                className="object-fit-cover opacity-50 mx-auto d-block"
+              ></img>
+              <p
+                className="text-center text-muted"
+                style={{ fontSize: "0.8rem" }}
+              >
+                Cart is empty
+              </p>
+            </div>
+          )}
+          {dataProductFilter !== null && dataProductFilter.length > 0 && (
+            <main className="bg-white p-3 rounded shadow-sm">
+              <div className="row g-2">
+                {dataProductFilter?.map((item, index) => (
+                  <div
+                    key={index}
+                    className="col-12 col-sm-6 col-md-4 col-lg-3"
+                  >
+                    <div className="product-item-list bg-white border rounded text-center p-2 h-100 w-100">
+                      <CardCustom item={item} />
+                    </div>
+                    {/* <div className="w-100 bg-dark">
                     <p>Hello</p>
                     <CardCustom item={item} />
                   </div> */}
-                </div>
-              ))}
-            </div>
-          <div className="panigation">
+                  </div>
+                ))}
+              </div>
+              <div className="panigation">
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -196,15 +226,15 @@ const ProductList = () => {
                       fromPrice || undefined,
                       toPrice || undefined,
                       whereToBuyFilter,
-                      page,
+                      page - 1
                       // limit = 12
                     );
                     setCurrentPage(page);
                     setDataProductFilter(result.products || []);
                   }}
                 />
-          </div>
-              </main>
+              </div>
+            </main>
           )}
         </div>
       </div>
@@ -213,4 +243,3 @@ const ProductList = () => {
 };
 
 export default ProductList;
-
