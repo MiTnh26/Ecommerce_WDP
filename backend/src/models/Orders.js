@@ -43,14 +43,12 @@ const orderSchema = new mongoose.Schema(
     ,
     receiverName: {
       type: String,
-      default: ""
+      default: "",
     },
     phoneNumber: {
       type: String,
-      default: ""
+      default: "",
     },
-    
-
   },
   { timestamps: true }
 );
