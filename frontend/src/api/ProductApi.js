@@ -118,11 +118,13 @@ export const filterData = async (
     category,
     fromPrice,
     toPrice,
-    whereToBuyFilter
+    whereToBuyFilter,
+    page = 0,
+    limit = 12
   ) => {
     try {
       const res = await axios.post(
-        `${baseURL}/product/filter-product`,
+        `${baseURL}/product/filter-product?page=${page}&limit=${limit}`,
         {
           name: search,
           category: category,

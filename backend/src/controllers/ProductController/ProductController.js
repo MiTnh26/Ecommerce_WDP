@@ -437,7 +437,7 @@ exports.fetchProductsRelated = async (req, res) => {
 exports.filterProduct = async (req, res) => {
   try {
     let { name, category, fromPrice, toPrice, whereToBuyFilter } = req.body;
-    let { limit = 20, page = 0 } = req.query;
+    let { limit = 12, page = 0 } = req.query;
     const nameRevert = name.trim();
     //category = "687904f506b1b9b68ea90144";
     //console.log("Filtering products with name:", name, "category:", category, "fromPrice:", fromPrice, "toPrice:", toPrice, "whereToBuyFilter:", whereToBuyFilter);
@@ -517,10 +517,23 @@ exports.filterProduct = async (req, res) => {
         ProductImage: 1
       }
     });
-
-    const products = await Product.aggregate(pipeline).limit(10).skip(Number(page) * Number(limit));
-    //console.log("Filtered products:", products);
-    res.json(products);
+    //sort theo createAt
+    pipeline.push({ $sort: { createdAt: -1 } });
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: Number(page) * Number(limit) },
+          { $limit: Number(limit) }
+        ],
+        totalCount: [
+          { $count: "count" }
+        ]
+      }
+    });
+    const result = await Product.aggregate(pipeline);
+    const totalItems = result[0].totalCount[0]?.count || 0;
+    const totalPages = Math.ceil(totalItems / Number(limit));
+    res.json({ products: result[0].data, totalPages });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error filtering products" });

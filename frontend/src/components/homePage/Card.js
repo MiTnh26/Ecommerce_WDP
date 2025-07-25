@@ -71,6 +71,7 @@ const Card = ({ item }) => {
         </div>
       </div>
     </div>
+
   );
 };
 export default Card;
