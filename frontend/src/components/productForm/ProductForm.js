@@ -192,13 +192,18 @@ export default function ProductForm({
             onChange={handleMainImageChange}
             className={styles.fileInput}
           />
-          <span className={styles.uploadText}>
-            {mainImage
-              ? mainImage.name
-              : mainPreview
-              ? "Current image"
-              : "Add image"}
-          </span>
+
+          {mainPreview ? (
+            <img
+              src={mainPreview}
+              alt="Product preview"
+              className={styles.preview}
+            />
+          ) : (
+            <span className={styles.uploadText}>
+              {mainImage ? mainImage.name : "Add image"}
+            </span>
+          )}
         </div>
         {submitAttempt && imageError && (
           <p className={styles.errorText}>{imageError}</p>
@@ -358,7 +363,7 @@ export default function ProductForm({
           type="submit"
           className={styles.submitBtn}
           disabled={
-            variants.length === 0 
+            variants.length === 0
             // ||
             // Boolean(nameError) ||
             // Boolean(descError) ||
