@@ -315,50 +315,35 @@ describe("ProductController", () => {
     });
   });
 
-  describe("getTrendingProducts", () => {
-    it("aggregates, computes, filters & returns trending", async () => {
-      const now = new Date();
-      // stub both aggregates
-      const cur = [
-        {
-          _id: "p1",
-          currentSold: 10,
-          currentRevenue: 0,
-          Price: 1,
-          ProductName: "p",
-          ProductImage: "i",
-          StockQuantity: 5,
-        },
-      ];
-      const prev = [{ _id: "p1", previousSold: 2 }];
-      OrderItem.aggregate
-        .mockResolvedValueOnce(cur)
-        .mockResolvedValueOnce(prev);
-
-      await ctrl.getTrendingProducts(req, res);
-
-      expect(OrderItem.aggregate).toHaveBeenCalledTimes(2);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith(expect.any(Array));
-    });
-  });
-
   describe("getNewProducts", () => {
     it("finds, sorts, limits & returns new products", async () => {
       const fake = [{ _id: "n1" }];
-      const chain = {
-        select: jest.fn().mockReturnThis(),
-        sort: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockResolvedValue(fake),
-      };
-      Product.find.mockReturnValue(chain);
+      Product.aggregate.mockResolvedValue(fake);
 
+      req.query = { limit: 5, page: 2 };
       await ctrl.getNewProducts(req, res);
 
-      expect(chain.select).toHaveBeenCalled();
+      expect(Product.aggregate).toHaveBeenCalledWith([
+        { $match: { Status: { $ne: "Inactive" } } },
+        { $lookup: expect.any(Object) },
+        { $unwind: "$shop" },
+        { $match: { "shop.status": { $ne: "Banned" } } },
+        { $project: expect.any(Object) },
+        { $sort: { createdAt: -1 } },
+        { $skip: 2 * 5 },
+        { $limit: 5 },
+      ]);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(fake);
+    });
+
+    it("handles error", async () => {
+      Product.aggregate.mockRejectedValue(new Error("fail-aggs"));
+      await ctrl.getNewProducts(req, res);
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Server error fetching new products",
+      });
     });
   });
 
@@ -376,69 +361,68 @@ describe("ProductController", () => {
 
   describe("getProductById", () => {
     it("returns product when found", async () => {
-      const prod = { _id: "p1" };
-      // deepest populate => resolves to the product
+      // include a ShopId.status so the 'banned' and 'inactive' checks pass through
+      const prod = { _id: "p1", ShopId: { status: "Active" } };
+      // 1) simulate .populate() resolving to our product
       const popShop = jest.fn().mockResolvedValue(prod);
-      // intermediate populate => returns object with second populate
-      const popCategory = jest.fn().mockReturnValue({ populate: popShop });
-      // select => returns object with first populate
-      const selectSpy = jest.fn().mockReturnValue({ populate: popCategory });
+      // 2) simulate .select() returning an object with .populate = popShop
+      const selectSpy = jest.fn().mockReturnValue({ populate: popShop });
+      // 3) make findOne(...) return that object
       Product.findOne.mockReturnValue({ select: selectSpy });
 
       req.params = { id: "p1" };
-
       await ctrl.getProductById(req, res);
 
+      expect(Product.findOne).toHaveBeenCalledWith({ _id: "p1" });
       expect(selectSpy).toHaveBeenCalledWith(
-        "_id ProductName ProductImage Description ProductVariant"
+        "_id ProductName ProductImage Description ProductVariant Status"
       );
-      expect(popCategory).toHaveBeenCalledWith({
-        path: "CategoryId",
-        select: "_id CategoryName",
-      });
       expect(popShop).toHaveBeenCalledWith({
         path: "ShopId",
-        select: "_id name shopAvatar description address",
+        select: "_id name shopAvatar description address status",
       });
-      expect(res.json).toHaveBeenCalledWith(prod);
+      expect(res.json).toHaveBeenCalledWith({
+        product: prod,
+        message: "Fetch product successfully",
+      });
     });
 
     it("404s when not found", async () => {
-      Product.findOne.mockReturnValue({
-        select: () => ({
-          populate: () => ({
-            populate: () => Promise.resolve(null),
-          }),
-        }),
-      });
-      req.params = { id: "p1" };
+      // 1) simulate .populate() resolving to null
+      const popShop = jest.fn().mockResolvedValue(null);
+      const selectSpy = jest.fn().mockReturnValue({ populate: popShop });
+      Product.findOne.mockReturnValue({ select: selectSpy });
 
+      req.params = { id: "p1" };
       await ctrl.getProductById(req, res);
 
+      expect(Product.findOne).toHaveBeenCalledWith({ _id: "p1" });
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ message: "Product not found" });
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Product not found",
+      });
     });
   });
 
-  describe("fetchProductsRelatedToCategory", () => {
-    it("400s without category_id", async () => {
-      req.params = {};
-      await ctrl.fetchProductsRelatedToCategory(req, res);
+  describe("fetchProductsRelated", () => {
+    it("400s without name_product", async () => {
+      req.body = {};
+      await ctrl.fetchProductsRelated(req, res);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        message: "Category ID is required",
+        message: "Product name is required",
       });
     });
 
     it("runs aggregate and returns products", async () => {
       const fake = [{ _id: "r1" }];
-      // mock aggregate to directly resolve the array
       Product.aggregate.mockResolvedValue(fake);
-      req.params = { category_id: "aaaaaaaaaaaaaaaaaaaaaaaa" };
+      req.body = { name_product: "foo" };
 
-      await ctrl.fetchProductsRelatedToCategory(req, res);
+      await ctrl.fetchProductsRelated(req, res);
 
       expect(Product.aggregate).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(fake);
     });
   });
@@ -446,10 +430,10 @@ describe("ProductController", () => {
   describe("filterProduct", () => {
     it("builds pipeline and returns filtered products", async () => {
       const fake = [{ _id: "f1" }];
-      Product.aggregate.mockReturnValue({
-        limit: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockResolvedValue(fake),
-      });
+      // Controller returns an array: [ { data: [...], totalCount: [{ count }] } ]
+      Product.aggregate.mockResolvedValue([
+        { data: fake, totalCount: [{ count: fake.length }] },
+      ]);
 
       req.body = {
         name: "foo",
@@ -462,7 +446,10 @@ describe("ProductController", () => {
       await ctrl.filterProduct(req, res);
 
       expect(Product.aggregate).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith(fake);
+      expect(res.json).toHaveBeenCalledWith({
+        products: fake,
+        totalPages: Math.ceil(fake.length / 2), // here 1
+      });
     });
 
     it("handles error", async () => {

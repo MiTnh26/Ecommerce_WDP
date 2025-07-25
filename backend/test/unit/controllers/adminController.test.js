@@ -321,18 +321,27 @@ describe("AdminController", () => {
         },
         { Status: "Pending", TotalAmount: 5, PaymentId: null },
       ];
-      const chain = {
-        populate: jest.fn().mockReturnThis(),
-        exec: jest.fn().mockResolvedValue(orders), // nếu controller dùng .exec()
-      };
-      Orders.find.mockReturnValue(chain);
+
+      // Build three-layer chain for the three populates:
+      const chain1 = { populate: jest.fn() };
+      const chain2 = { populate: jest.fn() };
+      const chain3 = { populate: jest.fn() };
+
+      // 1st .populate("Items") → chain2
+      chain1.populate.mockReturnValue(chain2);
+      // 2nd .populate("PaymentId") → chain3
+      chain2.populate.mockReturnValue(chain3);
+      // 3rd .populate("BuyerId") → resolves to orders
+      chain3.populate.mockResolvedValue(orders);
+
+      Orders.find.mockReturnValue(chain1);
 
       await ctrl.getAllOrder(req, res);
 
       expect(Orders.find).toHaveBeenCalled();
-      expect(chain.populate).toHaveBeenCalledWith("Items");
-      expect(chain.populate).toHaveBeenCalledWith("PaymentId");
-      expect(chain.populate).toHaveBeenCalledWith("BuyerId");
+      expect(chain1.populate).toHaveBeenCalledWith("Items");
+      expect(chain2.populate).toHaveBeenCalledWith("PaymentId");
+      expect(chain3.populate).toHaveBeenCalledWith("BuyerId");
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           totalTransactions: 2,

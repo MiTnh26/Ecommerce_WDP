@@ -1,7 +1,6 @@
 // test/unit/controllers/categoryController.test.js
 
 beforeAll(() => {
-  // silence error logging in tests
   jest.spyOn(console, "error").mockImplementation(() => {});
 });
 afterAll(() => {
@@ -10,17 +9,14 @@ afterAll(() => {
 
 const httpMocks = require("node-mocks-http");
 
-// 1️⃣ Mock the Category model as a constructor + static methods:
+// Mock the Category model
 jest.mock("../../../src/models/Categories", () => {
-  const Category = Object.assign(
-    jest.fn(),                 // so new Category(...) works
-    {
-      find: jest.fn(),
-      findById: jest.fn(),
-      findByIdAndUpdate: jest.fn(),
-      findByIdAndDelete: jest.fn(),
-    }
-  );
+  const Category = Object.assign(jest.fn(), {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    findOneAndUpdate: jest.fn(),
+    findOneAndDelete: jest.fn(),
+  });
   return Category;
 });
 
@@ -39,18 +35,27 @@ describe("SellerController › CategoryController", () => {
   });
 
   describe("getAllCategories", () => {
+    it("400 when shopId missing", async () => {
+      req.query = {};
+      await ctrl.getAllCategories(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: "Missing shopId" });
+    });
+
     it("returns all categories on success", async () => {
       const cats = [{ name: "A" }, { name: "B" }];
+      req.query = { shopId: "s1" };
       Category.find.mockResolvedValue(cats);
 
       await ctrl.getAllCategories(req, res);
 
-      expect(Category.find).toHaveBeenCalledWith();
+      expect(Category.find).toHaveBeenCalledWith({ ShopId: "s1" });
       expect(res.json).toHaveBeenCalledWith(cats);
     });
 
     it("handles DB errors", async () => {
       const err = new Error("fail");
+      req.query = { shopId: "s1" };
       Category.find.mockRejectedValue(err);
 
       await ctrl.getAllCategories(req, res);
@@ -64,21 +69,38 @@ describe("SellerController › CategoryController", () => {
   });
 
   describe("getCategoryById", () => {
-    it("404 when not found", async () => {
-      Category.findById.mockResolvedValue(null);
+    it("400 when shopId missing", async () => {
+      req.query = {};
       req.params.id = "c1";
+      await ctrl.getCategoryById(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: "Missing shopId" });
+    });
+
+    it("404 when not found", async () => {
+      const shopId = "s1";
+      req.query = { shopId };
+      req.params.id = "c1";
+      Category.findOne.mockResolvedValue(null);
 
       await ctrl.getCategoryById(req, res);
 
-      expect(Category.findById).toHaveBeenCalledWith("c1");
+      expect(Category.findOne).toHaveBeenCalledWith({
+        _id: "c1",
+        ShopId: shopId,
+      });
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ message: "Category not found" });
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Category not found or not belong to your shop",
+      });
     });
 
     it("returns category", async () => {
+      const shopId = "s2";
       const cat = { _id: "c2", name: "X" };
-      Category.findById.mockResolvedValue(cat);
+      req.query = { shopId };
       req.params.id = "c2";
+      Category.findOne.mockResolvedValue(cat);
 
       await ctrl.getCategoryById(req, res);
 
@@ -87,8 +109,9 @@ describe("SellerController › CategoryController", () => {
 
     it("handles errors", async () => {
       const err = new Error("boom");
-      Category.findById.mockRejectedValue(err);
+      req.query = { shopId: "s3" };
       req.params.id = "c3";
+      Category.findOne.mockRejectedValue(err);
 
       await ctrl.getCategoryById(req, res);
 
@@ -103,9 +126,7 @@ describe("SellerController › CategoryController", () => {
   describe("getCategoriesByShop", () => {
     it("400 when shopId missing", async () => {
       req.params = {};
-
       await ctrl.getCategoriesByShop(req, res);
-
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         message: "shopId parameter is required",
@@ -114,8 +135,8 @@ describe("SellerController › CategoryController", () => {
 
     it("returns categories for a shop", async () => {
       const list = [{ ShopId: "s1" }];
-      Category.find.mockResolvedValue(list);
       req.params.shopId = "s1";
+      Category.find.mockResolvedValue(list);
 
       await ctrl.getCategoriesByShop(req, res);
 
@@ -125,8 +146,8 @@ describe("SellerController › CategoryController", () => {
 
     it("handles DB errors", async () => {
       const err = new Error("oops");
-      Category.find.mockRejectedValue(err);
       req.params.shopId = "s2";
+      Category.find.mockRejectedValue(err);
 
       await ctrl.getCategoriesByShop(req, res);
 
@@ -143,15 +164,29 @@ describe("SellerController › CategoryController", () => {
   });
 
   describe("createCategory", () => {
-    it("creates and returns new category", async () => {
-      const fakeDoc = { save: jest.fn().mockResolvedValue(), CategoryName: "C", Status: "A" };
-      // new Category(...) returns fakeDoc
-      Category.mockImplementation(() => fakeDoc);
+    it("400 when shopId missing", async () => {
       req.body = { CategoryName: "C", Status: "A" };
+      await ctrl.createCategory(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: "Missing shopId" });
+    });
+
+    it("creates and returns new category", async () => {
+      const fakeDoc = {
+        save: jest.fn().mockResolvedValue(),
+        CategoryName: "C",
+        Status: "A",
+      };
+      Category.mockImplementation(() => fakeDoc);
+      req.body = { CategoryName: "C", Status: "A", shopId: "s1" };
 
       await ctrl.createCategory(req, res);
 
-      expect(Category).toHaveBeenCalledWith({ CategoryName: "C", Status: "A" });
+      expect(Category).toHaveBeenCalledWith({
+        CategoryName: "C",
+        Status: "A",
+        ShopId: "s1",
+      });
       expect(fakeDoc.save).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(fakeDoc);
@@ -161,7 +196,7 @@ describe("SellerController › CategoryController", () => {
       const err = new Error("nope");
       const fakeDoc = { save: jest.fn().mockRejectedValue(err) };
       Category.mockImplementation(() => fakeDoc);
-      req.body = { CategoryName: "X", Status: "Y" };
+      req.body = { CategoryName: "X", Status: "Y", shopId: "s2" };
 
       await ctrl.createCategory(req, res);
 
@@ -174,29 +209,42 @@ describe("SellerController › CategoryController", () => {
   });
 
   describe("updateCategory", () => {
-    it("404 when not found", async () => {
-      Category.findByIdAndUpdate.mockResolvedValue(null);
-      req.params.id = "u1";
+    it("400 when shopId missing", async () => {
       req.body = { CategoryName: "N", Status: "S" };
+      req.params.id = "u1";
+      await ctrl.updateCategory(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: "Missing shopId" });
+    });
+
+    it("404 when not found", async () => {
+      req.body = { CategoryName: "N", Status: "S", shopId: "s1" };
+      req.params.id = "u1";
+      Category.findOneAndUpdate.mockResolvedValue(null);
 
       await ctrl.updateCategory(req, res);
 
+      expect(Category.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: "u1", ShopId: "s1" },
+        { CategoryName: "N", Status: "S" },
+        { new: true }
+      );
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ message: "Category not found" });
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Category not found or not belong to your shop",
+      });
     });
 
     it("updates and returns", async () => {
       const updated = { _id: "u2", CategoryName: "New", Status: "Active" };
-      Category.findByIdAndUpdate.mockResolvedValue(updated);
+      req.body = { CategoryName: "New", Status: "Active", shopId: "s2" };
       req.params.id = "u2";
-      req.body = { CategoryName: "New", Status: "Active" };
+      Category.findOneAndUpdate.mockResolvedValue(updated);
 
       await ctrl.updateCategory(req, res);
 
-      expect(
-        Category.findByIdAndUpdate
-      ).toHaveBeenCalledWith(
-        "u2",
+      expect(Category.findOneAndUpdate).toHaveBeenCalledWith(
+        { _id: "u2", ShopId: "s2" },
         { CategoryName: "New", Status: "Active" },
         { new: true }
       );
@@ -205,9 +253,9 @@ describe("SellerController › CategoryController", () => {
 
     it("handles errors", async () => {
       const err = new Error("bad");
-      Category.findByIdAndUpdate.mockRejectedValue(err);
+      req.body = { CategoryName: "X", Status: "Y", shopId: "s3" };
       req.params.id = "x1";
-      req.body = { CategoryName: "X", Status: "Y" };
+      Category.findOneAndUpdate.mockRejectedValue(err);
 
       await ctrl.updateCategory(req, res);
 
@@ -220,19 +268,35 @@ describe("SellerController › CategoryController", () => {
   });
 
   describe("deleteCategory", () => {
-    it("404 when not found", async () => {
-      Category.findByIdAndDelete.mockResolvedValue(null);
+    it("400 when shopId missing", async () => {
+      req.query = {};
       req.params.id = "d1";
+      await ctrl.deleteCategory(req, res);
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: "Missing shopId" });
+    });
+
+    it("404 when not found", async () => {
+      req.query = { shopId: "s1" };
+      req.params.id = "d1";
+      Category.findOneAndDelete.mockResolvedValue(null);
 
       await ctrl.deleteCategory(req, res);
 
+      expect(Category.findOneAndDelete).toHaveBeenCalledWith({
+        _id: "d1",
+        ShopId: "s1",
+      });
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ message: "Category not found" });
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Category not found or not belong to your shop",
+      });
     });
 
     it("deletes and returns message", async () => {
-      Category.findByIdAndDelete.mockResolvedValue({ _id: "d2" });
+      req.query = { shopId: "s2" };
       req.params.id = "d2";
+      Category.findOneAndDelete.mockResolvedValue({ _id: "d2" });
 
       await ctrl.deleteCategory(req, res);
 
@@ -241,8 +305,9 @@ describe("SellerController › CategoryController", () => {
 
     it("handles errors", async () => {
       const err = new Error("err!");
-      Category.findByIdAndDelete.mockRejectedValue(err);
+      req.query = { shopId: "s3" };
       req.params.id = "d3";
+      Category.findOneAndDelete.mockRejectedValue(err);
 
       await ctrl.deleteCategory(req, res);
 

@@ -29,7 +29,7 @@ export default function AddProductPage({ product, onCancel, shopId }) {
     } catch (error) {
       console.error(error);
     }
-  }, []);
+  }, [shopId]);
 
   // useEffect(() => {
   //   const user = JSON.parse(localStorage.getItem("user") || "{}");
