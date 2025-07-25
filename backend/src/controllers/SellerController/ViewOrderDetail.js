@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Order = require("../../models/Orders");
 const OrderItem = require("../../models/OrderItems");
+const Product = require("../../models/Products");
 
 exports.getOrderDetail = async (req, res) => {
   try {
@@ -42,13 +43,13 @@ exports.getOrderDetail = async (req, res) => {
       OrderDate: order.OrderDate,
       Status: order.Status,
       TotalAmount: order.TotalAmount,
-      ReceiverName: defaultAddress?.receiverName || order.BuyerId.Username,
-      ReceiverPhone: defaultAddress?.phoneNumber || order.BuyerId.PhoneNumber,
-      ShippingAddress: order.ShippingAddress,
+      ReceiverName: order.receiverName || "N/A",
+      ReceiverPhone: order.phoneNumber || "N/A",
+      ShippingAddress: order.ShippingAddress || "N/A",
       PaymentId: order.PaymentId?.PaymentMethod || "N/A",
-      Items: order.Items ? {
-        _id: order.Items._id,
-        Product: order.Items.Product.map(product => ({
+      Items: Array.isArray(order.Items) && order.Items.length > 0 ? order.Items.map(item => ({
+        _id: item._id,
+        Product: item.Product.map(product => ({
           _id: product._id,
           ProductName: product.ProductName,
           ProductImage: product.ProductImage,
@@ -60,7 +61,7 @@ exports.getOrderDetail = async (req, res) => {
             Image: variant.Image
           }))
         }))
-      } : null
+      })) : []
     };
 
     res.json(formattedOrder);
@@ -95,6 +96,40 @@ exports.updateOrderStatus = async (req, res) => {
     );
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (Status === "Delivered" && Array.isArray(order.Items) && order.Items.length > 0) {
+      // Cập nhật trạng thái của các OrderItem
+      await OrderItem.updateMany(
+        { _id: { $in: order.Items } },
+        { $set: { Status: Status } }
+      );
+
+      // Lấy thông tin các OrderItem
+      const orderItems = await OrderItem.find({ _id: { $in: order.Items } });
+
+      for (const item of orderItems) {
+        for (const product of item.Product) {
+          for (const variant of product.ProductVariant) {
+            const quantitySold = variant.Quantity;
+
+            // Trừ StockQuantity và cộng vào Sales trong ProductVariant
+            await Product.updateOne(
+              {
+                _id: product._id,
+                "ProductVariant._id": variant._id,
+              },
+              {
+                $inc: {
+                  "ProductVariant.$.StockQuantity": -quantitySold,
+                  "ProductVariant.$.Sales": quantitySold,
+                  Sales: quantitySold 
+                }
+              }
+            );
+          }
+        }
+      }
     }
     console.log("Order status updated successfully:", order);
     res.json({

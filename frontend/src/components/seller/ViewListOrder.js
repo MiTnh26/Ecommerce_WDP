@@ -269,7 +269,7 @@ const ViewListOrder = () => {
                   {sortedOrders.map((order, index) => (
                     <tr key={order._id}>
                       <td>{index + 1}</td>
-                      <td>{order.customerName || "N/A"}</td>
+                      <td>{order.customerName || order.receiverName || "N/A"}</td>
                       <td>{order.totalAmount || "N/A"}</td>
                       <td>
                         {order.dateAdd
