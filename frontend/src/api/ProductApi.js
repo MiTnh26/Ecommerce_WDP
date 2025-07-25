@@ -1,3 +1,4 @@
+
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { getIconForCategory } from "../store/keywordToIcon";
@@ -86,7 +87,7 @@ export const fetchProductDetail = async (product_id) => {
     const data = res.data.product; // ✅ Sửa lại đúng key
     const status = res.status; // ✅ status là HTTP status, không phải res.data.status
     const message = res.data.message;
-    console.log("fetchProductDetail data", data, status, message);
+    //console.log("fetchProductDetail data", data, status, message);
     return { data, message, status };
   } catch (err) {
     console.log("fetchProductDetail err", err);
@@ -112,26 +113,29 @@ export const fetchProductDetail = async (product_id) => {
   }
 };
   
-  export const filterData = async (whereToBuyFilter, toPrice, fromPrice, search, category) => {
-        console.log("filterData", "1", search, "2",category, "3",fromPrice, toPrice, "4",whereToBuyFilter);
-        try {
-            const res = await axios.post(
-                `${baseURL}/product/filter-product`,
-                {
-                    name: search,            
-                    category: category,
-                    fromPrice: fromPrice,
-                    toPrice: toPrice,
-                    whereToBuyFilter: whereToBuyFilter
-                },
-                {
-                    withCredentials: true
-                }
-            );
-            return res.data
-            // Xử lý kết quả:
-            //console.log(res.data);
-        } catch (error) {
-            console.error('Lỗi lọc sản phẩm:', error);
+export const filterData = async (
+    search,
+    category,
+    fromPrice,
+    toPrice,
+    whereToBuyFilter
+  ) => {
+    try {
+      const res = await axios.post(
+        `${baseURL}/product/filter-product`,
+        {
+          name: search,
+          category: category,
+          fromPrice: fromPrice,
+          toPrice: toPrice,
+          whereToBuyFilter: whereToBuyFilter,
+        },
+        {
+          withCredentials: true,
         }
+      );
+      return res.data;
+    } catch (error) {
+      console.error("Lỗi lọc sản phẩm:", error);
     }
+  };

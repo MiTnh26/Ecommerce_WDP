@@ -1,21 +1,18 @@
 import { Button, Form, Card } from 'react-bootstrap';
-import StarVoting from '../../components/public/StarVoting';
 import CardCustom from '../../components/homePage/Card';
 import Pagination from '../../components/public/Pagination';
 import { useEffect, useState } from 'react';
 import { useSearchParams , useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AppContext  } from "../../store/Context";
-import { useContext } from "react"; 
 import img_empty from "../../assets/images/data-empty.png";
+import { filterData } from "../../api/ProductApi";
 const ProductList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams] = useSearchParams();
-  const {dataProductFilter, filterData} = useContext(AppContext);
-  //console.log("dataProductFilter", dataProductFilter);
+  const nameSearch = searchParams.get("name") || "";
+  const [dataProductFilter, setDataProductFilter] = useState([]);
   const navigate = useNavigate();
   const [category, setCategory] = useState(searchParams.get("category") || "");
-  const [nameSearch, setNameSearch] = useState(searchParams.get("name") || "");
   const [whereToBuy, setWhereToBuy] = useState([]);
   const [whereToBuyFilter, setWhereToBuyFilter] = useState([]);
   const [fromPrice, setFromPrice] = useState();
@@ -25,11 +22,12 @@ const ProductList = () => {
   const baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    // fetch data
-    setCategory(searchParams.get("category") || "");
-    //console.log("category", searchParams.get("category") || "");
-    filterData(nameSearch, category);
-
+    // fetch data product by search
+    const fetchData = async () => {
+    const cleanedName = nameSearch.trim().replace(/\s+/g, ' ');
+    const data = await filterData(cleanedName);
+    setDataProductFilter(data || []); // tránh null
+  };
     // fetch data where to buy
     const loadData = async () => {
       try {
@@ -40,6 +38,7 @@ const ProductList = () => {
         console.error("Lỗi khi load province:", error);
       }
     };
+    fetchData();
     loadData();
   }, [searchParams]);
 
@@ -69,22 +68,28 @@ const ProductList = () => {
 
  // search, category, fromPrice, toPrice, whereToBuyFilter
     const handleSubmitSearch = () => {
-      if(fromPrice > toPrice){
+      const cleanedFromPrice = fromPrice === "" ? null : Number(fromPrice);
+      const cleanedToPrice = toPrice === "" ? null : Number(toPrice);
+      if (
+        cleanedFromPrice !== null &&
+        cleanedToPrice !== null &&
+        cleanedFromPrice > cleanedToPrice
+      ) {
         alert("From price must be less than to price");
-        setFromPrice(0);
-        setToPrice(0);
         return;
       }
-      console.log("before", nameSearch);
-      console.log("after",  nameSearch.trim().replace(/\s+/g, " "));
-  filterData(
-    nameSearch.trim().replace(/\s+/g, " "),
-    category,
-    fromPrice || undefined,  // Nếu fromPrice là "" hoặc null/undefined → truyền undefined
-    toPrice || undefined,    // Tương tự với toPrice
-    whereToBuyFilter
-  );
-};
+      const fetchData = async () => {
+        const data = await filterData(
+          nameSearch.trim().replace(/\s+/g, " "),
+          category,
+          fromPrice || undefined,  // Nếu fromPrice là "" hoặc null/undefined → truyền undefined
+          toPrice || undefined,    // Tương tự với toPrice
+          whereToBuyFilter
+        );
+        setDataProductFilter(data);
+      };
+      fetchData();
+    }
  const displayed = showAllWTB ? whereToBuy : whereToBuy.slice(0, 6);
 
   return (
@@ -159,7 +164,6 @@ const ProductList = () => {
               )}
           {dataProductFilter !== null  && dataProductFilter.length > 0 &&
           (
-          <div>
           <main className="bg-white p-3 rounded shadow-sm">
             <div className="row g-2">
               {dataProductFilter?.map((item, index) => (
@@ -167,21 +171,24 @@ const ProductList = () => {
                   key={index}
                   className="col-12 col-sm-6 col-md-4 col-lg-3"
                 >
-                  <div className="product-item bg-white border rounded text-center p-2 h-100">
+                  <div className="product-item-list bg-white border rounded text-center p-2 h-100 w-100">
                     <CardCustom item={item} />
 
                   </div>
+                  {/* <div className="w-100 bg-dark">
+                    <p>Hello</p>
+                    <CardCustom item={item} />
+                  </div> */}
                 </div>
               ))}
             </div>
-          </main>
           <div className="panigation">
             <Pagination
               currentPage={currentPage}
               totalPages={
                 dataProductFilter && dataProductFilter.length > 0
-                  ? Math.ceil(dataProductFilter.length / 20)
-                  : 1
+                ? Math.ceil(dataProductFilter.length / 20)
+                : 1
               }
               onPageChange={(page) => {
                 filterData(
@@ -193,9 +200,9 @@ const ProductList = () => {
                 );
                 setCurrentPage(page)
               }}
-            />
+              />
           </div>
-          </div>
+              </main>
           )}
         </div>
       </div>
@@ -204,3 +211,4 @@ const ProductList = () => {
 };
 
 export default ProductList;
+

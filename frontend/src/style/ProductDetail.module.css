@@ -1,3 +1,4 @@
+
 /* prodcut-summay-section */
 .product-summary-section {
     display: flex;
@@ -63,7 +64,7 @@
 
 /* price */
 .price-value::after {
-    content: "đ";
+    content: "$";
     font-size: 0.9rem;
     color: red;
 }
@@ -75,7 +76,7 @@
         /*::after là pseudo-element được render như một phần nội dung inline mặc định. 
                     => thêm display: inline-block
                     => tách ::after ra khỏi dòng văn bản gốc (inline text) => trở thành một hộp riêng biệt (box)*/
-        content: "đ";
+        content: "$";
         font-size: 0.8rem;
         color: black;
         text-decoration: none;
@@ -192,5 +193,3 @@
         box-sizing: border-box;
         min-width: 0;
     }
-
-}

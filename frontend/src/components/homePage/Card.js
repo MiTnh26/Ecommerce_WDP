@@ -61,12 +61,12 @@ const Card = ({item}) => {
       <div className="card-body mt-2">
         <p className="card-title-custom fw-bold title">{item.ProductName ? item.ProductName : "Product Name"}</p>
         <div className="d-flex justify-content-between">
-          <p className="price fw-bold">{item.Price ? item.Price : "0".toLocaleString('vi-VN')} ₫</p>
+          <p className="price fw-bold">
+            {item.Price ? Number(item.Price).toLocaleString("en-US") : "0"} $
+          </p>
           {/* <p className="rate text-warning"><i className="fa-solid fa-star"></i> 4.8</p> */}
         </div>
       </div>
     </div>
   )
 }
-
-export default Card

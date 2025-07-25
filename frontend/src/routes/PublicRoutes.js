@@ -1,3 +1,4 @@
+
 import MainLayout from "../layouts/MainLayout";
 import {
   HomePage,
@@ -7,7 +8,7 @@ import {
   ForgotPasswordPage,
   ProductDetail,
   ProductList,
-} from "../pages/Public/index";
+} from "../pages/public/index";
 const PublicRoutes = [
   {
     path: "/Ecommerce",
@@ -22,7 +23,7 @@ const PublicRoutes = [
         element: <ProductDetail />,
       },
       {
-        path: "/Ecommerce/search/:keyword",
+        path: "/Ecommerce/search",
         element: <ProductList />,
       },
     ],
@@ -43,3 +44,4 @@ const PublicRoutes = [
 ];
 
 export default PublicRoutes;
+
