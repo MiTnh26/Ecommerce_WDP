@@ -210,7 +210,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
                 x{product.Quantity || "N/A"}
               </div>
               <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
-                ₫{Number(product.Price || 0).toLocaleString("vi-VN")}
+                ${Number(product.Price || 0).toLocaleString("vi-VN")}
               </div>
             </div>
           );
@@ -263,7 +263,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
               x{variant.Quantity}
             </div>
             <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
-              ₫{Number(variant.Price || 0).toLocaleString("vi-VN")}
+              ${Number(variant.Price || 0).toLocaleString("vi-VN")}
             </div>
           </div>
         ));
@@ -284,7 +284,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
     <div style={{ fontSize: 16, color: "#555" }}>
       Total Amount:{" "}
       <span style={{ color: blue, fontWeight: 700, fontSize: 22 }}>
-        ₫{Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
+        ${Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
       </span>
     </div>
   </div>
