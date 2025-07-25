@@ -172,6 +172,14 @@ function PaymentManagement() {
 
         // Refresh data after successful update
         await fetchPaymentMethods();
+        // Ensure only one default in UI
+        setPaymentMethods((prev) =>
+          prev.map((pm) => ({
+            ...pm,
+            Default: (pm._id || pm.id) === paymentId,
+            isDefault: (pm._id || pm.id) === paymentId,
+          }))
+        );
         console.log(`✅ Payment method ${paymentId} set as default`);
       } catch (err) {
         console.error("❌ Error setting default payment:", err);
@@ -454,7 +462,7 @@ function PaymentManagement() {
                             <i className="ti ti-edit"></i>
                           </button>
 
-                          {!payment.isDefault && (
+                          {!payment.Default && !payment.isDefault && (
                             <button
                               className="btn-action btn-star"
                               onClick={() =>
@@ -608,8 +616,14 @@ function PaymentManagement() {
                       <input
                         type="checkbox"
                         name="isDefault"
-                        defaultChecked={selectedPayment?.isDefault || false}
+                        checked={
+                          selectedPayment
+                            ? !!selectedPayment.Default || !!selectedPayment.isDefault
+                            : paymentMethods.every((pm) => !pm.Default && !pm.isDefault)
+                        }
+                        onChange={() => {}}
                         style={{ marginRight: "0.5rem" }}
+                        disabled
                       />
                       Set as Default Payment Method
                     </label>

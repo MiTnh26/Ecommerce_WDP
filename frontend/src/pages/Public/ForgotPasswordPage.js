@@ -13,7 +13,7 @@ const ForgotPasswordPage = () => {
         newPassword: '',
         confirmPassword: ''
     });
-    const navigate = useNavigate(); // chuyen trang
+    const navigate = useNavigate(); // navigate page
     const [resendTimer, setResendTimer] = useState(0); // store resend timer resend otp
     const timerRef = useRef(null);
     const [messRegex, setMessRegex] = useState('');
@@ -22,7 +22,7 @@ const ForgotPasswordPage = () => {
         setEmail(e.target.value);
     }
 
-    //Xu ly check email va gui ma otp 
+    //Handle check email and send otp code 
     const handleSubmitEmail = async (e) => {
         e.preventDefault();
         if (email) {
@@ -34,8 +34,8 @@ const ForgotPasswordPage = () => {
                 if (res.status === 200) {
                     setMessage('');
                     setStep(2);
-                    // setTime sau 4p de co the gui lai otp
-                    setResendTimer(240); // 4 phút
+                    // setTime after 4 minutes to resend otp
+                    setResendTimer(240); // 4 minutes
                     if (timerRef.current) clearInterval(timerRef.current);
                     timerRef.current = setInterval(() => {
                         setResendTimer(prev => {
@@ -49,20 +49,20 @@ const ForgotPasswordPage = () => {
                 }
                 return;
             } catch (error) {
-                setMessage(error.response.data.message || 'Có lỗi xảy ra');
+                setMessage(error.response.data.message || 'An error occurred');
                 console.log("error send email from fe", error);
             }
         }
     }
     const handleResendOtp = async () => {
-    if (resendTimer > 0) return; // Chưa hết 4 phút thì không gửi lại
+    if (resendTimer > 0) return; // Not enough 4 minutes, do not resend
     try {
         const res = await axios.post("http://localhost:5000/customer/send-email", 
             { email: email },
             { withCredentials: true });
         if (res.status === 200) {
             setMessage('Verification code resent successfully');
-            setResendTimer(240); // Reset lại 4 phút
+            setResendTimer(240); // Reset 4 minutes
             if (timerRef.current) clearInterval(timerRef.current);
             timerRef.current = setInterval(() => {
                 setResendTimer(prev => {
@@ -75,54 +75,54 @@ const ForgotPasswordPage = () => {
             }, 1000);
         }
     } catch (error) {
-        setMessage(error.response?.data?.message || 'Có lỗi xảy ra khi gửi lại mã');
+        setMessage(error.response?.data?.message || 'An error occurred while resending the code');
     }
 };
     // handle button navigate
     const handleNavigate = () => {
-        // back lai trang truoc
+        // go back to previous page
         window.history.back();
     }
 
     // handle box input otp
-    // xu ly focus() lan dau tien 
+    // handle focus() first time 
     const inputRefs = useRef([]);
     useEffect(() => {
         if (inputRefs.current[0]) {
             inputRefs.current[0].focus();
         }
     }, [step])
-    // xu ly ham change input otp
+    // handle change input otp
     const handleChange = (index, value) => {
-        // Chi cho phép nhập số
+        // Only allow numbers
         if (!/^\d*$/.test(value)) return;
 
         const newOtp = [...otp];
-        newOtp[index] = value.slice(-1); // lấy số cuối cùng "phong truong hop nhap nhanh"
+        newOtp[index] = value.slice(-1); // get last digit (in case of fast input)
         setOtp(newOtp);
 
-        //Tu dong chuyen focus den input tiep theo
+        //Auto focus to next input
         if (value && index < inputRefs.current.length - 1) {
             inputRefs.current[index + 1].focus();
         }
     }
-    //xu ly ham xoa input otp
+    //handle delete input otp
     const handleDelete = (index, e) => {
         if (e.key === 'Backspace') {
             const newOtp = [...otp];
 
             if (otp[index]) {
-                // nếu ô có giá trị xóa nó
+                // if input has value, delete it
                 newOtp[index] = '';
                 setOtp(newOtp);
             } else if (index > 0) {
-                // nếu o rỗng, chuyển về o sau
+                // if input is empty, move to previous input
                 newOtp[index - 1] = '';
                 setOtp(newOtp);
                 inputRefs.current[index - 1].focus();
             }
         }
-        // xu ly phim trai phai
+        // handle left/right arrow
         if (e.key === 'ArrowLeft' && index > 0) {
             inputRefs.current[index - 1]?.focus();
         }
@@ -130,7 +130,7 @@ const ForgotPasswordPage = () => {
             inputRefs.current[index + 1]?.focus();
         }
     }
-    //xu ly paste input otp
+    //handle paste input otp
     const handlePaste = (e) => {
         e.preventDefault();
         const pastedData = e.clipboardData.getData('text/plain').replace(/\D/g, '');
@@ -142,7 +142,7 @@ const ForgotPasswordPage = () => {
             }
             setOtp(newOtp);
 
-            // Focus vào ô cuối cùng được điền hoặc ô tiếp theo
+            // Focus to the last filled or next input
             const nextIndex = Math.min(pastedData.length, otp.length - 1);
             inputRefs.current[nextIndex]?.focus();
         }
@@ -155,7 +155,7 @@ const ForgotPasswordPage = () => {
     const handleSubmitOtp = async (e) => {
         const otpValue = otp.join('');
         if (otpValue.length !== otp.length) {
-            setMessage('Vui lòng nhập đủ mã xác minh');
+            setMessage('Please enter the full verification code');
             return;
         }
         try {
@@ -169,13 +169,13 @@ const ForgotPasswordPage = () => {
             }
             return;
         } catch (err) {
-            setMessage(err.response.data.message || 'Có lỗi xảy ra');
+            setMessage(err.response.data.message || 'An error occurred');
         }
 
     }
 
 
-    // Xu ly submit pasword
+    // Handle submit password
     //handle change password
     const handleChangePassword = (e) => {
         setFormPassword({
@@ -185,7 +185,7 @@ const ForgotPasswordPage = () => {
     }
     const handleSubmitChangePassword = async (e) => {
         e.preventDefault();
-        // Kiểm tra password trước khi gửi
+        // Check password before sending
         if (!formPassword.newPassword || !formPassword.confirmPassword) {
             setMessage('Please enter complete information');
             return;
@@ -207,14 +207,14 @@ const ForgotPasswordPage = () => {
                 { newPassword: formPassword.newPassword },
                 { withCredentials: true });
             if (res.status === 200) {
-                setMessage('Đổi mật khóa thanh cong');
+                setMessage('Password changed successfully');
                 setTimeout(() => {
                     navigate('/Ecommerce/login');
                 }, 2000);
             }
         } catch (err) {
             console.log("Error changing password:", err);
-            setMessage(err.response.data.message || 'Có lỗi xảy ra');
+            setMessage(err.response.data.message || 'An error occurred');
         }
     }
     useEffect(() => {
@@ -288,7 +288,7 @@ const ForgotPasswordPage = () => {
                             <p className="note text-center p-0 m-0 mt-1">
                                 Haven't received the code yet?
                                 {resendTimer > 0 ? (
-                                    <span className="text-secondary"> Gửi lại ({Math.floor(resendTimer / 60)}:{(resendTimer % 60).toString().padStart(2, '0')})</span>
+                                    <span className="text-secondary"> Resend ({Math.floor(resendTimer / 60)}:{(resendTimer % 60).toString().padStart(2, '0')})</span>
                                 ) : (
                                     <span className="text-danger" style={{ cursor: 'pointer' }} onClick={handleResendOtp}>Resend</span>
                                 )}
@@ -303,11 +303,11 @@ const ForgotPasswordPage = () => {
                             <Form className="w-100 mt-4" onSubmit={handleSubmitChangePassword}>
                                 <Form.Group className="mb-3">
                                     <Form.Label>New password</Form.Label>
-                                    <Form.Control type="text" name="newPassword" value={formPassword.newPassword} onChange={handleChangePassword} />
+                                    <Form.Control type="password" name="newPassword" value={formPassword.newPassword} onChange={handleChangePassword} />
                                 </Form.Group>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Confirm password</Form.Label>
-                                    <Form.Control type="text" name="confirmPassword" value={formPassword.confirmPassword} onChange={handleChangePassword} />
+                                    <Form.Control type="password" name="confirmPassword" value={formPassword.confirmPassword} onChange={handleChangePassword} />
                                 </Form.Group>
                                 {message && <p className="text-danger text-center p-0 m-0">{message}</p>}
                                 <Button type='submit' variant="warning w-100 mt-2">CHANGE PASSWORD</Button>

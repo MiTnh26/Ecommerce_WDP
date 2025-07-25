@@ -27,16 +27,18 @@ function ShopManagement() {
     const email = normalize(shop.owner?.Email);
 
     const matchesSearch =
-      name.includes(search) || username.includes(search) || email.includes(search);
+      name.includes(search) ||
+      username.includes(search) ||
+      email.includes(search);
     const matchesStatus =
       selectedStatus === "all" || shop.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "VND",
+      currency: "USD",
     }).format(amount);
   };
 
