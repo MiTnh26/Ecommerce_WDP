@@ -297,6 +297,7 @@ const Header = () => {
                     </a>
                   </OverlayTrigger>
                 )}
+
               </li>
               <li className="d-md-none" onClick={handlePopUpSearch}>
                 <a
