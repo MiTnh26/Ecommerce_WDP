@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Row, Col, Carousel, Button, Nav } from 'react-bootstrap'
-import slide1 from '../../assets/images/slide-1.jpg'
-import slide3 from '../../assets/images/slide-3.jpg'
-import slide4 from '../../assets/images/slide-4.jpg'
+import slide1 from '../../assets/images/banner-01.png'
+import slide12 from '../../assets/images/banner-02.png'
+import slide13 from '../../assets/images/banner-03.png'
+import slide3 from '../../assets/images/trending.jpg'
+import slide4 from '../../assets/images/best-seller-11.png'
+import slide5 from '../../assets/images/banner-happy-shoping.png'
+import slide6 from '../../assets/images/banner-cart.png'
 import '../../style/HomePage.css'
 import Category from '../../components/homePage/Category'
 import Card from '../../components/homePage/Card'
@@ -92,16 +96,46 @@ const HomePage = () => {
       <Row className='bg-white rounded-3 shadow-sm py-2'>
         <Col lg={7}>
           <div className="banner1 ">
-            <Carousel className=" rounded-4" controls={false}>
-              <Carousel.Item style={{ backgroundImage: `url(${slide1})`, width: '100%', height: '700px', backgroundPosition: 'right center' }} className=" rounded-3">
-                <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
-                  <div>
-                    <p className='title h1'>...</p>
-                    <p className="description text-muted">...</p>
-                  </div>
-                  <Button variant="outline-secondary" className='rounded-0'>SHOP NOW</Button>
-                </div>
-
+            <Carousel className=" rounded-4">
+              <Carousel.Item 
+              style={{ 
+                backgroundImage: `url(${slide1})`, 
+                width: '100%', height: '700px', 
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: 'cover',
+                position: 'relative'
+                }} className=" rounded-3">                
+                <Button 
+                variant=" mb-auto border" 
+                className="rounded-0 px-4 py-2 fw-bold text-dark border-dark shadow-sm hover-effect"
+                style={{
+                  position: 'absolute',
+                  bottom: '5%',
+                  left: '5%',
+                }}
+                onClick={() => navigate('/Ecommerce/search?name=')}
+                >SHOP NOW</Button>
+              </Carousel.Item>
+              <Carousel.Item
+                style={{
+                  backgroundImage: `url(${slide12})`,
+                  width: '100%', height: '700px',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: 'cover',
+                  position: 'relative'
+                }} className=" rounded-3">
+              </Carousel.Item>
+               <Carousel.Item
+                style={{
+                  backgroundImage: `url(${slide13})`,
+                  width: '100%', height: '700px',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: 'cover',
+                  position: 'relative'
+                }} className=" rounded-3">
               </Carousel.Item>
             </Carousel>
           </div>
@@ -116,15 +150,21 @@ const HomePage = () => {
                 height: '100%',
                 backgroundPosition: 'right center',
                 backgroundRepeat: 'no-repeat',
-                backgroundSize: 'cover'
+                backgroundSize: 'cover',
+                position: 'relative'
               }}>
-              <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
-                <div>
-                  <p className='title h2'>Fruits & Vegetables</p>
-                  <a href="/" className='text-muted text-decoration-none'>Shop Collection <i className="fa-solid fa-arrow-right"></i></a>
-                </div>
+              <a 
+                href="#trending"
+                className='text-muted text-decoration-none'
+                style={{
+                  position: "absolute",
+                  top: "85%",     
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                }}>
+                Check It Out
+                <i className="fa-solid fa-arrow-right"></i></a>
               </div>
-            </div>
           </div>
           {/* Banner dưới đáy phai */}
           <div style={{ height: '340px' }} className="mt-auto">
@@ -135,15 +175,21 @@ const HomePage = () => {
                 height: '100%',
                 backgroundPosition: 'right center',
                 backgroundRepeat: 'no-repeat',
-                backgroundSize: 'cover'
-              }}>
-              <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
-                <div>
-                  <p className='title h2'>Fruits & Vegetables</p>
-                  <a href="/" className='text-muted text-decoration-none'>Shop Collection <i className="fa-solid fa-arrow-right"></i></a>
+                backgroundSize: 'cover',
+                position: 'relative'
+              }}>         
+                <a 
+                  href="#best-seller" 
+                  className='text-muted text-decoration-none'
+                  style={{
+                    position: "absolute",
+                    top: "85%",     
+                    left: "80%",
+                    transform: "translate(-50%, -50%)",
+                  }}>
+                    View Now {" "}
+                  <i className="fa-solid fa-arrow-right"></i></a>
                 </div>
-              </div>
-            </div>
           </div>
         </Col>
       </Row>
@@ -151,7 +197,10 @@ const HomePage = () => {
         {dataCategory && <Category dataList={dataCategory} title="Category" dataLength={maxLengthCategory} onClickNext={handleCategoryClickNext} />}
       </div> */}
       {/* Trending */}
-      <div className="nav-trending-product mt-5 bg-white rounded-3 shadow-sm py-2 px-1" ref={trendingRef}>
+      <div 
+        className="nav-trending-product mt-5 bg-white rounded-3 shadow-sm py-2 px-1" 
+        ref={trendingRef}
+        id="trending">
         {isLoadingTrending ? (
           <>
             <p>Is Loading ...</p>
@@ -168,42 +217,34 @@ const HomePage = () => {
         )}
       </div>
       {/* Bannner 2 */}
-      <div className="d-flex gap-3 mt-5 bg-white rounded-3 shadow-sm py-2 px-1">
+      <div className="d-flex gap-3 mt-5 bg-white rounded-3 shadow-sm py-2 px-1" 
+        style={{ height: '200px' }}> 
         <div className="banner2 rounded-3"
           style={{
-            backgroundImage: `url(${slide1})`,
+            backgroundImage: `url(${slide5})`,
             width: '100%',
             height: '100%',
-            backgroundPosition: 'right center',
+            // backgroundPosition: 'right center',
             backgroundRepeat: 'no-repeat',
             backgroundSize: 'cover'
           }}>
-          <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
-            <div>
-              <p className='title h2'>Fruits & Vegetables</p>
-              <a href="/" className='text-muted text-decoration-none'>Shop Collection <i className="fa-solid fa-arrow-right"></i></a>
-            </div>
-          </div>
         </div>
         <div className="banner2 rounded-3"
           style={{
-            backgroundImage: `url(${slide3})`,
+            backgroundImage: `url(${slide6})`,
             width: '100%',
             height: '100%',
-            backgroundPosition: 'right center',
             backgroundRepeat: 'no-repeat',
-            backgroundSize: 'cover'
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}>
-          <div className='container-detail p-4 w-50 h-100 d-flex flex-column align-items-start justify-content-around'>
-            <div>
-              <p className='title h2'>Fruits & Vegetables</p>
-              <a href="/" className='text-muted text-decoration-none'>Shop Collection <i className="fa-solid fa-arrow-right"></i></a>
-            </div>
-          </div>
         </div>
       </div>
       {/* Best seller */}
-      <div className="best-seller mt-5 bg-white rounded-3 shadow-sm py-2 px-1" ref={bestSellerRef}>
+      <div 
+        className="best-seller mt-5 bg-white rounded-3 shadow-sm py-2 px-1" 
+        ref={bestSellerRef}
+        id="best-seller">
         {isBestSellerLoading ? (
           <>
             <p>Is Loading ...</p>

@@ -304,6 +304,24 @@ exports.getCartByUserId = async (req, res) => {
               in: "$$matchedVariant.Status"
             }
           },
+          "Items.ProductVariant.StockQuantity": {
+            $let: {
+              vars: {
+                matchedVariant: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$ProductDetail.ProductVariant",
+                        cond: { $eq: ["$$this._id", "$Items.ProductVariant._id"] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              },
+              in: "$$matchedVariant.StockQuantity"
+            }
+          },
           "Items.ShopStatus": "$ShopDetail.status",
           "Items.ProductStatus": "$ProductDetail.Status"
         }

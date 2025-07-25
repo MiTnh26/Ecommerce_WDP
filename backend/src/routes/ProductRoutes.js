@@ -44,7 +44,7 @@ router.get("/category", ctrl.getCategories);
 router.get("/category/shop/:shopId", ctrlCate.getCategoriesByShop);
 
 // 7) GET /products/trending
-router.get("/trending", ctrl.getTrendingProducts);
+router.get("/trending", ctrl.getTrendingProducts2);
 
 // 8) GET /products/new
 router.get("/get-new", ctrl.getNewProducts);

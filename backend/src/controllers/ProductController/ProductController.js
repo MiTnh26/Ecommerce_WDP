@@ -227,6 +227,7 @@ exports.getTrendingProducts = async (req, res) => {
     const now = new Date();
     const currentPeriodStart = new Date(now.getTime() - (trendingDays * 24 * 60 * 60 * 1000));
     const previousPeriodStart = new Date(now.getTime() - (comparisonDays * 24 * 60 * 60 * 1000));
+    //
 
      
     
@@ -524,5 +525,126 @@ exports.filterProduct = async (req, res) => {
     res.status(500).json({ message: "Server error filtering products" });
   }
 };
+exports.getTrendingProducts2 = async (req, res) => {
+  const limit = 10, trendingDays = 7, comparisonDays = 14;
+  try {
+    const now = new Date();
+    const currentPeriodStart = new Date(now.getTime() - (trendingDays * 24 * 60 * 60 * 1000));
+    const previousPeriodStart = new Date(now.getTime() - (comparisonDays * 24 * 60 * 60 * 1000));
 
+    // Lấy dữ liệu giai đoạn hiện tại (7 ngày gần đây)
+    const currentPeriodData = await OrderItem.aggregate([
+      {
+        $match: {
+          Status: "Delivered",
+          createdAt: { $gte: currentPeriodStart }
+        }
+      },
+      { $unwind: "$Product" },
+      { $unwind: "$Product.ProductVariant" },
+      {
+        $group: {
+          _id: "$Product._id",
+          ProductName: { $first: "$Product.ProductName" },
+          ProductImage: { $first: "$Product.ProductImage" },
+          Price: { $first: "$Product.ProductVariant.Price" },
+          currentSold: { $sum: "$Product.ProductVariant.Quantity" },
+          currentRevenue: {
+            $sum: {
+              $multiply: [
+                "$Product.ProductVariant.Quantity",
+                "$Product.ProductVariant.Price"
+              ]
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "productDetails"
+        }
+      },
+      {
+        $match: {"productDetails.Status": {$ne: "Inactive"} }
+      },
+      { $unwind: "$productDetails" },
+      {
+        $addFields: {
+          StockQuantity: { $first: "$productDetails.ProductVariant.StockQuantity" }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          ProductName: 1,
+          ProductImage: 1,
+          Price: 1,
+          currentSold: 1,
+          currentRevenue: 1,
+          StockQuantity: 1
+        }
+      }
+    ]);
 
+    // Lấy dữ liệu giai đoạn trước đó (7 ngày trước đó)
+    const previousPeriodData = await OrderItem.aggregate([
+      {
+        $match: {
+          Status: "Delivered",
+          createdAt: {
+            $gte: previousPeriodStart,
+            $lt: currentPeriodStart
+          }
+        }
+      },
+      { $unwind: "$Product" },
+      { $unwind: "$Product.ProductVariant" },
+      {
+        $group: {
+          _id: "$Product._id",
+          previousSold: { $sum: "$Product.ProductVariant.Quantity" }
+        }
+      }
+    ]);
+
+    // Tính toán trending
+    const trendingProducts = currentPeriodData
+      .map(current => {
+        const previous = previousPeriodData.find(
+          p => p._id.toString() === current._id.toString()
+        );
+        const previousSold = previous ? previous.previousSold : 0;
+
+        // Tính tỷ lệ tăng trưởng
+        const growthRate =
+          previousSold > 0
+            ? ((current.currentSold - previousSold) / previousSold) * 100
+            : current.currentSold > 0
+            ? 100
+            : 0;
+
+        return {
+          _id: current._id,
+          ProductName: current.ProductName,
+          ProductImage: current.ProductImage,
+          Price: current.Price,
+          StockQuantity: current.StockQuantity,
+          currentSold: current.currentSold,
+          previousSold: previousSold,
+          growthRate: Math.round(growthRate * 100) / 100,
+          trendingScore: current.currentSold * (1 + growthRate / 100) // Scoring formula
+        };
+      })
+      .filter(product => product.growthRate > 20)
+      .sort((a, b) => b.trendingScore - a.trendingScore)
+      .slice(0, limit);
+
+    res.status(200).json(trendingProducts);
+  } catch (error) {
+    console.error("Error getting trending products:", error);
+    res.status(500).json({ message: "Server error getting trending products" });
+  }
+};

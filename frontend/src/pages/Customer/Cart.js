@@ -14,19 +14,19 @@ import img_empty from "../../assets/images/data-empty.png";
 const Cart = () => {
   const [checkedItems, setCheckedItems] = useState([]); // chứa id của các variant được chọn
   const [data, setData] = useState([]);
-  const [totalCart, setTotalCart] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const { checkOut, setCheckOut } = useContext(AppContext);
-
+  const user = JSON.parse(localStorage.getItem("user"));
   const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        console.log("Data Test", user._id);
-        if (!user._id) {
+        //console.log("Data Test", user._id);
+        if (!user) {
           navigate("/Ecommerce/login");
+          return;
         }
         const res = await axios.post("http://localhost:5000/customer/get-cart",
           {
@@ -35,7 +35,7 @@ const Cart = () => {
           { withCredentials: true },
         );
         const data = res.data;
-        console.log("data", data);
+        //console.log("data", data);
         setData(data);
         // Tính tổng số item trong ProductVariant
         // const total = data.Items.reduce((sum, item) => {
@@ -58,13 +58,16 @@ const Cart = () => {
   // handle delete
   const handleDeleteProduct = async (Product_id, ProductVariant) => {
     try {
+      const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?");
+      if (!confirmDelete) return;
       const user = JSON.parse(localStorage.getItem("user"));
       console.log("Data Test", Product_id, ProductVariant, user._id);
       if (!Product_id || !ProductVariant) {
         Alert("Delete fail by invalid data");
       }
-      if (!user._id) {
+      if (!user) {
         navigate("/Ecommerce/login");
+        return;
       }
       const res = await axios.delete("http://localhost:5000/customer/remove-p-variant-cart", {
         data: {
@@ -105,25 +108,30 @@ const Cart = () => {
 const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Price }) => {
   console.log(ShopId)
   if (name === "all") {
-    const allVariants = data.Items.flatMap(item =>
-      item.ProductVariant.map(variant => ({
-        ShopId: item.ShopID,
-        Product_Id: item._id,
-        ProductVariant_id: variant._id,
-        Quantity: variant.Quantity,
-        Price: variant.Price
-      }))
+  const allVariants = data.Items
+    .filter(item => item.ShopStatus === "Active" && item.ProductStatus === "Active")
+    .flatMap(item =>
+      item.ProductVariant
+        .filter(variant => variant.Status === "Active")
+        .map(variant => ({
+          ShopId: item.ShopID,
+          Product_Id: item._id,
+          ProductVariant_id: variant._id,
+          Quantity: variant.Quantity,
+          Price: variant.Price
+        }))
     );
 
-    const allSelected = allVariants.every(variant =>
-      checkedItems.some(checked => checked.ProductVariant_id === variant.ProductVariant_id)
-    );
+  const allSelected = allVariants.every(variant =>
+    checkedItems.some(checked => checked.ProductVariant_id === variant.ProductVariant_id)
+  );
 
-    setCheckedItems(allSelected ? [] : allVariants);
-  }
+  setCheckedItems(allSelected ? [] : allVariants);
+}
 
+  // variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive"
   if (name === "shop") {
-    const shopItem = data.Items.find(item => item.ShopID === ShopId);
+    const shopItem = data.Items.find(item => item.ShopID === ShopId && item.ShopStatus === "Active" && item.ProductStatus === "Active");
     if (!shopItem) return;
 
     const shopVariants = shopItem.ProductVariant
@@ -179,13 +187,15 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
   }
     
   //handle checkout
-  const handlecheckOut = () => {
+    const handlecheckOut = () => {
     const dataCheckOut = {
       UserId: JSON.parse(localStorage.getItem("user"))._id,
       Items: checkedItems,
       TotalPrice: calculateTotalPriceChecked()
     }
-    console.log("dataCheckOut", dataCheckOut);
+    //console.log("dataCheckOut", dataCheckOut);
+    localStorage.removeItem("checkOut");
+    localStorage.setItem("checkOut", JSON.stringify(dataCheckOut));
     setCheckOut(dataCheckOut);
     navigate("/Ecommerce/user/checkout")
   }
@@ -196,14 +206,19 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
 }, [checkedItems]);
 
   const handleChangeQuantity = (Product_id, ProductVariant, behavor) => {
-    if (behavor === "increase") {
+    if (behavor === "increase" && ProductVariant.Quantity == ProductVariant.StockQuantity) {
+      alert("Out of stock");
+      return;
+    } 
+    if (behavor === "increase" && ProductVariant.Quantity < ProductVariant.StockQuantity) {
       ProductVariant.Quantity += 1;
     } else if (behavor === "decrease") {
       if (ProductVariant.Quantity === 1) {
         return;
       }
-      ProductVariant.Quantity -= 1;
+      ProductVariant.Quantity = ProductVariant.Quantity - 1;
     }
+    console.log("ProductVariant", ProductVariant.Quantity);
 
     const callData = async () => {
       try {
@@ -213,8 +228,9 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
           console.log("Not empty Product_id or ProductVariant");
           return;
         }
-        if (!user._id) {
+        if (!user) {
           navigate("/Ecommerce/login");
+          return;
         }
         console.log("Data Test",ProductVariant) 
               const res = await axios.post("http://localhost:5000/customer/change-quantity", {
@@ -224,7 +240,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
           {withCredentials: true},
         );
         if (res.status === 200) {
-          window.alert("Change quantity success");
+          //window.alert("Change quantity success");
           // cập nhat lai data
           // Sau khi gọi API thay đổi số lượng thành công:
           const filteredItems = data.Items.map(item => {
@@ -241,18 +257,18 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
             return item;
           });
 
-          // Tính lại tổng price
-          const newTotalPrice = filteredItems.reduce((total, item) => {
-            return total + item.ProductVariant.reduce((sum, variant) => {
-              return sum + variant.Price * variant.Quantity;
-            }, 0);
-          }, 0);
-          // Cập nhật state
-          setData({
-            ...data,
-            Items: filteredItems,
+          // cập nhật lại checkedItems nếu có items đang được chọn 
+          const filteredCheckedItems = checkedItems.map(item => {
+            if (item.Product_Id === Product_id) {
+              return {
+                ...item,
+                Quantity: ProductVariant.Quantity,
+              };
+            }
+            return item;
           });
-          setTotalPrice(newTotalPrice);
+          setData({ ...data, Items: filteredItems });
+          setCheckedItems(filteredCheckedItems);
         }
       }
 
@@ -267,7 +283,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
     <div className="w-100 bg-light vh-100 overflow-auto">
       <header className="">
         <div className="header-top bg-warning">
-          <div className="container d-flex justify-content-between py-1 align-items-center">
+          <div className="container d-flex justify-content-between py-1 align-items-center bg-warning" style={{backgroundImage: "none" }}>
             <a
               className=" text-decoration-none text-white"
               href="/Ecommerce/home"
@@ -276,7 +292,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
             </a>
             <div className="d-flex align-items-center">
               <img
-                src={logo}
+                src={user?.Image}
                 width={"30px"}
                 height={"30px"}
                 className="rounded-circle me-1"
@@ -286,19 +302,19 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
                 className=" text-decoration-none text-white"
                 href="/Ecommerce/user/profile"
               >
-                Name Account
+                {user?.Username}
               </a>
             </div>
           </div>
         </div>
-        <div className="header-bottom bg-white p-2">
-          <div className="container d-flex justify-content-between flex-wrap overflow-hidden align-items-center">
+        <div className="header-bottom bg-white">
+          <div className="container d-flex justify-content-between flex-wrap overflow-hidden align-items-center" style={{backgroundImage: "none" }}>
             <div className="header-bottom-left d-flex gap-3 align-items-center">
               <img
                 src={logo}
                 width={"80px"}
                 height={"80px"}
-                alt="img product"
+                alt="logo page"
               />
               <div
                 className="vertical-line bg-warning"
@@ -306,20 +322,6 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
               ></div>
               <p className="title p-0 m-0 text-warning fw-bold">GIỎ HÀNG</p>
             </div>
-            {/* <form
-              className="header-bottom-right d-flex "
-              style={{ width: "100%", maxWidth: "350px" }}
-            >
-              <input
-                type="text"
-                id="search"
-                className="form-control border-end-0 rounded-0 rounded-start "
-                placeholder="Tìm kiếm..."
-              />
-              <button className="bg-warning border-start-0 border-0 px-4 rounded-end">
-                <i className="fa-solid fa-magnifying-glass text-white"></i>
-              </button>
-            </form> */}
           </div>
         </div>
       </header>
@@ -330,10 +332,20 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
               type="checkbox"
               onChange={() => handleCheck({ name: "all" })}
               checked={
-                (data.Items?.flatMap(item => item.ProductVariant) || []).length > 0 &&
-                (data.Items?.flatMap(item => item.ProductVariant) || []).every(v =>
-                  checkedItems.some(c => c.ProductVariant_id === v._id)
-                )
+                (() => {
+                  const activeVariants =
+                    data.Items?.filter(item => item.ShopStatus === "Active" && item.ProductStatus === "Active")
+                      .flatMap(item =>
+                        item.ProductVariant.filter(variant => variant.Status === "Active")
+                      ) || [];
+
+                  return (
+                    activeVariants.length > 0 &&
+                    activeVariants.every(v =>
+                      checkedItems.some(c => c.ProductVariant_id === v._id)
+                    )
+                  );
+                })()
               }
             />
 
@@ -369,16 +381,17 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
             <div className="cart-item rounded mb-3 bg-white" key={item._id}>
               <div className="chosse-all-in-shop d-flex py-2 px-1 position-relative">
                 <Form.Check
+                  className="pe-2 border-end"
                   type="checkbox"
                   onChange={() => handleCheck({ name: "shop", ShopId: item.ShopID })}
                   checked={
-                    item.ProductVariant.every(v =>
+                    item.ProductVariant.some(v =>
                       checkedItems.some(c => c.ProductVariant_id === v._id)
                     )
                   }
-                  disabled={item.ShopStatus === "Inactive"}
+                  disabled={item.ShopStatus === "Banned"}
                 />
-                <div className="flex-grow-1"><p className="mb-0">Shop : {item.ShopName}</p></div>
+                <div className={`flex-grow-1 ${item.ShopStatus === "Banned" ? "text-decoration-line-through" : ""}`}><p className="mb-0">Shop : {item.ShopName}</p></div>
                 {/* Đường kẻ 90% nằm dưới */}
                 <div
                   className="position-absolute"
@@ -392,9 +405,11 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
                 ></div>
               </div>
               {item?.ProductVariant?.map((variant, index) => (
-                <div className="d-flex align-items-center text-muted text-nowrap bg-white mt-2 py-3 px-1  overflow-auto " key={index}>
+                <div className="d-flex align-items-center text-muted text-nowrap bg-white mt-2 py-3 px-1  overflow-auto " 
+                  key={index}>
                   <Form.Check
                     type="checkbox"
+                    className="pe-2 border-end"
                     onChange={() =>
                       handleCheck({
                         name: "productVariant",
@@ -406,31 +421,48 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
                       })
                     }
                     checked={checkedItems.some(v => v.ProductVariant_id === variant._id)}
-                    disabled={variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive"}
+                    disabled={variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive"}
                   />
 
 
                   <div className="flex-grow-1 d-flex gap-3">
-                    <img src={variant.Image} alt="img product" width={"80px"} height={"80px"} />
-                    <p className={`product-name text-wrap p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '50%', flexShrink: 0 }}>{item.ProductName}</p>
-                    <p className={`classification text-muted p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '20%', flexShrink: 0 }}>{variant.ProductVariantName}</p>
+                    <img 
+                      src={variant.Image} 
+                      alt="img product" 
+                      width={"80px"} height={"80px"} 
+                      className="ms-1"
+                      />
+                    <p 
+                      className={`product-name text-wrap p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} 
+                      style={{ flexBasis: '50%', flexShrink: 0 }}
+                      onClick={() => {
+                        if (variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive") {
+                          return
+                        } else {
+                          navigate(`/Ecommerce/product-detail/${item._id}`);
+                        }
+                      }}
+                      >{item.ProductName}</p>
+                    <p className={`classification text-muted p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} style={{ flexBasis: '20%', flexShrink: 0 }}>{variant.ProductVariantName}</p>
                   </div>
                   <div className="flex-shrink-0 flex-basic-15 text-center">
-                    <p className={`discount-price align-self-center p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}>{variant.Price.toLocaleString("vi-VN")}</p></div>
+                    <p className={`discount-price align-self-center p-0 m-0 ${variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}>{variant.Price.toLocaleString("vi-VN")}</p></div>
                   <div className="flex-shrink-0 flex-basic-15 text-center">
                     <div className="quantity-inputt d-flex justify-content-center">
-                      <button 
-                        className="border bg-white p-1 px-2" 
-                        onClick = {() => handleChangeQuantity(item._id, {"_id": "1", "Quantity": "1"}, "decrease")} 
-                        disabled= {variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive"}>-</button>
-                      <input type="number" className="border bg-white py-1 px-2 text-center border-start-0 border-end-0 input-no-spinner" style={{ width: '40px' }} value={variant.Quantity} readOnly/>
-                      <button 
-                        className="border bg-white p-1 px-2 text-muted fw-light" 
-                        onClick={() => handleChangeQuantity(item._id, {"_id": variant._id, "Quantity": variant.Quantity}, "increase")}
-                        disabled= {variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive"}>+</button>
+                      <button
+                        className="border bg-white p-1 px-2"
+                        onClick={() => handleChangeQuantity(item._id, variant, "decrease")}
+                        disabled={variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive"}
+                      >-</button>
+                      <input type="number" className="border bg-white py-1 px-2 text-center border-start-0 border-end-0 input-no-spinner" style={{ width: '40px' }} value={variant.Quantity} readOnly />
+                      <button
+                        className="border bg-white p-1 px-2 text-muted fw-light"
+                        onClick={() => handleChangeQuantity(item._id, variant, "increase")}
+                        disabled={variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive"}
+                      >+</button>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 flex-basic-15 text-center"><p className={`total-price p-0 m-0 text-danger ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}>{(variant.Price * variant.Quantity).toLocaleString("vi-VN")}</p></div>
+                  <div className="flex-shrink-0 flex-basic-15 text-center"><p className={`total-price p-0 m-0 text-danger ${variant.Status == "Inactive" || item.ShopStatus === "Banned" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}>{(variant.Price * variant.Quantity).toLocaleString("vi-VN")}</p></div>
                   <div className="flex-shrink-0 flex-basic-10 text-center" >
                     <button className="btn btn-outline-danger" onClick={() => handleDeleteProduct(item._id, variant._id)}>
                       <i className="fa-solid fa-trash"></i>

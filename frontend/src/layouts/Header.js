@@ -133,10 +133,10 @@ const handleShowCanvasCart = () => {
   );
   return (
     <>
-      <Container fluid>
+      <Container fluid >
         <Row
-          className=" py-2 d-flex align-items-center"
-          style={{ borderBottom: "1px solid #f7f7f7" }}
+          className="py-2 d-flex align-items-center"
+          style={{ borderBottom: "1px solid #f7f7f7", backgroundColor: "#ffe88f" }}
         >
           {/* Responsive __sm md lg__ */}
           {/* Logo */}

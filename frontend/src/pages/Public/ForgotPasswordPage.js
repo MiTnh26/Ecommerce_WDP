@@ -16,6 +16,7 @@ const ForgotPasswordPage = () => {
     const navigate = useNavigate(); // chuyen trang
     const [resendTimer, setResendTimer] = useState(0); // store resend timer resend otp
     const timerRef = useRef(null);
+    const [messRegex, setMessRegex] = useState('');
     // handle box input email 
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
@@ -60,7 +61,7 @@ const ForgotPasswordPage = () => {
             { email: email },
             { withCredentials: true });
         if (res.status === 200) {
-            setMessage('Đã gửi lại mã xác minh');
+            setMessage('Verification code resent successfully');
             setResendTimer(240); // Reset lại 4 phút
             if (timerRef.current) clearInterval(timerRef.current);
             timerRef.current = setInterval(() => {
@@ -186,12 +187,20 @@ const ForgotPasswordPage = () => {
         e.preventDefault();
         // Kiểm tra password trước khi gửi
         if (!formPassword.newPassword || !formPassword.confirmPassword) {
-            setMessage('Vui lòng nhập đầy đủ thông tin');
+            setMessage('Please enter complete information');
             return;
         }
         if (formPassword.newPassword !== formPassword.confirmPassword) {
-            setMessage('Mật khẩu xác nhận không khớp');
+            setMessage('Confirmation password does not match');
             return;
+        }
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+        if (formPassword.newPassword) {
+            const isValid = passwordRegex.test(formPassword.newPassword);
+            if (!isValid) {
+                setMessage("Must be at least 8 characters, 1 lowercase letter, 1 uppercase letter, 1 number, 1 special character");
+                return;
+            }
         }
         try {
             const res = await axios.put("http://localhost:5000/customer/change-password",
@@ -225,9 +234,9 @@ const ForgotPasswordPage = () => {
                         />
                     </a>
                     <span style={{ fontSize: "18px", marginLeft: "20px" }}>
-                        {step === 1 && <>Xác Minh Email</>}
-                        {step === 2 && <>Mã Xác Minh</>}
-                        {step === 3 && <>Đổi Mật Khẩu</>}
+                        {step === 1 && <>Email Verification</>}
+                        {step === 2 && <>Enter Verification Code</>}
+                        {step === 3 && <>Change Your Password</>}
                     </span>
                 </div>
             </header>
@@ -236,12 +245,12 @@ const ForgotPasswordPage = () => {
                     {step === 1 && (
                         <div className="box shadow w-50 h-50 p-4">
                             <Button className="bg-transparent border-0" onClick={handleNavigate}><i className="fa-solid fa-arrow-left" style={{ color: "orange" }}></i></Button>
-                            <h4 className="text-center">Đặt lại mật khẩu</h4>
+                            <h4 className="text-center">Reset Password</h4>
                             <Form className="w-100 mt-4" onSubmit={handleSubmitEmail}>
                                 <Form.Group>
                                     <Form.Control required type="email" placeholder="name@example.com" value={email} onChange={handleEmailChange} />
                                 </Form.Group>
-                                <Button type='submit' variant="warning w-100 mt-4">TIEP THEO</Button>
+                                <Button type='submit' variant="warning w-100 mt-4">NEXT</Button>
                                 {message && <p className="text-danger text-center">{message}</p>}
                             </Form>
                         </div>
@@ -249,8 +258,8 @@ const ForgotPasswordPage = () => {
                     {step === 2 && (
                         <div className="box shadow w-50 h-70 p-4">
                             <Button className="bg-transparent border-0" onClick={handleBackConfirmEmail}><i className="fa-solid fa-arrow-left" style={{ color: "orange" }}></i></Button>
-                            <h4 className="text-center p-0 m-0">Nhập mã xác nhận</h4>
-                            <p className="fw-italic text-center p-0 m-0 mt-3">Mã xác minh được gửi đến Email</p>
+                            <h4 className="text-center p-0 m-0">Enter Verification Code</h4>
+                            <p className="fw-italic text-center p-0 m-0 mt-3">Verification Code Sent to Email</p>
                             <p className="email text-center">{email}</p>
                             <div className="d-flex justify-content-center gap-2 mb-4">
                                 {otp.map((digit, index) => (
@@ -277,20 +286,20 @@ const ForgotPasswordPage = () => {
                                 ))}
                             </div>
                             <p className="note text-center p-0 m-0 mt-1">
-                                Bạn vẫn chưa nhận được mã?
+                                Haven't received the code yet?
                                 {resendTimer > 0 ? (
                                     <span className="text-secondary"> Gửi lại ({Math.floor(resendTimer / 60)}:{(resendTimer % 60).toString().padStart(2, '0')})</span>
                                 ) : (
-                                    <span className="text-danger" style={{ cursor: 'pointer' }} onClick={handleResendOtp}>Gửi lại</span>
+                                    <span className="text-danger" style={{ cursor: 'pointer' }} onClick={handleResendOtp}>Resend</span>
                                 )}
                             </p>
                             {message && <p className="text-danger text-center">{message}</p>}
-                            <Button type='submit' variant="warning w-100 mt-3" onClick={handleSubmitOtp}>KẾ TIẾP</Button>
+                            <Button type='submit' variant="warning w-100 mt-3" onClick={handleSubmitOtp}>Next</Button>
                         </div>)}
 
                     {step === 3 && (
-                        <div className="box shadow w-50 h-50 p-4">
-                            <h4 className="text-center">Đổi mật khẩu</h4>
+                        <div className="box shadow w-50 h-70 p-4">
+                            <h4 className="text-center">Change Password</h4>
                             <Form className="w-100 mt-4" onSubmit={handleSubmitChangePassword}>
                                 <Form.Group className="mb-3">
                                     <Form.Label>New password</Form.Label>
@@ -301,7 +310,7 @@ const ForgotPasswordPage = () => {
                                     <Form.Control type="text" name="confirmPassword" value={formPassword.confirmPassword} onChange={handleChangePassword} />
                                 </Form.Group>
                                 {message && <p className="text-danger text-center p-0 m-0">{message}</p>}
-                                <Button type='submit' variant="warning w-100 mt-2">ĐỔI MẬT KHẨU</Button>
+                                <Button type='submit' variant="warning w-100 mt-2">CHANGE PASSWORD</Button>
                             </Form>
                         </div>
                     )}
