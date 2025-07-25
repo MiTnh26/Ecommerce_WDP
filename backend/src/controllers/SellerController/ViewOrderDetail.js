@@ -18,13 +18,8 @@ exports.getOrderDetail = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate("BuyerId", "Username PhoneNumber ShippingAddress")
       .populate("PaymentId")
-      .populate({
-        path: "Items",
-        populate: {
-          path: "Product",
-          select: "ProductName ProductImage ProductVariant"
-        }
-      })
+      .populate("Items") // là đủ, vì Product đã nằm trong OrderItem
+
       .lean();
     console.log("hihi " + order);
 
@@ -47,22 +42,21 @@ exports.getOrderDetail = async (req, res) => {
       ReceiverPhone: order.phoneNumber || "N/A",
       ShippingAddress: order.ShippingAddress || "N/A",
       PaymentId: order.PaymentId?.PaymentMethod || "N/A",
-      Items: Array.isArray(order.Items) && order.Items.length > 0 ? order.Items.map(item => ({
-        _id: item._id,
-        Product: item.Product.map(product => ({
-          _id: product._id,
-          ProductName: product.ProductName,
-          ProductImage: product.ProductImage,
-          ProductVariant: product.ProductVariant.map(variant => ({
-            _id: variant._id,
-            ProductVariantName: variant.ProductVariantName,
-            Price: variant.Price,
-            Quantity: variant.Quantity,
-            Image: variant.Image
-          }))
+      Items: order.Items ? order.Items.Product.map(product => ({
+        _id: product._id,
+        ProductName: product.ProductName,
+        ProductImage: product.ProductImage,
+        ProductVariant: product.ProductVariant.map(variant => ({
+          _id: variant._id,
+          ProductVariantName: variant.ProductVariantName,
+          Price: variant.Price,
+          Quantity: variant.Quantity,
+          Image: variant.Image
         }))
-      })) : []
+      })) : [],
+
     };
+
 
     res.json(formattedOrder);
   } catch (error) {
@@ -123,7 +117,7 @@ exports.updateOrderStatus = async (req, res) => {
                 $inc: {
                   "ProductVariant.$.StockQuantity": -quantitySold,
                   "ProductVariant.$.Sales": quantitySold,
-                  Sales: quantitySold 
+                  Sales: quantitySold
                 }
               }
             );
