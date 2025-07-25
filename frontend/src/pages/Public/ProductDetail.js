@@ -1,11 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import image_default from "../../assets/images/img_default.jpg";
-import logo from "../../assets/images/logo_page.jpg";
 import styles from "../../style/ProductDetail.module.css";
 import { useState } from "react";
-import StarVoting from "../../components/public/StarVoting";
-import Pagination from "../../components/public/Pagination";
 import Card from "../../components/homePage/Card";
 import {
   fetchRelatedProducts,
@@ -13,14 +9,16 @@ import {
   fetchProductDetail,
 } from "../../api/ProductApi";
 import { useEffect } from "react";
-import { data, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from '@tanstack/react-query';
 import LazyLoad from 'react-lazyload';
 import axios from "axios";
+import { AppContext  } from "../../store/Context";
+import { useContext } from "react"; 
 const visibleCount = 5;
 const imageWidth = 82;
 const imageGap = 10;
-const rating = 4.5;
+
 
 const ProductDetail = () => {
   // 1. State declare
@@ -30,6 +28,9 @@ const ProductDetail = () => {
   const product_id = useParams().id;
   const [quantity, setQuantity] = useState(1); // quantity of product
   const queryClient = useQueryClient();
+  const { setCheckOut} = useContext(AppContext);
+  const [cart, setCart] = useState();
+  const user = JSON.parse(localStorage.getItem("user"));
   // 2. inView hook for product feedback section and product related section
   const { ref: reviewRef, inView: reviewInView } = useInView({
     triggerOnce: true,
@@ -42,12 +43,27 @@ const ProductDetail = () => {
   const navigate = useNavigate();
 
   // 3. Data fetching useEffect
+const loadDataCart = async () => {
+  try {
+    const res = await axios.post("http://localhost:5000/customer/get-cart",
+      { UserId: user._id },
+      { withCredentials: true }
+    );
+    setCart(res.data);
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      setCart([]);
+    } else {
+      // Xử lý các lỗi khác nếu cần
+      console.error(error);
+    }
+  }
+}
   useEffect(() => {
      window.scrollTo({ top: 0, behavior: 'smooth' });
     const loadData = async () => {
     const result = await fetchProductDetail(product_id);
-    console.log("result", result.data);  
-
+    //console.log("result", result.data);  
     if (result?.status === 200 && result?.data === null) {
       alert(result?.message);
       navigate("/Ecommerce/home");
@@ -57,6 +73,10 @@ const ProductDetail = () => {
     if (!productDetail) return;
     setDataProduct(productDetail);
     };
+    if(user){
+      loadDataCart();
+    }
+
     loadData();
 
   }, [product_id]);
@@ -143,8 +163,9 @@ const ProductDetail = () => {
     }
     const addToCart = async () => {
       const user = JSON.parse(localStorage.getItem("user"));
-      if (!user._id) {
+      if (!user) {
         navigate("/Ecommerce/login");
+        return;
       }
       if (quantity === 0) {
         alert("Please select quantity");
@@ -154,24 +175,54 @@ const ProductDetail = () => {
         alert("This variant is inactive");
         return;      
       }
+      // check quatity + ProductVariant.Quatity in cart < ProductVariant.StockQuantity
+        // find ProductVariant in cart 
+      if (cart) {
+        const currentVariantId = dataProduct?.ProductVariant[currentIndex]?._id;
+        let findProductVariantInCart = null;
+
+        if (cart?.Items && currentVariantId) {
+          for (const item of cart.Items) {
+            const variant = item.ProductVariant.find(
+              v => String(v._id) === String(currentVariantId)
+            );
+            if (variant) {
+              findProductVariantInCart = variant;
+              break;
+            }
+          }
+        }
+        // check quatity + ProductVariant.Quatity in cart < ProductVariant.StockQuantity
+        // console.log("findProductVariantInCart", findProductVariantInCart);
+        // console.log("cart", cart)
+        // console.log("quatity", quantity);
+        // console.log("dataProduct.ProductVariant[currentIndex].StockQuantity", dataProduct.ProductVariant[currentIndex].StockQuantity);
+        // console.log("y", findProductVariantInCart?.Quantity + quantity)
+        if (findProductVariantInCart) {
+          if (findProductVariantInCart.Quantity + quantity > dataProduct.ProductVariant[currentIndex].StockQuantity) {
+            alert("The quantity in the cart plus the added quantity exceeds the limit");
+            return;
+          }
+        }
+      }
+      // const dataCheckOut = {
+      // UserId: JSON.parse(localStorage.getItem("user"))._id,
+      // Items: checkedItems,
+      // TotalPrice: calculateTotalPriceChecked()
+      // }
       const data = {
         UserId: user._id,
-        Product_id: product_id,
-        ProductName: dataProduct.ProductName,
-        ProductImage: dataProduct.ProductImage,
-        ShopID: dataProduct.ShopId._id,
-        ProductVariant: [
-          {
-            _id: dataProduct.ProductVariant[currentIndex]._id,
-            Image: dataProduct.ProductVariant[currentIndex].Image,
-            Price: dataProduct.ProductVariant[currentIndex].Price,
-            ProductVariantName: dataProduct.ProductVariant[currentIndex].ProductVariantName,
-            Quantity: quantity
-          }
-        ],
+        Items: [{
+          ProductVariant_id: dataProduct.ProductVariant[currentIndex]._id,
+          Product_Id: product_id,
+          Quantity: quantity,
+          ShopId: dataProduct.ShopId._id,
+          Price: dataProduct.ProductVariant[currentIndex].Price
+        }],
+        TotalPrice: dataProduct.ProductVariant[currentIndex].Price * quantity,
       };
 
-      console.log("data add to cart", data);
+      //console.log("data add to cart", data);
       const res = await axios.post(`${URL}/customer/add-to-cart`, {
         UserId: user._id,
         Product_id: product_id,
@@ -190,11 +241,42 @@ const ProductDetail = () => {
       }, { withCredentials: true });
       if (res.status === 200) {
         alert("Add to cart successfully");
+        loadDataCart()
       }
     }
     queryClient.invalidateQueries(["cart"]);
-    console.log("add to cart");
+    //console.log("add to cart");
     addToCart();
+  }
+
+  const handleBuyNow = () => {
+    if(currentIndex === -1){
+      alert("Please select variant");
+      return;
+    }
+    if(dataProduct?.ProductVariant[currentIndex].Status === "Inactive"){
+        alert("This variant is inactive");
+        return;      
+    }
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      navigate("/Ecommerce/login");
+      return;
+    }
+    const data = {
+        UserId: user._id,
+        Items: [{
+          ProductVariant_id: dataProduct.ProductVariant[currentIndex]._id,
+          Product_Id: product_id,
+          Quantity: quantity,
+          ShopId: dataProduct.ShopId._id,
+          Price: dataProduct.ProductVariant[currentIndex].Price
+        }],
+        TotalPrice: dataProduct.ProductVariant[currentIndex].Price * quantity,
+      };
+    localStorage.removeItem("checkOut");
+    localStorage.setItem("checkOut", JSON.stringify(data));
+    navigate("/Ecommerce/user/checkout")
   }
   
 
@@ -203,7 +285,7 @@ const ProductDetail = () => {
     <>
     {/* 1. Render UI */
       dataProduct == null ? (
-        <div className="container">
+        <div className="container" style={{backgroundImage: "none" }}>
           <div className="d-flex justify-content-center align-items-center">
             <div className="spinner-border" role="status">
               <span className="visually-hidden">Loading...</span>
@@ -211,9 +293,8 @@ const ProductDetail = () => {
           </div>
         </div>
       ) : (
-        <div className="container">
+        <div className="container" style={{backgroundImage: "none" }}>
       <div className="navigate d-flex gap-2  align-items-center my-2 bg-white p-2 flex-wrap">
-        {/* Ecommerce > CategoryName > ProductName */}
         <a
           className="navigate-item text-decoration-none"
           href="/Ecommerce/home"
@@ -221,12 +302,6 @@ const ProductDetail = () => {
           Ecommerce
         </a>
         <i className="fa-solid fa-chevron-right fa-xs"></i>
-        {/* <a className="navigate-item text-decoration-none" href={`/Ecommerce/search?name=&category=${dataProduct?.CategoryId._id}`}>
-          {dataProduct?.CategoryId?.CategoryName?.trim()
-            ? dataProduct.CategoryId.CategoryName
-            : ""}
-        </a> */}
-        {/* <i className="fa-solid fa-chevron-right fa-xs"></i> */}
         <span className="navigate-item-name">
           {dataProduct?.ProductName || "Loading..."}
         </span>
@@ -349,56 +424,66 @@ const ProductDetail = () => {
                 className={`${styles["price-value"]} p-0 m-0 text-danger fs-3`}
               >
                 { currentIndex >= 0 ?   dataProduct?.ProductVariant[currentIndex].Price?.toLocaleString(
-                  "vi-VN"
+                  "en-US"
                 ) || "Loading..." : dataProduct?.ProductVariant[0].Price?.toLocaleString(
-                  "vi-VN"
+                  "en-US"
                 ) || "Loading..."}
               </p>
             </div>
 
-            {/* Product Variant */}
-            <div className="product-color mt-5 d-flex gap-2">
-              <p className={`${styles["color-label"]}  p-0 m-0 text-muted`}>
-                Product Variant
-              </p>
-              <div
-                className={`${styles["list-item-color"]} list-item-color d-flex gap-2 flex-wrap justify-content-between overflow-y-auto`}
-              >
-                {dataProduct?.ProductVariant.map((item, index) => (
-                  <button
-                    key={index}
-                    className={`color-item border ${
-                      currentIndex === index ? "border-warning border-2" : "border-muted"
-                    } bg-white p-1 pe-2`}
-                    style={{ 
-                      maxHeight: "38px",
-                      cursor: item.Status === "Inactive" ? "not-allowed" : "pointer" }}
-                    onClick={() => {
-                      setCurrentIndex(index);
-                      setQuantity(0); 
-                    }}
-                    disabled={item.Status === "Inactive"}
-                    //cursor={item.Status === "Inactive" ? "not-allowed" : "pointer"}
-                  >
-                    <img
-                      src={item?.Image || ""}
-                      alt={item.name}
-                      className="p-0 m-0 object-fit-cover"
-                      width={26}
-                      height={"auto"}
-                      loading="lazy"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0";
-                      }}
-                    />
-                    <span className="text-nowrap">
-                      {" " + item.ProductVariantName}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
+                    {/* Product Variant */}
+                    <div className="product-color mt-5 d-flex gap-2">
+                      <p className={`${styles["color-label"]}  p-0 m-0 text-muted`}>
+                        Product Variant
+                      </p>
+                      <div
+                        className={`${styles["list-item-color"]} list-item-color d-flex gap-2 flex-wrap justify-content-between overflow-y-auto`}
+                      >
+                        {dataProduct?.ProductVariant.map((item, index) => (
+                          <button
+                            key={index}
+                            className={`color-item border ${currentIndex === index ? "border-warning border-2" : "border-muted"
+                              } bg-white p-1 pe-2`}
+                            style={{
+                              maxHeight: "38px",
+                              cursor: item.Status === "Inactive" ? "not-allowed" : "pointer"
+                            }}
+                            onClick={() => {
+                              //console.log("index", dataProduct?.ProductVariant[index].StockQuantity);
+                              setCurrentIndex(index);
+                              setQuantity(1);
+                            }}
+                            disabled={item.Status === "Inactive"}
+                          >
+                            <img
+                              src={item?.Image || ""}
+                              alt={item.name}
+                              className="p-0 m-0 object-fit-cover"
+                              width={26}
+                              height={"auto"}
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.src =
+                                  "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0";
+                              }}
+                            />
+                            <span className="text-nowrap">
+                              {" " + item.ProductVariantName}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {currentIndex >= 0 && dataProduct?.ProductVariant[currentIndex].Status === "Active" && (
+                      <div className="d-flex gap-2">
+                        <p className="  p-0 m-0 text-muted" style={{width: "80px"}}>
+                          In Stock
+                        </p>
+                        <div
+                          style={{width: "80px"}}
+                      >{dataProduct?.ProductVariant[currentIndex].StockQuantity}</div>
+                      </div>
+                    )}
             {/* Quantity */}
             <div className="product-quantity mt-4 d-flex gap-2">
               <p className={`${styles["quantity-label"]} p-0 m-0 text-muted `}>
@@ -432,7 +517,7 @@ const ProductDetail = () => {
               </button>
               <button
                 className={`${styles["btn-buy-now"]} border border-warning bg-warning text-white p-2`}
-                //onClick={handleAddToCart}
+                onClick={handleBuyNow}
               >
                 BUY NOW
               </button>
@@ -441,47 +526,46 @@ const ProductDetail = () => {
         </article>
 
         {/* view shop */}
-        <aside className="shop-info bg-white rounded shadow-sm mt-3">
-          <div className="shop-title d-flex align-items-center p-3 gap-2">
-            <img
-              src={dataProduct?.ShopId?.shopAvatar || ""}
-              alt="Shop Logo"
-              className=" rounded-circle me-2 flex-shrink-0"
-              width={80}
-              height={80}
-              loading="lazy"
-              onError={(e) => {
-                e.target.src =
-                  "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0";
-              }}
-            />
-
-            <div className="">
-              <p className="shop-name p-0 m-0 fw-bold mb-2">
-                {dataProduct?.ShopId?.name || "Loading..."}
-              </p>
-              <button className="border border-warning bg-white text-warning pe-1 rounded">
-                <i className="fa-solid fa-shop fs-sx mx-1"></i>View Shop{" "}
-              </button>
-            </div>
-            <div className={`${styles["vertical-line"]}  mx-4`}></div>
-            <div className="other-content d-flex">
-              <div>
-                <label className="fw-bold p-0 m-0">Address</label>
-                <p className="shop-description p-0 m-0 text-muted">
-                  {dataProduct?.ShopId?.address?.province || "Loading..."}
-                </p>
-              </div>
-              <div className={`${styles["vertical-line"]}  mx-4`}></div>
-              <div>
-                <label className="fw-bold p-0 m-0">Description</label>
-                <p className="shop-description p-0 m-0 text-muted">
-                  {dataProduct?.ShopId?.description || "Loading..."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </aside>
+                <aside className="shop-info bg-white rounded shadow-sm mt-3">
+                  <div className="shop-title d-flex align-items-center p-3 gap-2">
+                    <img
+                      src={dataProduct?.ShopId?.shopAvatar || ""}
+                      alt="Shop Logo"
+                      className=" rounded-circle me-2 flex-shrink-0"
+                      width={80}
+                      height={80}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://cdn.dribbble.com/userupload/29476359/file/original-8b86b24e7fc146c5cd6c64446873cfaa.jpg?resize=400x0";
+                      }}
+                    />
+                    <div className="other-content d-flex">
+                      <div className="d-flex align-items-center flex-column">
+                        <label className="p-0 m-0 fw-bold">
+                          Shop Name
+                        </label>
+                        <p className="shop-description p-0 m-0 text-muted">
+                          {dataProduct?.ShopId?.name || "Loading..."}
+                        </p>
+                      </div>
+                      <div className={`${styles["vertical-line"]}  mx-4`}></div>
+                      <div>
+                        <label className="fw-bold p-0 m-0">Address</label>
+                        <p className="shop-description p-0 m-0 text-muted">
+                          {dataProduct?.ShopId?.address?.province || "Loading..."}
+                        </p>
+                      </div>
+                      <div className={`${styles["vertical-line"]}  mx-4`}></div>
+                      <div>
+                        <label className="fw-bold p-0 m-0">Description</label>
+                        <p className="shop-description p-0 m-0 text-muted">
+                          {dataProduct?.ShopId?.description || "Loading..."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
 
         {/* view product description */}
         <section className="product-description-view mt-3 bg-white rounded shadow-sm p-2">

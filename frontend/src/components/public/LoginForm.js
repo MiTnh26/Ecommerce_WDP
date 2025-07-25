@@ -84,11 +84,11 @@ function Login() {
   // Validate email
   const validateEmail = (email) => {
     if (!email.trim()) {
-      return "Email không được để trống";
+      return "Email is required";
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return "Email không đúng định dạng";
+      return "Invalid email format";
     }
     return "";
   };
@@ -96,10 +96,10 @@ function Login() {
   // Validate password
   const validatePassword = (password) => {
     if (!password.trim()) {
-      return "Mật khẩu không được để trống";
+      return "Password is required";
     }
     if (password.length < 6) {
-      return "Mật khẩu phải có ít nhất 6 ký tự";
+      return "Password must be at least 6 characters";
     }
     return "";
   };
@@ -159,7 +159,7 @@ function Login() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        setSuccess("Đăng nhập thành công!");
+        setSuccess("Login successful!");
 
         // Redirect after 2 seconds
         setTimeout(() => {
@@ -172,13 +172,13 @@ function Login() {
       } else {
         setErrors((prev) => ({
           ...prev,
-          general: data.message || "Sai tài khoản hoặc mật khẩu",
+          general: data.message || "Incorrect email or password",
         }));
       }
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
-        general: "Lỗi kết nối máy chủ. Vui lòng thử lại sau.",
+        general: "Server connection error. Please try again later.",
       }));
     } finally {
       setIsLoading(false);
@@ -201,7 +201,7 @@ function Login() {
       console.log("data", data);
 
       if (res.ok) {
-        setSuccess("Đăng nhập bằng Google thành công!");
+        setSuccess("Google login successful!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -216,14 +216,14 @@ function Login() {
       } else {
         setErrors((prev) => ({
           ...prev,
-          google: data.message || "Đăng nhập Google thất bại",
+          google: data.message || "Google login failed",
         }));
       }
     } catch (err) {
       console.error(err);
       setErrors((prev) => ({
         ...prev,
-        google: "Lỗi khi xử lý đăng nhập Google. Vui lòng thử lại.",
+        google: "Error processing Google login. Please try again.",
       }));
     } finally {
       setIsLoading(false);
@@ -233,7 +233,7 @@ function Login() {
   const handleGoogleError = () => {
     setErrors((prev) => ({
       ...prev,
-      google: "Đăng nhập Google thất bại. Vui lòng thử lại.",
+      google: "Google login failed. Please try again.",
     }));
   };
 
@@ -324,7 +324,7 @@ function Login() {
                       Remember me
                     </label>
                   </div>
-                  <a href="/forgot-password" className="text-body">
+                  <a href="/Ecommerce/forgot-password" className="text-body">
                     Forgot password?
                   </a>
                 </div>
@@ -342,14 +342,14 @@ function Login() {
                           role="status"
                           aria-hidden="true"
                         ></span>
-                        Đang đăng nhập...
+                        Logging in...
                       </>
                     ) : (
                       "Login"
                     )}
                   </button>
 
-                  <div className="my-3 text-center">hoặc</div>
+                  <div className="my-3 text-center">Or</div>
 
                   <div className="d-flex justify-content-center">
                     <GoogleLogin

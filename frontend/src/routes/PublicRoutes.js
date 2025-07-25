@@ -22,7 +22,7 @@ const PublicRoutes = [
         element: <ProductDetail />,
       },
       {
-        path: "/Ecommerce/search/:keyword",
+        path: "/Ecommerce/search",
         element: <ProductList />,
       },
     ],
