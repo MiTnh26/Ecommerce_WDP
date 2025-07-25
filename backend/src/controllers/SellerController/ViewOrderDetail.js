@@ -41,7 +41,7 @@ exports.getOrderDetail = async (req, res) => {
       ReceiverName: order.receiverName || "N/A",
       ReceiverPhone: order.phoneNumber || "N/A",
       ShippingAddress: order.ShippingAddress || "N/A",
-      PaymentId: order.PaymentId?.PaymentMethod || "N/A",
+      PaymentId: order.PaymentId?.Type || "N/A",
       Items: order.Items ? order.Items.Product.map(product => ({
         _id: product._id,
         ProductName: product.ProductName,
