@@ -42,21 +42,21 @@ exports.getOrderDetail = async (req, res) => {
       ReceiverPhone: order.phoneNumber || "N/A",
       ShippingAddress: order.ShippingAddress || "N/A",
       PaymentId: order.PaymentId?.PaymentMethod || "N/A",
-      Items: order.Items
-        ? order.Items.Product.map((product) => ({
-            _id: product._id,
-            ProductName: product.ProductName,
-            ProductImage: product.ProductImage,
-            ProductVariant: product.ProductVariant.map((variant) => ({
-              _id: variant._id,
-              ProductVariantName: variant.ProductVariantName,
-              Price: variant.Price,
-              Quantity: variant.Quantity,
-              Image: variant.Image,
-            })),
-          }))
-        : [],
+      Items: order.Items ? order.Items.Product.map(product => ({
+        _id: product._id,
+        ProductName: product.ProductName,
+        ProductImage: product.ProductImage,
+        ProductVariant: product.ProductVariant.map(variant => ({
+          _id: variant._id,
+          ProductVariantName: variant.ProductVariantName,
+          Price: variant.Price,
+          Quantity: variant.Quantity,
+          Image: variant.Image
+        }))
+      })) : [],
+
     };
+
 
     res.json(formattedOrder);
   } catch (error) {
@@ -121,8 +121,8 @@ exports.updateOrderStatus = async (req, res) => {
                 $inc: {
                   "ProductVariant.$.StockQuantity": -quantitySold,
                   "ProductVariant.$.Sales": quantitySold,
-                  Sales: quantitySold,
-                },
+                  Sales: quantitySold
+                }
               }
             );
           }

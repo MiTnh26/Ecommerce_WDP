@@ -173,10 +173,7 @@ const ViewOrderDetail = () => {
                         <tr key={product._id}>
                           <td>
                             <img
-                              src={
-                                product.ProductImage ||
-                                "/assets/images/no-image.png"
-                              }
+                              src={product.ProductImage || "/assets/images/no-image.png"}
                               alt={product.ProductName}
                               style={{
                                 width: "80px",
@@ -187,41 +184,32 @@ const ViewOrderDetail = () => {
                               }}
                             />
                           </td>
+                          <td className="align-middle">{product.ProductName}</td>
                           <td className="align-middle">
-                            {product.ProductName}
-                          </td>
-                          <td className="align-middle">
-                            {product.ProductVariant.map((variant) => (
-                              <div key={variant._id}>
-                                {variant.ProductVariantName}
-                              </div>
+                            {product.ProductVariant.map(variant => (
+                              <div key={variant._id}>{variant.ProductVariantName}</div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant) => (
-                              <div key={variant._id}>
-                                ${Number(variant.Price).toLocaleString("vi-VN")}
-                              </div>
+                            {product.ProductVariant.map(variant => (
+                              <div key={variant._id}>${Number(variant.Price).toLocaleString('vi-VN')}</div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant) => (
+                            {product.ProductVariant.map(variant => (
                               <div key={variant._id}>{variant.Quantity}</div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant) => (
-                              <div key={variant._id}>
-                                $
-                                {Number(
-                                  variant.Price * variant.Quantity
-                                ).toLocaleString("vi-VN")}
-                              </div>
+                            {product.ProductVariant.map(variant => (
+                              <div key={variant._id}>${Number(variant.Price * variant.Quantity).toLocaleString('vi-VN')}</div>
                             ))}
                           </td>
                         </tr>
                       ))}
+
                     </tbody>
+
                   </Table>
                 </Card.Body>
               </Card>
