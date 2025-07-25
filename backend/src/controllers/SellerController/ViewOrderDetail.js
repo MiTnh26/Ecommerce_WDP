@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Order = require("../../models/Orders");
 const OrderItem = require("../../models/OrderItems");
+const Product = require("../../models/Products");
 
 exports.getOrderDetail = async (req, res) => {
   try {
@@ -97,34 +98,39 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // If status is Delivered, update all related OrderItem statuses
     if (Status === "Delivered" && Array.isArray(order.Items) && order.Items.length > 0) {
-      const OrderItem = require("../../models/OrderItems");
-      const Product = require("../../models/Products");
+      // Cập nhật trạng thái của các OrderItem
       await OrderItem.updateMany(
         { _id: { $in: order.Items } },
-        { $set: { Status: "Delivered" } }
+        { $set: { Status: Status } }
       );
-      // Trừ StockQuantity của ProductVariant
+
+      // Lấy thông tin các OrderItem
       const orderItems = await OrderItem.find({ _id: { $in: order.Items } });
+
       for (const item of orderItems) {
         for (const product of item.Product) {
           for (const variant of product.ProductVariant) {
-            // Trừ StockQuantity của ProductVariant trong bảng Products
+            const quantitySold = variant.Quantity;
+
+            // Trừ StockQuantity và cộng vào Sales trong ProductVariant
             await Product.updateOne(
               {
                 _id: product._id,
-                "ProductVariant._id": variant._id
+                "ProductVariant._id": variant._id,
               },
               {
-                $inc: { "ProductVariant.$.StockQuantity": -variant.Quantity }
+                $inc: {
+                  "ProductVariant.$.StockQuantity": -quantitySold,
+                  "ProductVariant.$.Sales": quantitySold,
+                  Sales: quantitySold 
+                }
               }
             );
           }
         }
       }
     }
-
     console.log("Order status updated successfully:", order);
     res.json({
       message: "Order status updated successfully",
