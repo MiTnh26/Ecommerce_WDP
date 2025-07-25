@@ -156,10 +156,10 @@ const loadDataCart = async () => {
     }
   }
 
-  const handleAddToCart = (showAlert = true) => {
+  const handleAddToCart = () => {
     //console.log("quantity");
     if(currentIndex === -1){
-      if (showAlert) alert("Please select variant");
+      alert("Please select variant");
       return;
     }
     const addToCart = async () => {
@@ -169,11 +169,11 @@ const loadDataCart = async () => {
         return;
       }
       if (quantity === 0) {
-        if (showAlert) alert("Please select quantity");
+        alert("Please select quantity");
         return;
       }
       if(dataProduct?.ProductVariant[currentIndex].Status === "Inactive"){
-        if (showAlert) alert("This variant is inactive");
+        alert("This variant is inactive");
         return;      
       }
       // check quatity + ProductVariant.Quatity in cart < ProductVariant.StockQuantity
@@ -201,7 +201,7 @@ const loadDataCart = async () => {
         // console.log("y", findProductVariantInCart?.Quantity + quantity)
         if (findProductVariantInCart) {
           if (findProductVariantInCart.Quantity + quantity > dataProduct.ProductVariant[currentIndex].StockQuantity) {
-            if (showAlert) alert("The quantity in the cart plus the added quantity exceeds the limit");
+            alert("The quantity in the cart plus the added quantity exceeds the limit");
             return;
           }
         }
@@ -241,7 +241,7 @@ const loadDataCart = async () => {
         ],
       }, { withCredentials: true });
       if (res.status === 200) {
-        if (showAlert) alert("Add to cart successfully");
+        alert("Add to cart successfully");
         loadDataCart()
       }
     }
@@ -250,7 +250,7 @@ const loadDataCart = async () => {
     addToCart();
   }
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if(currentIndex === -1){
       alert("Please select variant");
       return;
@@ -264,31 +264,20 @@ const loadDataCart = async () => {
       navigate("/Ecommerce/login");
       return;
     }
-    // Gọi handleAddToCart trước nhưng không hiện alert
-    await new Promise((resolve) => {
-      const originalAlert = window.alert;
-      window.alert = function(msg) {
-        if (msg !== "Add to cart successfully") originalAlert(msg);
-        resolve();
-      };
-      handleAddToCart(false);
-      setTimeout(() => resolve(), 500); // fallback nếu không có alert
-    });
-    // Tiếp tục logic buy now
     const data = {
-      UserId: user._id,
-      Items: [{
-        ProductVariant_id: dataProduct.ProductVariant[currentIndex]._id,
-        Product_Id: product_id,
-        Quantity: quantity,
-        ShopId: dataProduct.ShopId._id,
-        Price: dataProduct.ProductVariant[currentIndex].Price
-      }],
-      TotalPrice: dataProduct.ProductVariant[currentIndex].Price * quantity,
-    };
+        UserId: user._id,
+        Items: [{
+          ProductVariant_id: dataProduct.ProductVariant[currentIndex]._id,
+          Product_Id: product_id,
+          Quantity: quantity,
+          ShopId: dataProduct.ShopId._id,
+          Price: dataProduct.ProductVariant[currentIndex].Price
+        }],
+        TotalPrice: dataProduct.ProductVariant[currentIndex].Price * quantity,
+      };
     localStorage.removeItem("checkOut");
     localStorage.setItem("checkOut", JSON.stringify(data));
-    navigate("/Ecommerce/user/checkout");
+    navigate("/Ecommerce/user/checkout")
   }
   
 
@@ -523,7 +512,7 @@ const loadDataCart = async () => {
             <div className="product-add-to-cart mt-4">
               <button
                 className={`${styles["btn-add-cart"]} border border-warning bg-white text-warning p-2 me-2`}
-                onClick={() => handleAddToCart()}
+                onClick={handleAddToCart}
               >
                 <i className="fa-solid fa-cart-shopping fs-sx me-1"></i>ADD TO CART
               </button>

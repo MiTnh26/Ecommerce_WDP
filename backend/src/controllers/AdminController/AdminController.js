@@ -343,24 +343,22 @@ const setDefaultPaymentMethod = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Tìm payment method theo id
+    // Find payment method by id
     const targetPayment = await Payment.findById(id);
 
     if (!targetPayment) {
       return res.status(404).json({ message: "Payment method not found" });
     }
 
-    const type = targetPayment.Type;
+    // Set all payment methods to Default: false (only one default allowed)
+    await Payment.updateMany({}, { $set: { Default: false } });
 
-    // Set tất cả các payment method cùng Type về Default: false
-    await Payment.updateMany({ Type: type }, { $set: { Default: false } });
-
-    // Set payment hiện tại về Default: true
+    // Set current payment method to Default: true
     targetPayment.Default = true;
     await targetPayment.save();
 
     res.status(200).json({
-      message: `Set default payment method for Type '${type}' successfully`,
+      message: `Set default payment method successfully`,
       paymentMethod: targetPayment,
     });
   } catch (error) {

@@ -46,7 +46,24 @@ function CheckoutPage() {
   };
 
   // Thêm state cho dropbox mở/đóng từng loại
-  const [openPaymentType, setOpenPaymentType] = useState(null);
+  const [openPaymentType, setOpenPaymentType] = useState(() => {
+    // On mount, open the payment type that contains the default method
+    return (() => {
+      if (paymentMethods && paymentMethods.length > 0) {
+        const defaultMethod = paymentMethods.find((m) => m.Default);
+        if (defaultMethod) return defaultMethod.Type;
+      }
+      return null;
+    })();
+  });
+
+  // Ensure openPaymentType updates if paymentMethods change (e.g. after fetch)
+  useEffect(() => {
+    if (paymentMethods && paymentMethods.length > 0) {
+      const defaultMethod = paymentMethods.find((m) => m.Default);
+      if (defaultMethod) setOpenPaymentType(defaultMethod.Type);
+    }
+  }, [paymentMethods]);
 
   // Load provinces on component mount
   useEffect(() => {
@@ -56,9 +73,9 @@ function CheckoutPage() {
       .catch((err) => console.error("Error loading provinces:", err));
   }, []);
 
-  // useEffect để lấy dữ liệu checkout và userId
+  // useEffect to get checkout data and userId
   useEffect(() => {
-    // Lấy dữ liệu checkout từ localStorage
+    // Get checkout data from localStorage
     const storedCheckOut = localStorage.getItem("checkOut");
     if (storedCheckOut) {
       try {
@@ -66,26 +83,26 @@ function CheckoutPage() {
         setCheckOut(checkOutData);
         console.log("CheckOut data:", checkOutData);
 
-        // Lấy userId từ checkOut data
+        // Get userId from checkOut data
         if (checkOutData.UserId) {
           setUserId(checkOutData.UserId);
           fetchAddresses(checkOutData.UserId);
         } else {
-          setError("Không tìm thấy thông tin người dùng trong checkout");
+          setError("User information not found in checkout");
           setLoading(false);
         }
 
-        // Transform checkout data thành orders format
+        // Transform checkout data to orders format
         if (checkOutData.Items && Array.isArray(checkOutData.Items)) {
           transformCheckoutToOrders(checkOutData.Items);
         }
       } catch (err) {
         console.error("Error parsing checkout data:", err);
-        setError("Lỗi đọc dữ liệu checkout");
+        setError("Error reading checkout data");
         setLoading(false);
       }
     } else {
-      setError("Không tìm thấy dữ liệu checkout");
+      setError("Checkout data not found");
       setLoading(false);
     }
   }, []);
@@ -99,7 +116,7 @@ function CheckoutPage() {
         const res = await fetch(
           "http://localhost:5000/customer/getPaymentMethod"
         );
-        if (!res.ok) throw new Error("Không thể tải phương thức thanh toán");
+        if (!res.ok) throw new Error("Could not load payment methods");
         const data = await res.json();
         setPaymentMethods(data);
         // Set default payment method
@@ -210,7 +227,7 @@ function CheckoutPage() {
           const itemsWithDetails = await Promise.all(
             shopItems.map(async (item) => {
               try {
-                // Fetch product details với API endpoint mới
+                // Fetch product details with new API endpoint
                 const productResponse = await fetch(
                   `http://localhost:5000/customer/getProduct/${item.Product_Id}`,
                   {
@@ -225,11 +242,11 @@ function CheckoutPage() {
                   const product = await productResponse.json();
                   console.log("Product data:", product);
 
-                  // Fetch variant details với API endpoint mới
+                  // Fetch variant details with new API endpoint
                   let variant = null;
                   let variantPrice = item.Price;
                   let variantImage = product.ProductImage;
-                  let variantName = "Mặc định";
+                  let variantName = "Default";
 
                   if (item.ProductVariant_id) {
                     try {
@@ -248,14 +265,14 @@ function CheckoutPage() {
                         console.log("Variant data:", variant);
                         variantPrice = variant.Price || item.Price;
                         variantImage = variant.Image || product.ProductImage;
-                        // Ưu tiên lấy tên từ variant object
+                        // Prioritize getting name from variant object
                         if (variant.ProductVariantName) {
                           variantName = variant.ProductVariantName;
                         } else if (
                           product.ProductVariant &&
                           Array.isArray(product.ProductVariant)
                         ) {
-                          // Nếu không, tìm trong mảng ProductVariant của product
+                          // If not, find in the product's ProductVariant array
                           const found = product.ProductVariant.find(
                             (v) => v._id === item.ProductVariant_id
                           );
@@ -267,7 +284,7 @@ function CheckoutPage() {
                         product.ProductVariant &&
                         Array.isArray(product.ProductVariant)
                       ) {
-                        // Nếu không fetch được variant riêng, tìm trong mảng ProductVariant của product
+                        // If variant cannot be fetched separately, find in the product's ProductVariant array
                         const found = product.ProductVariant.find(
                           (v) => v._id === item.ProductVariant_id
                         );
@@ -280,7 +297,7 @@ function CheckoutPage() {
                         "Error fetching variant details:",
                         variantErr
                       );
-                      // Nếu lỗi, thử tìm trong mảng ProductVariant của product
+                      // If error, try to find in the product's ProductVariant array
                       if (
                         product.ProductVariant &&
                         Array.isArray(product.ProductVariant)
@@ -297,13 +314,13 @@ function CheckoutPage() {
 
                   return {
                     id: item.Product_Id,
-                    name: product.ProductName || "Sản phẩm",
+                    name: product.ProductName || "Product",
                     description: product.Description || "",
                     price: variantPrice,
                     quantity: item.Quantity,
                     image: variantImage || "/placeholder.svg",
                     color: variantName,
-                    ProductVariantName: variantName, // Đảm bảo luôn có trường này
+                    ProductVariantName: variantName, // Ensure this field is always present
                     productId: item.Product_Id,
                     variantId: item.ProductVariant_id,
                     sales: product.Sales || 0,
@@ -321,13 +338,13 @@ function CheckoutPage() {
                   );
                   return {
                     id: item.Product_Id,
-                    name: "Sản phẩm",
+                    name: "Product",
                     description: "",
                     price: item.Price,
                     quantity: item.Quantity,
                     image: "/placeholder.svg",
-                    color: "Mặc định",
-                    ProductVariantName: "Mặc định", // fallback luôn có trường này
+                    color: "Default",
+                    ProductVariantName: "Default", // fallback always has this field
                     productId: item.Product_Id,
                     variantId: item.ProductVariant_id,
                     sales: 0,
@@ -340,13 +357,13 @@ function CheckoutPage() {
                 console.error("Error fetching product details:", err);
                 return {
                   id: item.Product_Id,
-                  name: "Sản phẩm",
+                  name: "Product",
                   description: "",
                   price: item.Price,
                   quantity: item.Quantity,
                   image: "/placeholder.svg",
-                  color: "Mặc định",
-                  ProductVariantName: "Mặc định", // fallback luôn có trường này
+                  color: "Default",
+                  ProductVariantName: "Default", // fallback always has this field
                   productId: item.Product_Id,
                   variantId: item.ProductVariant_id,
                   sales: 0,
@@ -358,7 +375,7 @@ function CheckoutPage() {
             })
           );
 
-          // Fetch shop details với API endpoint mới
+          // Fetch shop details with new API endpoint
           let shopName = `Shop ${shopId}`;
           let shopAvatar = "/placeholder.svg";
           let shopDescription = "";
@@ -427,7 +444,7 @@ function CheckoutPage() {
       setLoading(true);
       setError(null);
 
-      // Sử dụng GET request với userId trong URL path
+      // Use GET request with userId in URL path
       const response = await fetch(
         `http://localhost:5000/customer/getAddress/${userIdParam || userId}`,
         {
@@ -481,19 +498,19 @@ function CheckoutPage() {
     e.preventDefault();
 
     if (!userId) {
-      alert("Không tìm thấy thông tin người dùng");
+      alert("User information not found");
       return;
     }
 
-    // Validate số điện thoại phải đúng 10 chữ số
+    // Validate phone number must be 10 digits
     const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(newAddress.phoneNumber)) {
-      alert("Số điện thoại phải có đúng 10 chữ số");
+      alert("Phone number must be exactly 10 digits");
       return;
     }
 
     try {
-      // Call API to add new address với endpoint mới
+      // Call API to add new address with new endpoint
       const response = await fetch(
         `http://localhost:5000/customer/user/${userId}/address`,
         {
@@ -531,14 +548,14 @@ function CheckoutPage() {
         setDistricts([]);
         setWards([]);
         setShowAddressModal(false);
-        alert("Thêm địa chỉ thành công!");
+        alert("Address added successfully!");
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to add address");
       }
     } catch (err) {
       console.error("Error adding address:", err);
-      alert("Có lỗi xảy ra khi thêm địa chỉ: " + err.message);
+      alert("An error occurred while adding address: " + err.message);
     }
   };
 
@@ -567,19 +584,19 @@ function CheckoutPage() {
 
   const handleCheckout = async () => {
     if (!userId || addresses.length === 0) {
-      alert("Vui lòng thêm địa chỉ giao hàng");
+      alert("Please add a shipping address");
       return;
     }
 
     if (!checkOut || !checkOut.Items || checkOut.Items.length === 0) {
-      alert("Giỏ hàng trống");
+      alert("Cart is empty");
       return;
     }
 
     try {
-      // Lặp qua từng shop để tạo orderItem và order riêng
+      // Loop through each shop to create orderItem and order separately
       for (const shop of orders) {
-        // 1. Chuẩn bị dữ liệu cho OrderItems của shop
+        // 1. Prepare data for OrderItems of the shop
         const orderItemsPayload = {
           Product: shop.items.map((item) => ({
             _id: item.productId,
@@ -599,7 +616,7 @@ function CheckoutPage() {
           Status: "Pending",
         };
 
-        // 2. Gọi API tạo OrderItems cho shop
+        // 2. Call API to create OrderItems for the shop
         const orderItemsRes = await fetch(
           "http://localhost:5000/customer/createOrderItems",
           {
@@ -610,12 +627,12 @@ function CheckoutPage() {
         );
         if (!orderItemsRes.ok) {
           const err = await orderItemsRes.json();
-          throw new Error(err.message || "Tạo OrderItems thất bại");
+          throw new Error(err.message || "Failed to create OrderItems");
         }
         const orderItemsData = await orderItemsRes.json();
         const orderItemsId = orderItemsData.orderItem._id;
 
-        // 3. Chuẩn bị dữ liệu cho Order của shop
+        // 3. Prepare data for Order of the shop
         const orderPayload = {
           PaymentId: selectedPayment,
           ShippingAddress: formatFullAddress(addresses[selectedAddress]),
@@ -624,11 +641,11 @@ function CheckoutPage() {
           BuyerId: userId,
           ShopId: shop.shopId,
           Items: orderItemsId,
-          receiverName: addresses[selectedAddress]?.name, // truyền tên người nhận
-          phoneNumber: addresses[selectedAddress]?.phone, // truyền số điện thoại
+          receiverName: addresses[selectedAddress]?.name, // pass receiver name
+          phoneNumber: addresses[selectedAddress]?.phone, // pass phone number
         };
 
-        // 4. Gọi API tạo Order cho shop
+        // 4. Call API to create Order for the shop
         const orderRes = await fetch(
           "http://localhost:5000/customer/checkout",
           {
@@ -639,16 +656,15 @@ function CheckoutPage() {
         );
         if (!orderRes.ok) {
           const err = await orderRes.json();
-          throw new Error(err.message || "Tạo Order thất bại");
+          throw new Error(err.message || "Failed to create Order");
         }
       }
-      // Thành công
-      // Xóa từng sản phẩm đã đặt khỏi giỏ hàng
+      // Success
+      // Remove each ordered product from the cart
       const user = JSON.parse(localStorage.getItem("user"));
-      const latestCheckOut = JSON.parse(localStorage.getItem("checkOut"));
-      if (user && user._id && latestCheckOut && Array.isArray(latestCheckOut.Items) && latestCheckOut.Items.length > 0) {
-        for (const item of latestCheckOut.Items) {
-          // Nếu có ProductVariant_id thì xóa theo biến thể, nếu không thì xóa theo sản phẩm
+      if (user && user._id && checkOut.Items) {
+        for (const item of checkOut.Items) {
+          // If there is a ProductVariant_id, delete by variant, otherwise delete by product
           await axios.delete(
             "http://localhost:5000/customer/remove-p-variant-cart",
             {
@@ -669,7 +685,7 @@ function CheckoutPage() {
       }, 5000);
     } catch (err) {
       console.error("Error creating order:", err);
-      alert("Có lỗi xảy ra khi đặt hàng: " + err.message);
+      alert("An error occurred while placing order: " + err.message);
     }
   };
 
@@ -685,7 +701,7 @@ function CheckoutPage() {
     });
   };
 
-  // Tạo danh sách các loại phương thức có trong danh sách trả về
+  // Create a list of payment methods available in the returned list
   const paymentTypes = Object.keys(paymentTypeNames).filter((type) =>
     paymentMethods.some((m) => m.Type === type)
   );
@@ -694,23 +710,23 @@ function CheckoutPage() {
     <div className="checkout-container">
       <div className="checkout-content">
         <div className="checkout-main">
-          {/* Địa chỉ giao hàng */}
+          {/* Shipping Address */}
           <div className="section-card">
             <div className="section-header">
               <i className="ti ti-map-pin"></i>
-              <span>Địa chỉ nhận hàng</span>
+              <span>Shipping Address</span>
             </div>
             <div className="address-content">
               {loading ? (
-                <div className="address-loading">Đang tải địa chỉ...</div>
+                <div className="address-loading">Loading addresses...</div>
               ) : error ? (
                 <div className="address-error">
-                  Lỗi tải địa chỉ: {error}
+                  Error loading addresses: {error}
                   <button
                     onClick={() => fetchAddresses()}
                     className="btn-retry"
                   >
-                    Thử lại
+                    Retry
                   </button>
                 </div>
               ) : addresses.length > 0 ? (
@@ -724,7 +740,7 @@ function CheckoutPage() {
                         {addresses[selectedAddress]?.phone}
                       </span>
                       {addresses[selectedAddress]?.isDefault && (
-                        <span className="address-default">Mặc định</span>
+                        <span className="address-default">Default</span>
                       )}
                     </div>
                     <div className="address-detail">
@@ -735,29 +751,29 @@ function CheckoutPage() {
                     className="btn-change"
                     onClick={() => setShowAddressListModal(true)}
                   >
-                    Thay đổi
+                    Change
                   </button>
                 </>
               ) : (
                 <div className="no-address">
-                  <p>Chưa có địa chỉ giao hàng</p>
+                  <p>No shipping address added</p>
                   <button
                     className="btn-add-address"
                     onClick={() => setShowAddressModal(true)}
                   >
-                    Thêm địa chỉ
+                    Add Address
                   </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Sản phẩm theo shop */}
+          {/* Products by shop */}
           {productsLoading ? (
             <div className="section-card">
               <div className="products-loading">
                 <div className="loading-spinner"></div>
-                <span>Đang tải sản phẩm...</span>
+                <span>Loading products...</span>
               </div>
             </div>
           ) : orders.length > 0 ? (
@@ -782,11 +798,7 @@ function CheckoutPage() {
                       <div className="shop-name-row">
                         <span className="shop-name">{shop.shopName}</span>
                       </div>
-                      {shop.shopDescription && (
-                        <div className="shop-description">
-                          {shop.shopDescription}
-                        </div>
-                      )}
+
                       {shop.shopAddress && (
                         <div className="shop-address">{shop.shopAddress}</div>
                       )}
@@ -794,7 +806,7 @@ function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Sản phẩm */}
+                {/* Products */}
                 <div className="products-list">
                   {shop.items.map((item) => (
                     <div
@@ -818,8 +830,8 @@ function CheckoutPage() {
                           {item.name}
                         </div>
                         <div className="product-variant">
-                          Loại:{" "}
-                          {item.color || item.ProductVariantName || "Mặc định"}
+                          Type:{" "}
+                          {item.color || item.ProductVariantName || "Default"}
                         </div>
                       </div>
                       <div className="product-price">
@@ -833,9 +845,9 @@ function CheckoutPage() {
                   ))}
                 </div>
 
-                {/* Tổng tiền shop */}
+                {/* Shop total */}
                 <div className="shop-total">
-                  <span>Tổng số tiền ({shop.items.length} sản phẩm): </span>
+                  <span>Total amount ({shop.items.length} products): </span>
                   <span className="total-amount">
                     {formatCurrency(calculateShopTotal(shop))}
                   </span>
@@ -846,12 +858,12 @@ function CheckoutPage() {
             <div className="section-card">
               <div className="empty-cart">
                 <i className="ti ti-shopping-cart-off"></i>
-                <p>Giỏ hàng trống</p>
+                <p>Cart is empty</p>
               </div>
             </div>
           )}
 
-          {/* Phương thức thanh toán */}
+          {/* Payment Method */}
           <div className="section-card">
             <div className="section-header">
               <img
@@ -859,7 +871,7 @@ function CheckoutPage() {
                 alt="Logo"
                 className="checkout-logo"
               />
-              <span>Thanh Toán</span>
+              <span>Payment</span>
             </div>
             <div
               className="payment-options"
@@ -867,25 +879,25 @@ function CheckoutPage() {
             >
               {paymentLoading ? (
                 <div className="payment-loading">
-                  Đang tải phương thức thanh toán...
+                  Loading payment methods...
                 </div>
               ) : paymentError ? (
                 <div className="payment-error">
-                  Lỗi: {paymentError}
+                  Error: {paymentError}
                   <button
                     onClick={() => window.location.reload()}
                     className="btn-retry"
                   >
-                    Thử lại
+                    Retry
                   </button>
                 </div>
               ) : paymentTypes.length === 0 ? (
                 <div className="payment-empty">
-                  Không có phương thức thanh toán khả dụng
+                  No payment methods available
                 </div>
               ) : (
                 paymentTypes.map((type) => {
-                  // Lọc và sắp xếp phương thức theo loại, mặc định lên đầu
+                  // Filter and sort payment methods by type, default first
                   const methods = paymentMethods
                     .filter((m) => m.Type === type)
                     .sort((a, b) => (b.Default ? 1 : 0) - (a.Default ? 1 : 0));
@@ -904,7 +916,7 @@ function CheckoutPage() {
                         <span
                           style={{ marginLeft: 8, fontSize: 12, color: "#888" }}
                         >
-                          {methods.length} phương thức
+                          {methods.length} methods
                         </span>
                         <span style={{ marginLeft: "auto" }}>
                           <i
@@ -956,9 +968,7 @@ function CheckoutPage() {
                                 {method.Provider}
                               </span>
                               {method.Default && (
-                                <span className="payment-default">
-                                  Mặc định
-                                </span>
+                                <span className="payment-default">Default</span>
                               )}
                             </label>
                           ))}
@@ -972,13 +982,13 @@ function CheckoutPage() {
           </div>
         </div>
 
-        {/* Sidebar thanh toán */}
+        {/* Sidebar for payment */}
         <div className="checkout-sidebar">
           <div className="payment-summary">
-            <h3>Đơn hàng</h3>
+            <h3>Order</h3>
 
             <div className="summary-row">
-              <span>Tạm tính</span>
+              <span>Subtotal</span>
               <span>
                 {formatCurrency(
                   orders.reduce(
@@ -990,7 +1000,7 @@ function CheckoutPage() {
             </div>
 
             <div className="summary-total">
-              <span>Tổng cộng</span>
+              <span>Total</span>
               <span>{formatCurrency(calculateGrandTotal())}</span>
             </div>
 
@@ -1000,21 +1010,20 @@ function CheckoutPage() {
               onClick={handleCheckout}
             >
               {addresses.length === 0
-                ? "Vui lòng thêm địa chỉ"
+                ? "Please add an address"
                 : orders.length === 0
-                ? "Giỏ hàng trống"
-                : "Đặt hàng"}
+                ? "Cart is empty"
+                : "Place Order"}
             </button>
 
             <div className="checkout-note">
-              Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo điều
-              khoản của EZShop
+              Clicking "Place Order" means you agree to EZShop's terms.
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal thêm địa chỉ */}
+      {/* Add Address Modal */}
       {showAddressModal && (
         <div
           className="modal-overlay"
@@ -1025,7 +1034,7 @@ function CheckoutPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
-              <h3>Địa chỉ mới</h3>
+              <h3>New Address</h3>
               <button
                 className="modal-close"
                 onClick={() => setShowAddressModal(false)}
@@ -1039,7 +1048,7 @@ function CheckoutPage() {
                   <div className="form-group">
                     <input
                       type="text"
-                      placeholder="Họ và tên"
+                      placeholder="Receiver Name"
                       name="receiverName"
                       value={newAddress.receiverName}
                       onChange={handleAddressFieldChange}
@@ -1050,7 +1059,7 @@ function CheckoutPage() {
                   <div className="form-group">
                     <input
                       type="tel"
-                      placeholder="Số điện thoại"
+                      placeholder="Phone Number"
                       name="phoneNumber"
                       value={newAddress.phoneNumber}
                       onChange={handleAddressFieldChange}
@@ -1068,7 +1077,7 @@ function CheckoutPage() {
                       className="form-control"
                       required
                     >
-                      <option value="">Chọn Tỉnh/Thành phố</option>
+                      <option value="">Select Province/City</option>
                       {provinces.map((province) => (
                         <option key={province.code} value={province.name}>
                           {province.name}
@@ -1084,7 +1093,7 @@ function CheckoutPage() {
                       required
                       disabled={!newAddress.province}
                     >
-                      <option value="">Chọn Quận/Huyện</option>
+                      <option value="">Select District/County</option>
                       {districts.map((district) => (
                         <option key={district.code} value={district.name}>
                           {district.name}
@@ -1103,7 +1112,7 @@ function CheckoutPage() {
                     required
                     disabled={!newAddress.district}
                   >
-                    <option value="">Chọn Phường/Xã</option>
+                    <option value="">Select Ward/Commune</option>
                     {wards.map((ward) => (
                       <option key={ward.code} value={ward.name}>
                         {ward.name}
@@ -1114,7 +1123,7 @@ function CheckoutPage() {
 
                 <div className="form-group">
                   <textarea
-                    placeholder="Địa chỉ cụ thể (số nhà, tên đường...)"
+                    placeholder="Specific Address (House number, street name...)"
                     name="detail"
                     value={newAddress.detail}
                     onChange={handleAddressFieldChange}
@@ -1133,7 +1142,7 @@ function CheckoutPage() {
                         handleSetDefaultAddress(e.target.checked)
                       }
                     />
-                    <span>Thiết lập làm địa chỉ mặc định</span>
+                    <span>Set as default address</span>
                   </label>
                 </div>
 
@@ -1143,10 +1152,10 @@ function CheckoutPage() {
                     className="btn btn-secondary"
                     onClick={() => setShowAddressModal(false)}
                   >
-                    Trở Lại
+                    Back
                   </button>
                   <button type="submit" className="btn btn-primary">
-                    Hoàn thành
+                    Complete
                   </button>
                 </div>
               </form>
@@ -1155,7 +1164,7 @@ function CheckoutPage() {
         </div>
       )}
 
-      {/* Modal danh sách địa chỉ */}
+      {/* Address List Modal */}
       {showAddressListModal && (
         <div
           className="modal-overlay"
@@ -1166,7 +1175,7 @@ function CheckoutPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
-              <h3>Chọn địa chỉ giao hàng</h3>
+              <h3>Select Shipping Address</h3>
               <button
                 className="modal-close"
                 onClick={() => setShowAddressListModal(false)}
@@ -1197,7 +1206,7 @@ function CheckoutPage() {
                         <span className="address-name">{address.name}</span>
                         <span className="address-phone">{address.phone}</span>
                         {address.isDefault && (
-                          <span className="address-default">Mặc định</span>
+                          <span className="address-default">Default</span>
                         )}
                       </div>
                       <div className="address-full">
@@ -1216,13 +1225,13 @@ function CheckoutPage() {
                   }}
                 >
                   <i className="ti ti-plus"></i>
-                  Thêm địa chỉ mới
+                  Add New Address
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={() => setShowAddressListModal(false)}
                 >
-                  Xác nhận
+                  Confirm
                 </button>
               </div>
             </div>
@@ -1250,15 +1259,15 @@ function CheckoutPage() {
                 />
               </svg>
             </div>
-            <h2>Đặt hàng thành công!</h2>
-            <p>Bạn sẽ được chuyển về trang chủ sau 5 giây...</p>
+            <h2>Order placed successfully!</h2>
+            <p>You will be redirected to the home page in 5 seconds...</p>
             <button
               className="btn btn-primary"
               onClick={() =>
                 (window.location.href = "http://localhost:3000/Ecommerce/home")
               }
             >
-              Về trang chủ ngay
+              Go to Home Now
             </button>
           </div>
         </div>

@@ -41,22 +41,22 @@ exports.getOrderDetail = async (req, res) => {
       ReceiverName: order.receiverName || "N/A",
       ReceiverPhone: order.phoneNumber || "N/A",
       ShippingAddress: order.ShippingAddress || "N/A",
-      PaymentId: order.PaymentId?.PaymentMethod || "N/A",
-      Items: order.Items ? order.Items.Product.map(product => ({
-        _id: product._id,
-        ProductName: product.ProductName,
-        ProductImage: product.ProductImage,
-        ProductVariant: product.ProductVariant.map(variant => ({
-          _id: variant._id,
-          ProductVariantName: variant.ProductVariantName,
-          Price: variant.Price,
-          Quantity: variant.Quantity,
-          Image: variant.Image
-        }))
-      })) : [],
-
+      PaymentId: order.PaymentId?.Name || "N/A",
+      Items: order.Items
+        ? order.Items.Product.map((product) => ({
+            _id: product._id,
+            ProductName: product.ProductName,
+            ProductImage: product.ProductImage,
+            ProductVariant: product.ProductVariant.map((variant) => ({
+              _id: variant._id,
+              ProductVariantName: variant.ProductVariantName,
+              Price: variant.Price,
+              Quantity: variant.Quantity,
+              Image: variant.Image,
+            })),
+          }))
+        : [],
     };
-
 
     res.json(formattedOrder);
   } catch (error) {
@@ -94,20 +94,19 @@ exports.updateOrderStatus = async (req, res) => {
 
     if (
       Status === "Delivered" &&
-      Array.isArray(order.Items) &&
-      order.Items.length > 0
+      order.Items // chỉ cần kiểm tra tồn tại
     ) {
-      // Cập nhật trạng thái của các OrderItem
-      await OrderItem.updateMany(
-        { _id: { $in: order.Items } },
+      // Cập nhật trạng thái của OrderItem
+      await OrderItem.updateOne(
+        { _id: order.Items },
         { $set: { Status: Status } }
       );
 
-      // Lấy thông tin các OrderItem
-      const orderItems = await OrderItem.find({ _id: { $in: order.Items } });
+      // Lấy thông tin OrderItem
+      const orderItem = await OrderItem.findById(order.Items);
 
-      for (const item of orderItems) {
-        for (const product of item.Product) {
+      if (orderItem) {
+        for (const product of orderItem.Product) {
           for (const variant of product.ProductVariant) {
             const quantitySold = variant.Quantity;
 
@@ -121,8 +120,8 @@ exports.updateOrderStatus = async (req, res) => {
                 $inc: {
                   "ProductVariant.$.StockQuantity": -quantitySold,
                   "ProductVariant.$.Sales": quantitySold,
-                  Sales: quantitySold
-                }
+                  Sales: quantitySold,
+                },
               }
             );
           }
