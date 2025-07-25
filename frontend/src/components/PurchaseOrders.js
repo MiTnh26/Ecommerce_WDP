@@ -310,7 +310,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                 <div>
                   <span>Payment: </span>
                   <span className="purchaseorders-order-footer-highlight">
-                    {order.PaymentId?.Type || "unknow"}
+                    {order.PaymentId?.Name || "unknow"}
                   </span>
                 </div>
               </div>

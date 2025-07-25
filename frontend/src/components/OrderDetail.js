@@ -146,7 +146,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
           <b>Shipping Address:</b> {order.ShippingAddress}
         </div>
         <div>
-          <b>Payment Method:</b> {order.PaymentId?.Type|| "Unknown"}
+          <b>Payment Method:</b> {order.PaymentId?.Name|| "Unknown"}
         </div>
       </div>
     </div>
