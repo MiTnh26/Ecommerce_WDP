@@ -15,35 +15,13 @@ const ProfileHeader = () => {
       <div className={styles.container}>
         {/* Left side - Shop info and navigation */}
         <div className={styles.leftSection}>
-          <div className={styles.shopInfo}>
-            <img
-              src={shopInfo?.shopAvatar || "/placeholder.svg?height=40&width=40"}
-              alt="Shop Avatar"
-              className={styles.shopAvatar}
-            />
-          </div>
-
           <nav className={styles.navigation}>
-            <a href="/Ecommerce/home" className={styles.navLink}>Home</a>
-            <a href="#" className={styles.navLink}>Order</a>
-            
-            <div className={styles.dropdown}>
-              <button className={styles.dropdownToggle}>
-                Product <span className={styles.dropdownArrow}>▼</span>
-              </button>
-              <div className={styles.dropdownMenu}>
-                <a href="#" className={styles.dropdownItem}>View Products</a>
-                <a href="#" className={styles.dropdownItem}>Add Product</a>
-              </div>
-            </div>
-            
-            <a href="#" className={styles.navLink}>Shop</a>
+            <a href="/Ecommerce/home" className={styles.navLink}>Back to shopping page</a>
           </nav>
         </div>
 
         {/* Right side - User info */}
         <div className={styles.rightSection}>
-          <a href="#" className={styles.backLink}>Back to shopping page</a>
           <img
             src={user?.Image || "/placeholder.svg?height=35&width=35"}
             alt="User Avatar"
