@@ -658,9 +658,33 @@ const createOrderItems = async (req, res) => {
     if (!Product || !Array.isArray(Product) || Product.length === 0) {
       return res.status(400).json({ message: "Product array is required" });
     }
+    // Đảm bảo ProductVariant._id lấy đúng từ Product gốc
+    const ProductsModel = require("../../models/Products");
+    const fixedProductArr = [];
+    for (const p of Product) {
+      // Lấy Product gốc từ DB
+      const dbProduct = await ProductsModel.findById(p._id);
+      if (!dbProduct) continue;
+      // Map từng variant
+      const fixedVariants = p.ProductVariant.map(v => {
+        // Tìm variant gốc trong Product
+        const dbVariant = dbProduct.ProductVariant.find(
+          dbv => dbv.ProductVariantName === v.ProductVariantName && dbv.Price === v.Price
+        );
+        return {
+          ...v,
+          _id: dbVariant ? dbVariant._id : v._id // Ưu tiên lấy _id gốc
+        };
+      });
+      fixedProductArr.push({
+        ...p,
+        _id: dbProduct._id,
+        ProductVariant: fixedVariants
+      });
+    }
     // Tạo order item mới
     const newOrderItem = new OrderItem({
-      Product,
+      Product: fixedProductArr,
       Total,
       Status: Status || "Pending",
     });

@@ -14,7 +14,7 @@ function AdminHeader({ title = "Dashboard", user = null }) {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         const userData = JSON.parse(storedUser);
-        adminId = userData.id || userData.userId || userData.ID;
+        adminId = userData._id || userData.id || userData.userId || userData.ID;
       }
     }
     if (!adminId) return;
@@ -26,14 +26,18 @@ function AdminHeader({ title = "Dashboard", user = null }) {
 
   const currentUser = adminInfo
     ? {
-        name: adminInfo.FirstName && adminInfo.LastName ? `${adminInfo.FirstName} ${adminInfo.LastName}` : adminInfo.Username || "Admin",
+        name:
+          (adminInfo.FirstName && adminInfo.LastName && `${adminInfo.FirstName} ${adminInfo.LastName}`) ||
+          adminInfo.Username ||
+          adminInfo.Email ||
+          "Admin",
         avatar: adminInfo.Image || "/placeholder.svg?height=32&width=32",
       }
     : user || { name: "Admin", avatar: "/placeholder.svg?height=32&width=32" };
 
   // Debug: Log adminInfo and avatar URL
-  console.log('AdminHeader adminInfo:', adminInfo);
-  console.log('AdminHeader avatar src:', currentUser.avatar);
+  console.log("AdminHeader adminInfo:", adminInfo);
+  console.log("AdminHeader avatar src:", currentUser.avatar);
 
   const handleProfileClick = () => {
     window.location.href = "http://localhost:3000/Ecommerce/admin/profile";
@@ -61,7 +65,7 @@ function AdminHeader({ title = "Dashboard", user = null }) {
             <div className="dropdown-menu">
               <div className="dropdown-header">
                 <span className="user-name">{currentUser.name}</span>
-                <span className="user-role">Quản trị viên</span>
+                <span className="user-role">Admin</span>
               </div>
               <div className="dropdown-divider"></div>
               <a
@@ -73,7 +77,7 @@ function AdminHeader({ title = "Dashboard", user = null }) {
                 }}
               >
                 <i className="ti ti-user"></i>
-                Hồ sơ của tôi
+                Profile
               </a>
               <a
                 href="#"
@@ -84,7 +88,7 @@ function AdminHeader({ title = "Dashboard", user = null }) {
                 }}
               >
                 <i className="ti ti-logout"></i>
-                Đăng xuất
+                Logout
               </a>
             </div>
           </div>

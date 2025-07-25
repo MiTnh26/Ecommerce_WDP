@@ -324,6 +324,7 @@ describe("ProductController", () => {
       await ctrl.getNewProducts(req, res);
 
       expect(Product.aggregate).toHaveBeenCalledWith([
+        { $match: { Status: { $ne: "Inactive" } } },
         { $lookup: expect.any(Object) },
         { $unwind: "$shop" },
         { $match: { "shop.status": { $ne: "Banned" } } },
@@ -429,10 +430,10 @@ describe("ProductController", () => {
   describe("filterProduct", () => {
     it("builds pipeline and returns filtered products", async () => {
       const fake = [{ _id: "f1" }];
-      Product.aggregate.mockReturnValue({
-        limit: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockResolvedValue(fake),
-      });
+      // Controller returns an array: [ { data: [...], totalCount: [{ count }] } ]
+      Product.aggregate.mockResolvedValue([
+        { data: fake, totalCount: [{ count: fake.length }] },
+      ]);
 
       req.body = {
         name: "foo",
@@ -445,7 +446,10 @@ describe("ProductController", () => {
       await ctrl.filterProduct(req, res);
 
       expect(Product.aggregate).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith(fake);
+      expect(res.json).toHaveBeenCalledWith({
+        products: fake,
+        totalPages: Math.ceil(fake.length / 2), // here 1
+      });
     });
 
     it("handles error", async () => {

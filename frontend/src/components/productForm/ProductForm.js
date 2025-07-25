@@ -112,8 +112,13 @@ export default function ProductForm({
 
   const handleMainImageChange = (e) => {
     const file = e.target.files[0];
-    setMainImage(file);
-    setMainPreview(URL.createObjectURL(file));
+    if (file) {
+      setMainImage(file);
+      setMainPreview(URL.createObjectURL(file));
+    } else {
+      setMainImage(null);
+      setMainPreview("");
+    }
   };
 
   const handleVariantChange = (i, field, val) => {
@@ -238,9 +243,7 @@ export default function ProductForm({
       </div>
 
       <div className={styles.variantSection}>
-        <label className={styles.label}>
-          *Product Variant
-        </label>
+        <label className={styles.label}>*Product Variant</label>
         <button
           type="button"
           className={styles.addVariantBtn}
@@ -291,7 +294,7 @@ export default function ProductForm({
                   <td>
                     <input
                       id={`variantName-${i}`}
-                      name={`ProductVariantName-${i}`} 
+                      name={`ProductVariantName-${i}`}
                       aria-label="Product Variant Name"
                       type="text"
                       value={v.name}

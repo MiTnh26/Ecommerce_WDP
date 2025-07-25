@@ -137,16 +137,16 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
       </div>
       <div style={{ color: "#555", fontSize: 15 }}>
         <div>
-          <b>Receiver:</b> {order.BuyerId?.LastName || "N/A"}
+          <b>Receiver:</b> {order.receiverName || "N/A"}
         </div>
         <div>
-          <b>Phone:</b> {order.BuyerId?.PhoneNumber || "N/A"}
+          <b>Phone:</b> {order.phoneNumber || "N/A"}
         </div>
         <div>
           <b>Shipping Address:</b> {order.ShippingAddress}
         </div>
         <div>
-          <b>Payment Method:</b> {order.PaymentId?.Type|| "Unknown"}
+          <b>Payment Method:</b> {order.PaymentId?.Name|| "Unknown"}
         </div>
       </div>
     </div>
@@ -210,7 +210,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
                 x{product.Quantity || "N/A"}
               </div>
               <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
-                ₫{Number(product.Price || 0).toLocaleString("vi-VN")}
+                ${Number(product.Price || 0).toLocaleString("vi-VN")}
               </div>
             </div>
           );
@@ -263,7 +263,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
               x{variant.Quantity}
             </div>
             <div style={{ minWidth: 120, textAlign: "right", color: blue, fontWeight: 600 }}>
-              ₫{Number(variant.Price || 0).toLocaleString("vi-VN")}
+              ${Number(variant.Price || 0).toLocaleString("vi-VN")}
             </div>
           </div>
         ));
@@ -284,7 +284,7 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
     <div style={{ fontSize: 16, color: "#555" }}>
       Total Amount:{" "}
       <span style={{ color: blue, fontWeight: 700, fontSize: 22 }}>
-        ₫{Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
+        ${Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
       </span>
     </div>
   </div>

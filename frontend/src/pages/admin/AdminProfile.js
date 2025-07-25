@@ -48,8 +48,8 @@ function ProfileView({ onUpdateSuccess }) {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
           const userData = JSON.parse(storedUser);
-          if (userData.id || userData.userId || userData.ID) {
-            return userData.id || userData.userId || userData.ID;
+          if (userData._id || userData.id || userData.userId || userData.ID) {
+            return userData._id || userData.id || userData.userId || userData.ID;
           }
         }
 
@@ -76,7 +76,17 @@ function ProfileView({ onUpdateSuccess }) {
     };
 
     const id = getUserIdFromStorage();
+    console.log("userId lấy được khi mount:", id);
     setUserId(id);
+
+    // Listen for localStorage changes to update userId
+    const handleStorageChange = () => {
+      const newId = getUserIdFromStorage();
+      console.log("userId lấy được khi storage thay đổi:", newId);
+      setUserId(newId);
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -85,6 +95,7 @@ function ProfileView({ onUpdateSuccess }) {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
+        console.log("userId dùng để fetch profile:", userId);
         const response = await fetch(
           `http://localhost:5000/customer/profile/${userId}`
         );
@@ -116,6 +127,7 @@ function ProfileView({ onUpdateSuccess }) {
 
   const handleProfileUpdated = async () => {
     try {
+      console.log("userId dùng để refetch profile:", userId);
       const response = await fetch(
         `http://localhost:5000/customer/profile/${userId}`
       );
@@ -167,7 +179,7 @@ function ProfileView({ onUpdateSuccess }) {
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        setMessage({ type: "error", text: "Vui lòng chọn file ảnh hợp lệ" });
+        setMessage({ type: "error", text: "Vui lòng chọn một file ảnh hợp lệ" });
         return;
       }
 
@@ -210,15 +222,43 @@ function ProfileView({ onUpdateSuccess }) {
     setFormLoading(true);
     setMessage({ type: "", text: "" });
 
+    // Validate required fields (after trimming/removing spaces)
+    const trimAndRemoveSpaces = (str) => (str || "").replace(/\s+/g, "").trim();
+    const trimOnly = (str) => (str || "").trim();
+    const requiredFields = [
+      trimOnly(formData.firstName),
+      trimOnly(formData.lastName),
+      trimAndRemoveSpaces(formData.username),
+      trimAndRemoveSpaces(formData.email),
+      trimOnly(formData.gender),
+      trimAndRemoveSpaces(formData.phoneNumber),
+      formData.dateOfBirth ? trimOnly(formData.dateOfBirth) : ""
+    ];
+    if (requiredFields.some((val) => !val)) {
+      setFormLoading(false);
+      setMessage({ type: "error", text: "Tất cả các trường đều bắt buộc và không được để trống hoặc chỉ chứa khoảng trắng." });
+      return;
+    }
+    // Validate date of birth is not in the future
+    if (formData.dateOfBirth) {
+      const dob = new Date(formData.dateOfBirth);
+      const now = new Date();
+      if (dob > now) {
+        setFormLoading(false);
+        setMessage({ type: "error", text: "Ngày sinh không được trong tương lai." });
+        return;
+      }
+    }
+
     try {
       // Prepare FormData for both profile info and image
       const form = new FormData();
-      form.append("FirstName", formData.firstName);
-      form.append("LastName", formData.lastName);
-      form.append("Username", formData.username);
-      form.append("Email", formData.email);
-      form.append("Gender", formData.gender);
-      form.append("PhoneNumber", formData.phoneNumber);
+      form.append("FirstName", trimOnly(formData.firstName));
+      form.append("LastName", trimOnly(formData.lastName));
+      form.append("Username", trimAndRemoveSpaces(formData.username));
+      form.append("Email", trimAndRemoveSpaces(formData.email));
+      form.append("Gender", trimOnly(formData.gender));
+      form.append("PhoneNumber", trimAndRemoveSpaces(formData.phoneNumber));
       form.append(
         "DateOfBirth",
         formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : ""
@@ -227,6 +267,7 @@ function ProfileView({ onUpdateSuccess }) {
         form.append("Image", selectedImage);
       }
 
+      console.log("userId dùng để update profile:", userId);
       const response = await fetch(
         `http://localhost:5000/customer/profile/${userId}`,
         {
@@ -238,10 +279,15 @@ function ProfileView({ onUpdateSuccess }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Có lỗi xảy ra khi cập nhật thông tin");
+        throw new Error(
+          data.message || "Đã xảy ra lỗi khi cập nhật thông tin"
+        );
       }
 
-      setMessage({ type: "success", text: "Cập nhật thông tin thành công!" });
+      setMessage({
+        type: "success",
+        text: "Cập nhật thông tin thành công!",
+      });
       setTimeout(() => {
         handleProfileUpdated();
       }, 1500);
@@ -249,7 +295,7 @@ function ProfileView({ onUpdateSuccess }) {
       console.error("Lỗi khi gửi request:", error);
       setMessage({
         type: "error",
-        text: error.message || "Không thể kết nối đến server",
+        text: error.message || "Không thể kết nối đến máy chủ",
       });
     } finally {
       setFormLoading(false);
@@ -866,7 +912,7 @@ function ProfileView({ onUpdateSuccess }) {
               }}
             >
               <span style={styles.backButtonIcon}>←</span>
-              <span style={styles.backButtonText}>Quay lại Dashboard</span>
+              <span style={styles.backButtonText}>Back to Dashboard</span>
             </button>
           </div>
 
@@ -912,7 +958,7 @@ function ProfileView({ onUpdateSuccess }) {
               <div style={styles.infoRow}>
                 <div style={styles.infoLabel}>
                   <span style={styles.infoIcon}>👤</span>
-                  <span style={styles.infoLabelText}>Giới tính</span>
+                  <span style={styles.infoLabelText}>Gender</span>
                 </div>
                 <span style={styles.infoValue}>{user.Gender || "-"}</span>
               </div>
@@ -920,7 +966,7 @@ function ProfileView({ onUpdateSuccess }) {
               <div style={styles.infoRow}>
                 <div style={styles.infoLabel}>
                   <span style={styles.infoIcon}>📅</span>
-                  <span style={styles.infoLabelText}>Ngày sinh</span>
+                  <span style={styles.infoLabelText}>Date of Birth</span>
                 </div>
                 <span style={styles.infoValue}>
                   {formatDate(user.DateOfBirth || "")}
@@ -930,7 +976,7 @@ function ProfileView({ onUpdateSuccess }) {
               <div style={styles.infoRow}>
                 <div style={styles.infoLabel}>
                   <span style={styles.infoIcon}>📞</span>
-                  <span style={styles.infoLabelText}>Số điện thoại</span>
+                  <span style={styles.infoLabelText}>Phone Number</span>
                 </div>
                 <span style={styles.infoValue}>{user.PhoneNumber || "-"}</span>
               </div>
@@ -957,7 +1003,7 @@ function ProfileView({ onUpdateSuccess }) {
                 }}
               >
                 <span style={styles.updateButtonIcon}>✏️</span>
-                Cập nhật thông tin
+                Update Information
               </button>
             </div>
           </div>
@@ -969,11 +1015,11 @@ function ProfileView({ onUpdateSuccess }) {
         <div style={styles.modalOverlay} onClick={handleCloseModal}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>Cập nhật thông tin cá nhân</h3>
+              <h3 style={styles.modalTitle}>Update Personal Information</h3>
               <button
                 style={styles.modalClose}
                 onClick={handleCloseModal}
-                aria-label="Đóng modal"
+                aria-label="Close modal"
                 onMouseEnter={(e) => {
                   e.target.style.background = "#e5e7eb";
                   e.target.style.color = "#374151";
@@ -1005,7 +1051,7 @@ function ProfileView({ onUpdateSuccess }) {
 
                 {/* Avatar Upload Section */}
                 <div style={styles.fieldGroup}>
-                  <label style={styles.label}>Ảnh đại diện</label>
+                  <label style={styles.label}>Profile Picture</label>
                   <div
                     style={styles.avatarUploadSection}
                     onMouseEnter={(e) => {
@@ -1065,7 +1111,7 @@ function ProfileView({ onUpdateSuccess }) {
                         }}
                       >
                         <span style={styles.uploadIcon}>📷</span>
-                        {selectedImage ? "Thay đổi ảnh" : "Chọn ảnh"}
+                        {selectedImage ? "Change Image" : "Select Image"}
                       </label>
 
                       {selectedImage && (
@@ -1087,7 +1133,7 @@ function ProfileView({ onUpdateSuccess }) {
                           }}
                         >
                           <span style={styles.removeIcon}>🗑️</span>
-                          Xóa
+                          Remove
                         </button>
                       )}
                     </div>
@@ -1108,7 +1154,7 @@ function ProfileView({ onUpdateSuccess }) {
                 <div style={styles.gridContainer}>
                   <div style={styles.fieldGroup}>
                     <label htmlFor="firstName" style={styles.label}>
-                      Họ *
+                      First Name *
                     </label>
                     <input
                       id="firstName"
@@ -1117,7 +1163,7 @@ function ProfileView({ onUpdateSuccess }) {
                       onChange={(e) =>
                         handleInputChange("firstName", e.target.value)
                       }
-                      placeholder="Nhập họ"
+                      placeholder="Enter first name"
                       style={styles.input}
                       required
                       onFocus={(e) => {
@@ -1136,7 +1182,7 @@ function ProfileView({ onUpdateSuccess }) {
                   </div>
                   <div style={styles.fieldGroup}>
                     <label htmlFor="lastName" style={styles.label}>
-                      Tên *
+                      Last Name *
                     </label>
                     <input
                       id="lastName"
@@ -1145,7 +1191,7 @@ function ProfileView({ onUpdateSuccess }) {
                       onChange={(e) =>
                         handleInputChange("lastName", e.target.value)
                       }
-                      placeholder="Nhập tên"
+                      placeholder="Enter last name"
                       style={styles.input}
                       required
                       onFocus={(e) => {
@@ -1166,7 +1212,7 @@ function ProfileView({ onUpdateSuccess }) {
 
                 <div style={styles.fieldGroup}>
                   <label htmlFor="username" style={styles.label}>
-                    Tên người dùng
+                    Username
                   </label>
                   <input
                     id="username"
@@ -1175,7 +1221,7 @@ function ProfileView({ onUpdateSuccess }) {
                     onChange={(e) =>
                       handleInputChange("username", e.target.value)
                     }
-                    placeholder="Nhập tên người dùng"
+                    placeholder="Enter username"
                     style={styles.input}
                     onFocus={(e) => {
                       e.target.style.outline = "none";
@@ -1200,28 +1246,18 @@ function ProfileView({ onUpdateSuccess }) {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="Nhập email"
-                    style={styles.input}
+                    onChange={() => {}} // prevent editing
+                    placeholder="Enter email"
+                    style={{ ...styles.input, backgroundColor: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed' }}
                     required
-                    onFocus={(e) => {
-                      e.target.style.outline = "none";
-                      e.target.style.borderColor = "#3b82f6";
-                      e.target.style.boxShadow =
-                        "0 0 0 3px rgba(59, 130, 246, 0.1)";
-                      e.target.style.backgroundColor = "white";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                      e.target.style.boxShadow = "none";
-                      e.target.style.backgroundColor = "#fafafa";
-                    }}
+                    readOnly
+                    tabIndex={-1}
                   />
                 </div>
 
                 <div style={styles.fieldGroup}>
                   <label htmlFor="gender" style={styles.label}>
-                    Giới tính
+                    Gender
                   </label>
                   <select
                     id="gender"
@@ -1243,16 +1279,16 @@ function ProfileView({ onUpdateSuccess }) {
                       e.target.style.backgroundColor = "#fafafa";
                     }}
                   >
-                    <option value="">Chọn giới tính</option>
-                    <option value="Nam">Nam</option>
-                    <option value="Nữ">Nữ</option>
-                    <option value="Khác">Khác</option>
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 
                 <div style={styles.fieldGroup}>
                   <label htmlFor="dateOfBirth" style={styles.label}>
-                    Ngày sinh
+                    Date of Birth
                   </label>
                   <input
                     id="dateOfBirth"
@@ -1279,7 +1315,7 @@ function ProfileView({ onUpdateSuccess }) {
 
                 <div style={styles.fieldGroup}>
                   <label htmlFor="phoneNumber" style={styles.label}>
-                    Số điện thoại
+                    Phone Number
                   </label>
                   <input
                     id="phoneNumber"
@@ -1288,7 +1324,7 @@ function ProfileView({ onUpdateSuccess }) {
                     onChange={(e) =>
                       handleInputChange("phoneNumber", e.target.value)
                     }
-                    placeholder="Nhập số điện thoại"
+                    placeholder="Enter phone number"
                     style={styles.input}
                     onFocus={(e) => {
                       e.target.style.outline = "none";
@@ -1324,7 +1360,7 @@ function ProfileView({ onUpdateSuccess }) {
                       }
                     }}
                   >
-                    Hủy
+                    Cancel
                   </button>
                   <button
                     type="submit"
@@ -1355,7 +1391,7 @@ function ProfileView({ onUpdateSuccess }) {
                     }}
                   >
                     {formLoading && <div style={styles.formLoadingIcon}></div>}
-                    {formLoading ? "Đang cập nhật..." : "Cập nhật thông tin"}
+                    {formLoading ? "Updating..." : "Update Information"}
                   </button>
                 </div>
               </form>

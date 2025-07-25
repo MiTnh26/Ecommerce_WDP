@@ -322,31 +322,30 @@ describe("AdminController", () => {
         { Status: "Pending", TotalAmount: 5, PaymentId: null },
       ];
 
-      // Create a fake query object whose populate() is called three times:
-      // 1) .populate("Items") → returns self
-      // 2) .populate("PaymentId") → returns self
-      // 3) .populate("BuyerId") → returns a Promise resolving to our orders array
-      const chain = { populate: jest.fn() };
-      chain.populate
-        .mockReturnValueOnce(chain) // first populate
-        .mockReturnValueOnce(chain) // second populate
-        .mockResolvedValueOnce(orders); // third populate → resolves to orders
+      // Build three-layer chain for the three populates:
+      const chain1 = { populate: jest.fn() };
+      const chain2 = { populate: jest.fn() };
+      const chain3 = { populate: jest.fn() };
 
-      Orders.find.mockReturnValue(chain);
+      // 1st .populate("Items") → chain2
+      chain1.populate.mockReturnValue(chain2);
+      // 2nd .populate("PaymentId") → chain3
+      chain2.populate.mockReturnValue(chain3);
+      // 3rd .populate("BuyerId") → resolves to orders
+      chain3.populate.mockResolvedValue(orders);
+
+      Orders.find.mockReturnValue(chain1);
 
       await ctrl.getAllOrder(req, res);
 
-      // Assert the three populates happened
       expect(Orders.find).toHaveBeenCalled();
-      expect(chain.populate).toHaveBeenCalledWith("Items");
-      expect(chain.populate).toHaveBeenCalledWith("PaymentId");
-      expect(chain.populate).toHaveBeenCalledWith("BuyerId");
-
-      // Finally, we should get the correct stats object back
+      expect(chain1.populate).toHaveBeenCalledWith("Items");
+      expect(chain2.populate).toHaveBeenCalledWith("PaymentId");
+      expect(chain3.populate).toHaveBeenCalledWith("BuyerId");
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          totalTransactions: 2, // two orders total
-          totalAmount: 10, // only count Delivered
+          totalTransactions: 2,
+          totalAmount: 10,
           paymentStats: expect.any(Array),
         })
       );

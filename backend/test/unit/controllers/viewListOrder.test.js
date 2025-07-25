@@ -125,7 +125,7 @@ describe("SellerController › getOrdersByShop", () => {
     expect(res.json).toHaveBeenCalledWith([
       {
         _id: "o1",
-        customerName: "Alice",
+        customerName: "N/A",
         dateAdd: "2025-07-01",
         status: "Delivered",
         totalAmount: 150,

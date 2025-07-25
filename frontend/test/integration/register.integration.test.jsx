@@ -33,19 +33,19 @@ describe("Register flow (integration w/ fetch-mock)", () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /đăng ký/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Register/i }));
 
     expect(
-      await screen.findByText(/Username phải từ 5 đến 30 ký tự/i)
+      await screen.findByText(/Username must be between 5 and 30 characters./i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Password phải có ít nhất 6 ký tự/i)
+      screen.getByText(/Password must be at least 6 characters, include a number, a letter, and a special character./i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Email phải có đuôi @gmail\.com/i)
+      screen.getByText(/Email must end with @gmail.com/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Số điện thoại phải từ 10 chữ số/i)
+      screen.getByText(/Phone number must be at least 10 digits and contain only numbers./i)
     ).toBeInTheDocument();
   });
 
@@ -72,10 +72,9 @@ describe("Register flow (integration w/ fetch-mock)", () => {
     fireEvent.change(screen.getByPlaceholderText(/Enter phone number/i), {
       target: { value: "0123456789" },
     });
-    fireEvent.click(screen.getByLabelText(/Nam/i));
 
     // submit
-    fireEvent.click(screen.getByRole("button", { name: /đăng ký/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Register/i }));
 
     await waitFor(() => {
       // verify fetch

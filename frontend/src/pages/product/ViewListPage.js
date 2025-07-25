@@ -12,6 +12,7 @@ export default function ViewListPage({
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     try {
@@ -26,6 +27,23 @@ export default function ViewListPage({
       console.error(error);
     }
   }, [shopId, reloadKey]);
+
+  useEffect(() => {
+      try {
+        const shopIdInfo = shopId;
+        if (!shopIdInfo) return;
+  
+        fetch(`http://localhost:5000/product/category/shop/${shopIdInfo}`)
+          .then((res) => res.json())
+          .then(setCategories)
+          .catch((err) => {
+            console.error("Error loading categories:", err);
+            setCategories([]);
+          });
+      } catch (error) {
+        console.error(error);
+      }
+    }, []);
 
   // Normalize query once
   const cleanQ = query.replace(/\s+/g, "").toLowerCase();
@@ -88,11 +106,6 @@ export default function ViewListPage({
               onChange={(e) => setQuery(e.target.value)}
             />
             <button>Search</button>
-          </div>
-
-          <div className={styles.sortBtns}>
-            <button className={styles.sortNew}>⬆ Date add new – old</button>
-            <button>⬇ Date add old–new</button>
           </div>
         </div>
       </div>

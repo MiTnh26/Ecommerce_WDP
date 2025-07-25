@@ -29,7 +29,9 @@ const ViewOrderDetail = () => {
 
   const fetchOrderDetail = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/seller/orders/${orderId}`);
+      const response = await fetch(
+        `http://localhost:5000/seller/orders/${orderId}`
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -46,11 +48,14 @@ const ViewOrderDetail = () => {
 
   const handleStatusChange = async (newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/seller/orders/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Status: newStatus })
-      });
+      const response = await fetch(
+        `http://localhost:5000/seller/orders/${orderId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ Status: newStatus }),
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -69,14 +74,16 @@ const ViewOrderDetail = () => {
     }
   };
 
-
   const handleBackToList = () => {
     navigate("../viewlistorder");
   };
 
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: "400px" }}>
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
         <Spinner animation="border" variant="primary" />
       </Container>
     );
@@ -110,15 +117,36 @@ const ViewOrderDetail = () => {
                   <Row>
                     <Col md={6}>
                       <FormField label="Order ID" value={order._id} />
-                      <FormField label="Order Date" value={new Date(order.OrderDate).toLocaleString()} />
+                      <FormField
+                        label="Order Date"
+                        value={new Date(order.OrderDate).toLocaleString()}
+                      />
                       <FormField label="Status" value={order.Status} />
-                      <FormField label="Total Amount" value={`$${Number(order.TotalAmount).toLocaleString('vi-VN')}`} />
+                      <FormField
+                        label="Total Amount"
+                        value={`$${Number(order.TotalAmount).toLocaleString(
+                          "vi-VN"
+                        )}`}
+                      />
                     </Col>
                     <Col md={6}>
-                      <FormField label="Receiver Name" value={order.ReceiverName} />
-                      <FormField label="Phone Number" value={order.ReceiverPhone} />
-                      <FormField label="Shipping Address" value={order.ShippingAddress} textarea />
-                      <FormField label="Payment Method" value={order.PaymentId} />
+                      <FormField
+                        label="Receiver Name"
+                        value={order.ReceiverName}
+                      />
+                      <FormField
+                        label="Phone Number"
+                        value={order.ReceiverPhone}
+                      />
+                      <FormField
+                        label="Shipping Address"
+                        value={order.ShippingAddress}
+                        textarea
+                      />
+                      <FormField
+                        label="Payment Method"
+                        value={order.PaymentId}
+                      />
                     </Col>
                   </Row>
                 </Card.Body>
@@ -141,11 +169,14 @@ const ViewOrderDetail = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {order.Items && order.Items.Product && order.Items.Product.map((product, productIndex) => (
-                        <tr key={`${product._id}-${productIndex}`}>
+                      {order.Items.map((product, idx) => (
+                        <tr key={product._id}>
                           <td>
                             <img
-                              src={product.ProductImage || "/assets/images/no-image.png"}
+                              src={
+                                product.ProductImage ||
+                                "/assets/images/no-image.png"
+                              }
                               alt={product.ProductName}
                               style={{
                                 width: "80px",
@@ -156,49 +187,36 @@ const ViewOrderDetail = () => {
                               }}
                             />
                           </td>
-                          <td className="align-middle">{product.ProductName}</td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  {variant.ProductVariantName}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductName}
+                          </td>
+                          <td className="align-middle">
+                            {product.ProductVariant.map((variant) => (
+                              <div key={variant._id}>
+                                {variant.ProductVariantName}
+                              </div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  ${Number(variant.Price).toLocaleString('vi-VN')}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductVariant.map((variant) => (
+                              <div key={variant._id}>
+                                ${Number(variant.Price).toLocaleString("vi-VN")}
+                              </div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  {variant.Quantity}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductVariant.map((variant) => (
+                              <div key={variant._id}>{variant.Quantity}</div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  ${Number(variant.Price * variant.Quantity).toLocaleString('vi-VN')}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductVariant.map((variant) => (
+                              <div key={variant._id}>
+                                $
+                                {Number(
+                                  variant.Price * variant.Quantity
+                                ).toLocaleString("vi-VN")}
+                              </div>
                             ))}
                           </td>
                         </tr>
@@ -240,7 +258,10 @@ const ViewOrderDetail = () => {
       >
         <Modal.Body className="text-center py-4">
           <div className="mb-3">
-            <i className="fas fa-check-circle text-success" style={{ fontSize: '3rem' }}></i>
+            <i
+              className="fas fa-check-circle text-success"
+              style={{ fontSize: "3rem" }}
+            ></i>
           </div>
           <h5>Order status updated to Delivered successfully!</h5>
         </Modal.Body>

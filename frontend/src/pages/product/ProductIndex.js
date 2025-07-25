@@ -1,11 +1,12 @@
 // /pages/product/ProductIndex.js
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import SellerLayout from "./SellerLayout";
 import ViewListPage from "./ViewListPage";
 import AddProductPage from "./AddProductPage";
 
 export default function ProductIndex() {
+  const navigate = useNavigate();
   const location = useLocation();
   const [tab, setTab] = useState("list");
   const [editingProduct, setEditingProduct] = useState(null);
@@ -33,7 +34,7 @@ export default function ProductIndex() {
   // Handlers for ViewListPage buttons
   const handleAdd = () => {
     setEditingProduct(null);
-    setTab("add");
+    navigate(location.pathname, { state: { tab: "add" } });
   };
   const handleEdit = product => {
     setEditingProduct(product);
