@@ -20,10 +20,14 @@ function ShopManagement() {
   }, []); // ✅ Chạy một lần duy nhất
 
   const filteredShops = shopList.filter((shop) => {
+    const normalize = (str) => (str || "").toLowerCase().replace(/\s+/g, "");
+    const search = normalize(searchTerm);
+    const name = normalize(shop.name);
+    const username = normalize(shop.owner?.Username);
+    const email = normalize(shop.owner?.Email);
+
     const matchesSearch =
-      shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shop.owner?.Username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shop.owner?.Email?.toLowerCase().includes(searchTerm.toLowerCase());
+      name.includes(search) || username.includes(search) || email.includes(search);
     const matchesStatus =
       selectedStatus === "all" || shop.status === selectedStatus;
     return matchesSearch && matchesStatus;

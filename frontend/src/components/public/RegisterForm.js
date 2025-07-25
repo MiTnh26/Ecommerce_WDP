@@ -19,20 +19,20 @@ const RegisterForm = () => {
   const validate = () => {
     const e = {};
     if (form.Username.length < 5 || form.Username.length > 30) {
-      e.Username = "Username phải từ 5 đến 30 ký tự.";
+      e.Username = "Username must be between 5 and 30 characters.";
     }
 
     if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/.test(form.Password)) {
       e.Password =
-        "Password phải có ít nhất 6 ký tự, 1 số, 1 chữ, 1 ký tự đặc biệt.";
+        "Password must be at least 6 characters, include a number, a letter, and a special character.";
     }
 
     if (!form.Email.endsWith("@gmail.com")) {
-      e.Email = "Email phải có đuôi @gmail.com";
+      e.Email = "Email must end with @gmail.com";
     }
 
     if (!/^\d{10,}$/.test(form.PhoneNumber)) {
-      e.PhoneNumber = "Số điện thoại phải từ 10 chữ số và chỉ chứa số.";
+      e.PhoneNumber = "Phone number must be at least 10 digits and contain only numbers.";
     }
 
     return e;
@@ -64,14 +64,14 @@ const RegisterForm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Đăng ký thành công!");
+        alert("Registration successful!");
         // có thể reset form hoặc chuyển trang login
         navigate("/Ecommerce/login"); // chuyển hướng sang login sau 1 giây
       } else {
-        alert(data.message || "Đăng ký thất bại");
+        alert(data.message || "Registration failed");
       }
     } catch (error) {
-      alert("Lỗi kết nối server");
+      alert("Server connection error");
     }
   };
 
@@ -97,7 +97,7 @@ const RegisterForm = () => {
       <div className="col-md-6 d-flex flex-column">
         {/* Header */}
         <div className="d-flex align-items-center p-4 border-bottom">
-          <h4 className="ms-4 mb-0">Đăng ký</h4>
+          <h4 className="ms-4 mb-0">Register</h4>
         </div>
 
         {/* Form content */}
@@ -163,7 +163,7 @@ const RegisterForm = () => {
 
               <Form.Group className="mb-3">
                 <Form.Label className="fw-semibold text-dark">
-                  Số điện thoại:
+                  Phone number:
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -182,7 +182,7 @@ const RegisterForm = () => {
 
               <Form.Group className="mb-4">
                 <Form.Label className="fw-semibold text-dark">
-                  Giới tính:
+                  Gender:
                 </Form.Label>
                 <div className="mt-2">
                   <Form.Check
@@ -192,7 +192,7 @@ const RegisterForm = () => {
                     value="Male"
                     checked={form.Gender === "Male"}
                     onChange={handleChange}
-                    label="Nam"
+                    label="Male"
                     id="male"
                   />
                   <Form.Check
@@ -202,7 +202,7 @@ const RegisterForm = () => {
                     value="Female"
                     checked={form.Gender === "Female"}
                     onChange={handleChange}
-                    label="Nữ"
+                    label="Female"
                     id="female"
                   />
                 </div>
@@ -218,21 +218,21 @@ const RegisterForm = () => {
                   borderRadius: "4px",
                 }}
               >
-                Đăng ký
+                Register
               </Button>
 
               <div className="text-center my-3">
-                <span className="text-muted">hoặc</span>
+                <span className="text-muted">or</span>
               </div>
 
               <div className="text-center mt-4">
-                <span className="text-muted">Đã có tài khoản? </span>
+                <span className="text-muted">Already have an account? </span>
                 <a
                   href="/Ecommerce/login"
                   className="text-decoration-none"
                   style={{ color: "#d63384" }}
                 >
-                  Đăng nhập
+                  Login
                 </a>
               </div>
             </Form>

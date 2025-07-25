@@ -17,7 +17,7 @@ import {
 import image from "../assets/images/logo_page.jpg";
 
 import axios from "axios";
-import Tooltip from 'react-bootstrap/Tooltip';
+import Tooltip from "react-bootstrap/Tooltip";
 import img_empty from "../assets/images/data-empty.png";
 const Header = () => {
   const [popUpSearch, setPopUpSearch] = useState(false);
@@ -31,11 +31,11 @@ const Header = () => {
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const [owner, setOwner] = useState(null);
-
+  console.log("owner", owner);
   //toast
   const [showToast, setShowToast] = useState(false);
 
-   // config
+  // config
   const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
   // fetch data owner
   useEffect(() => {
@@ -44,10 +44,12 @@ const Header = () => {
         if (!UserId._id) {
           return;
         }
-        const res = await axios.post(`http://localhost:5000/customer/find-owner-by-user-id`, {
-          UserId: UserId._id
-        },
-          { withCredentials: true },
+        const res = await axios.post(
+          `http://localhost:5000/customer/find-owner-by-user-id`,
+          {
+            UserId: UserId._id,
+          },
+          { withCredentials: true }
         );
         if (res.status === 200) {
           if (res.data.owner) {
@@ -59,14 +61,12 @@ const Header = () => {
       } catch (err) {
         console.log(err);
       }
-    }
-    fetchOwnerByUserId()
+    };
+    fetchOwnerByUserId();
   }, [UserId]);
-
 
   //inview hook for cart
   const { ref: cartRef, inView: cartInView } = useInView({ triggerOnce: true });
-
 
   // useQuery to state Cart
   //fetch cart data
@@ -76,11 +76,12 @@ const Header = () => {
       if (!UserId._id) {
         return;
       }
-      const res = await axios.post(`${URL}/customer/get-cart`,
+      const res = await axios.post(
+        `${URL}/customer/get-cart`,
         {
-          UserId: UserId._id
+          UserId: UserId._id,
         },
-        { withCredentials: true },
+        { withCredentials: true }
       );
       const data = res.data;
       console.log("cartdata", data);
@@ -101,18 +102,17 @@ const Header = () => {
     console.log("popUpSearch", popUpSearch);
     setPopUpSearch(!popUpSearch);
   };
-const handleShowCanvasCart = () => {
-  if (!UserId) {
-    setShowToast(true); 
-    setTimeout(() => {
-    navigate("/Ecommerce/login");
-  }, 2000); // 2 giây = 2000 ms
-  return;
-  }
-  setShowCanvasCart(!showCanvasCart);
-};
-
-
+  const handleShowCanvasCart = () => {
+    if (!UserId) {
+      setShowToast(true);
+      setTimeout(() => {
+        navigate("/Ecommerce/login");
+      }, 2000); // 2 giây = 2000 ms
+      return;
+    }
+    setShowCanvasCart(!showCanvasCart);
+  };
+  
   const handleSubmitSearch = async () => {
     const cleanedSearch = search.trim().replace(/\s+/g, ' ');
     //await filterData(cleanedSearch);
@@ -125,12 +125,13 @@ const handleShowCanvasCart = () => {
     localStorage.removeItem("token");
     navigate("/Ecommerce/home");
     window.location.reload();
-  }
-  const renderTooltip = (name) => (props) => (
-    <Tooltip id="button-tooltip" {...props}>
-      {name}
-    </Tooltip>
-  );
+  };
+  const renderTooltip = (name) => (props) =>
+    (
+      <Tooltip id="button-tooltip" {...props}>
+        {name}
+      </Tooltip>
+    );
   return (
     <>
       <Container fluid >
@@ -199,8 +200,7 @@ const handleShowCanvasCart = () => {
           >
             <ul className="d-flex justify-content-end list-unstyled m-0 gap-2">
               <li>
-
-                {UserId && UserId  ? (
+                {UserId && UserId ? (
                   <OverlayTrigger
                     placement="bottom"
                     delay={{ show: 250, hide: 400 }}
@@ -215,19 +215,19 @@ const handleShowCanvasCart = () => {
                     </a>
                   </OverlayTrigger>
                 ) : (
-                    <OverlayTrigger
-                      placement="bottom"
-                      delay={{ show: 250, hide: 400 }}
-                      overlay={renderTooltip("Login")}
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Login")}
+                  >
+                    <a
+                      href="/Ecommerce/login"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
                     >
-                      <a
-                        href="/Ecommerce/login"
-                        className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                        style={{ width: "50px", height: "50px" }}
-                      >
-                        <i className="fa-solid fa-right-to-bracket text-black fs-4"></i>
-                      </a>
-                    </OverlayTrigger> 
+                      <i className="fa-solid fa-right-to-bracket text-black fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
                 )}
               </li>
               {UserId && UserId._id && (
@@ -237,14 +237,13 @@ const handleShowCanvasCart = () => {
                     delay={{ show: 250, hide: 400 }}
                     overlay={renderTooltip("Profile")}
                   >
-
-                  <a
-                    href="/Ecommerce/user/profile"
-                    className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                    style={{ width: "50px", height: "50px" }}
+                    <a
+                      href="/Ecommerce/user/profile"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
                     >
-                    <i className="fa-regular fa-user text-black fs-4"></i>
-                  </a>
+                      <i className="fa-regular fa-user text-black fs-4"></i>
+                    </a>
                   </OverlayTrigger>
                 </li>
               )}
@@ -252,24 +251,23 @@ const handleShowCanvasCart = () => {
                 {/* owner null => hiện thỉ nút dăng kí */}
                 {/* owner not null và status "pending" => click vào hiển thị alert : "Shop đang được duyệt" */}
                 {/* owner not null và status "active" => click vào chuyển sang seller */}
-                {owner == null && UserId &&(
+                {owner == null && UserId && (
                   <OverlayTrigger
-                  placement="bottom"
-                  delay={{ show: 250, hide: 400 }}
-                  overlay={renderTooltip("Go to Page Seller register")}
-                >
-                  <a
-                    href="/Ecommerce/seller/seller-register"
-                    className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                    style={{ width: "50px", height: "50px" }}
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Go to Page Seller register")}
                   >
-                    <i className="fa-solid fa-shop text-black fs-4"></i>
-                  </a>
-                </OverlayTrigger>
+                    <a
+                      href="/Ecommerce/seller/seller-register"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="fa-solid fa-shop text-black fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
                 )}
-                {
-                  owner && owner.status == "Pending" && (
-                    <OverlayTrigger
+                {owner && owner.status == "Pending" && (
+                  <OverlayTrigger
                     placement="bottom"
                     delay={{ show: 250, hide: 400 }}
                     overlay={renderTooltip("Pending")}
@@ -282,26 +280,22 @@ const handleShowCanvasCart = () => {
                       <i className="fa-solid fa-shop text-primary fs-4"></i>
                     </a>
                   </OverlayTrigger>
-                  )}
-                  {
-                    owner && owner.status == "Active" && (
-                      <OverlayTrigger
-                      placement="bottom"
-                      delay={{ show: 250, hide: 400 }}
-                      overlay={renderTooltip("Go to page seller")}
+                )}
+                {owner && owner.status == "Active" && (
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Go to page seller")}
+                  >
+                    <a
+                      href="/Ecommerce/seller/statistic"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
                     >
-                      <a
-                        href="/Ecommerce/seller"
-                        className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                        style={{ width: "50px", height: "50px" }}
-                      >
-                        <i className="fa-solid fa-shop text-success fs-4"></i>
-                      </a>
-                    </OverlayTrigger>
-                    )
-                  }
-
-
+                      <i className="fa-solid fa-shop text-success fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
+                )}
               </li>
               <li className="d-md-none" onClick={handlePopUpSearch}>
                 <a
@@ -327,7 +321,9 @@ const handleShowCanvasCart = () => {
               onClick={handleShowCanvasCart}
             >
               <span className="cart-total fs-5 fw-bold">Your Cart</span>
-              <span className="fs-6 text-muted text-center"><i className="fa-solid fa-cart-shopping"></i></span>
+              <span className="fs-6 text-muted text-center">
+                <i className="fa-solid fa-cart-shopping"></i>
+              </span>
             </div>
           </Col>
         </Row>
@@ -372,7 +368,9 @@ const handleShowCanvasCart = () => {
             className="bg-warning  d-flex justify-content-center align-items-center rounded-circle"
             style={{ width: "40px", height: "40px" }}
           >
-            <span className="total item text-white p-0">{cartData?.Quantity}</span>
+            <span className="total item text-white p-0">
+              {cartData?.Quantity}
+            </span>
           </div>
         </Offcanvas.Header>
         <Offcanvas.Body className="h-100 d-flex flex-column" ref={cartRef}>
@@ -425,8 +423,8 @@ const handleShowCanvasCart = () => {
                         </div>
                       </ListGroup.Item>
                     )
-                    )
-                  )))}          
+                  )))
+                  )}
                 </>
               )}
             </ListGroup>
@@ -442,19 +440,19 @@ const handleShowCanvasCart = () => {
         </Offcanvas.Body>
       </Offcanvas>
       <ToastContainer position="top-center" className="p-3">
-  <Toast
-    onClose={() => setShowToast(false)}
-    show={showToast}
-    delay={2000}
-    autohide
-    bg="warning"
-  >
-    <Toast.Header>
-      <strong className="me-auto">Thông báo</strong>
-    </Toast.Header>
-    <Toast.Body>Vui lòng đăng nhập trước!</Toast.Body>
-  </Toast>
-</ToastContainer>
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={2000}
+          autohide
+          bg="warning"
+        >
+          <Toast.Header>
+            <strong className="me-auto">Thông báo</strong>
+          </Toast.Header>
+          <Toast.Body>Vui lòng đăng nhập trước!</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </>
   );
 };

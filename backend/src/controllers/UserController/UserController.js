@@ -12,7 +12,6 @@ const OrderItem = require("../../models/OrderItems");
 
 const Shops = require("../../models/Shops");
 
-
 const client = new OAuth2Client(process.env.O2Auth_Key);
 
 const getUsers = async (req, res) => {
@@ -482,31 +481,31 @@ const setDefaultAddress = async (req, res) => {
     console.error("❌ Error setting default address:", error);
     res.status(500).json({ message: "Failed to set default address", error });
   }
-}
+};
 const findOwnerByUserId = async (req, res) => {
-  try{
-    const {UserId} = req.body;
-    if(!UserId){
-      return res.status(400).json({ message: "Not find UserID" });  
+  try {
+    const { UserId } = req.body;
+    if (!UserId) {
+      return res.status(400).json({ message: "Not find UserID" });
     }
-  
+
     const owner = await Shops.findOne({ owner: new mongoose.Types.ObjectId(UserId) })
     if(!owner){
       return res.status(200).json({ 
+
         message: "No shop found for this user",
-        owner: null 
+        owner: null,
       });
     }
-    
+
     res.status(200).json({
-      message: "Shop found successfully", 
-      owner: owner
+      message: "Shop found successfully",
+      owner: owner,
     });
-    
-  }catch(error){
+  } catch (error) {
     res.status(500).json({ message: "Failed to find owner", error });
   }
-}
+};
 const changePasswordInUser = async (req, res) => {
   const { id } = req.params;
   const { currentPassword, newPassword } = req.body;
@@ -685,6 +684,8 @@ const checkout = async (req, res) => {
       BuyerId,
       ShopId,
       Items,
+      receiverName,
+      phoneNumber,
     } = req.body;
 
     if (
@@ -707,6 +708,8 @@ const checkout = async (req, res) => {
       BuyerId,
       ShopId,
       Items,
+      receiverName,
+      phoneNumber,
     });
     await newOrder.save();
     res
@@ -742,5 +745,5 @@ module.exports = {
   getPaymentMethod,
   createOrderItems,
   checkout,
-  findOwnerByUserId
+  findOwnerByUserId,
 };

@@ -322,9 +322,8 @@ describe("AdminController", () => {
         { Status: "Pending", TotalAmount: 5, PaymentId: null },
       ];
       const chain = {
-        populate: jest.fn().mockReturnValue({
-          populate: jest.fn().mockResolvedValue(orders),
-        }),
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(orders), // nếu controller dùng .exec()
       };
       Orders.find.mockReturnValue(chain);
 
@@ -332,6 +331,8 @@ describe("AdminController", () => {
 
       expect(Orders.find).toHaveBeenCalled();
       expect(chain.populate).toHaveBeenCalledWith("Items");
+      expect(chain.populate).toHaveBeenCalledWith("PaymentId");
+      expect(chain.populate).toHaveBeenCalledWith("BuyerId");
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           totalTransactions: 2,

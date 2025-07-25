@@ -195,6 +195,7 @@ const handleCheck = ({ name, ShopId, Product_Id, ProductVariant_id, Quantity, Pr
     }
     //console.log("dataCheckOut", dataCheckOut);
     localStorage.removeItem("checkOut");
+    //console.log("dataCheckOut", dataCheckOut);
     localStorage.setItem("checkOut", JSON.stringify(dataCheckOut));
     setCheckOut(dataCheckOut);
     navigate("/Ecommerce/user/checkout")

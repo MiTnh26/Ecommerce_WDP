@@ -6,7 +6,6 @@ const { Shop } = require("../../models");
 const Order = require("../../models/Orders");
 const OrderItem = require("../../models/OrderItems");
 
-
 // helper to calculate total quantity in cart
 const calculateTotalQuantity = (items) => {
   let count = 0;
@@ -188,101 +187,101 @@ exports.changeQuantity = async (req, res) => {
 };
 
 exports.deleteProductVariantInCart = async (req, res) => {
-    try{
-        // get data
-        const { UserId = "", Product_id = "", ProductVariant = "" } = req.body;
-        // console.log("UserId:", UserId);
-        // console.log("Product_id:", Product_id);
-        // console.log("ProductVariantId:", ProductVariant._id);
+  try {
+    // get data
+    const { UserId = "", Product_id = "", ProductVariant = "" } = req.body;
+    // console.log("UserId:", UserId);
+    // console.log("Product_id:", Product_id);
+    // console.log("ProductVariantId:", ProductVariant._id);
 
-        // check valid data
-        if (!UserId || !Product_id || !ProductVariant) {
-          return res.status(400).json({ message: "All fields are requiredc" });
-        }
-
-        // find cart bu UserId
-        const cart = await Cart.findOne({
-          UserId: new mongoose.Types.ObjectId(UserId),
-        });
-        if (!cart) {
-          return res.status(404).json({ message: "Cart not found" });
-        }
-
-        // find product in cart
-        const product = cart.Items.find((item) => item._id == Product_id);
-        if (!product) {
-          return res.status(404).json({ message: "Product not found in cart" });
-        }
-        // find product variant in product
-        const productVariant = product.ProductVariant.find(
-          (variant) => variant._id == ProductVariant._id
-        );
-        if (!productVariant) {
-          return res.status(404).json({ message: "Product variant not found" });
-        }
-
-        // delete product variant in product
-        product.ProductVariant = product.ProductVariant.filter(
-          (variant) => variant._id != ProductVariant._id
-        );
-        // Nếu sau khi xóa variant mà mảng rỗng, xóa luôn item khỏi cart.Items
-        if (product.ProductVariant.length === 0) {
-        cart.Items = cart.Items.filter((item) => item._id != Product_id);
-        }
-        // calculate total quantity
-        const items = cart.Items;
-        const totalQuantity = calculateTotalQuantity(items);
-        cart.Quantity = totalQuantity;
-        await cart.save();
-
-        res.status(200).json({ message: "Delete product variant successfully" });
-    }catch(error){
-        console.error("Delete product variant error:", error);
-        return res.status(500).json({
-          message: "Failed to delete product variant",
-          error: error.message || error,
-        });
+    // check valid data
+    if (!UserId || !Product_id || !ProductVariant) {
+      return res.status(400).json({ message: "All fields are requiredc" });
     }
+
+    // find cart bu UserId
+    const cart = await Cart.findOne({
+      UserId: new mongoose.Types.ObjectId(UserId),
+    });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    // find product in cart
+    const product = cart.Items.find((item) => item._id == Product_id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found in cart" });
+    }
+    // find product variant in product
+    const productVariant = product.ProductVariant.find(
+      (variant) => variant._id == ProductVariant._id
+    );
+    if (!productVariant) {
+      return res.status(404).json({ message: "Product variant not found" });
+    }
+
+    // delete product variant in product
+    product.ProductVariant = product.ProductVariant.filter(
+      (variant) => variant._id != ProductVariant._id
+    );
+    // Nếu sau khi xóa variant mà mảng rỗng, xóa luôn item khỏi cart.Items
+    if (product.ProductVariant.length === 0) {
+      cart.Items = cart.Items.filter((item) => item._id != Product_id);
+    }
+    // calculate total quantity
+    const items = cart.Items;
+    const totalQuantity = calculateTotalQuantity(items);
+    cart.Quantity = totalQuantity;
+    await cart.save();
+
+    res.status(200).json({ message: "Delete product variant successfully" });
+  } catch (error) {
+    console.error("Delete product variant error:", error);
+    return res.status(500).json({
+      message: "Failed to delete product variant",
+      error: error.message || error,
+    });
+  }
 };
 exports.getCartByUserId = async (req, res) => {
   try {
-    const {UserId} = req.body;
-    if(!UserId){
+    const { UserId } = req.body;
+    if (!UserId) {
       return res.status(400).json({ message: "All fields are required" });
     }
     console.log("userId", UserId);
 
     const cart = await Cart.aggregate([
       { $match: { UserId: new mongoose.Types.ObjectId(UserId) } },
-      
+
       // Tách từng item trong cart
       { $unwind: "$Items" },
-      
+
       // Lấy thông tin shop cho từng item
       {
         $lookup: {
           from: "shops",
           localField: "Items.ShopID",
           foreignField: "_id",
-          as: "ShopDetail"
-        }
+          as: "ShopDetail",
+        },
       },
       { $unwind: { path: "$ShopDetail", preserveNullAndEmptyArrays: true } },
-      
+
       // Lấy thông tin product cho từng item
       {
         $lookup: {
           from: "products",
           localField: "Items._id",
           foreignField: "_id",
-          as: "ProductDetail"
-        }
+          as: "ProductDetail",
+        },
       },
       { $unwind: { path: "$ProductDetail", preserveNullAndEmptyArrays: true } },
-      
+
       // Tách từng variant trong item (nếu có nhiều variants)
       { $unwind: "$Items.ProductVariant" },
-      
+
       // Tìm status của variant trong ProductDetail
       {
         $addFields: {
@@ -294,15 +293,17 @@ exports.getCartByUserId = async (req, res) => {
                     {
                       $filter: {
                         input: "$ProductDetail.ProductVariant",
-                        cond: { $eq: ["$$this._id", "$Items.ProductVariant._id"] }
-                      }
+                        cond: {
+                          $eq: ["$$this._id", "$Items.ProductVariant._id"],
+                        },
+                      },
                     },
-                    0
-                  ]
-                }
+                    0,
+                  ],
+                },
               },
-              in: "$$matchedVariant.Status"
-            }
+              in: "$$matchedVariant.Status",
+            },
           },
           "Items.ProductVariant.StockQuantity": {
             $let: {
@@ -323,16 +324,16 @@ exports.getCartByUserId = async (req, res) => {
             }
           },
           "Items.ShopStatus": "$ShopDetail.status",
-          "Items.ProductStatus": "$ProductDetail.Status"
-        }
+          "Items.ProductStatus": "$ProductDetail.Status",
+        },
       },
-      
+
       // Gom lại từng item với các variants của nó
       {
         $group: {
           _id: {
             cartId: "$_id",
-            itemId: "$Items._id"
+            itemId: "$Items._id",
           },
           UserId: { $first: "$UserId" },
           Quantity: { $first: "$Quantity" },
@@ -342,10 +343,10 @@ exports.getCartByUserId = async (req, res) => {
           ShopName: { $first: "$ShopDetail.name" },
           ShopStatus: { $first: "$Items.ShopStatus" },
           ProductStatus: { $first: "$Items.ProductStatus" },
-          ProductVariants: { $push: "$Items.ProductVariant" }
-        }
+          ProductVariants: { $push: "$Items.ProductVariant" },
+        },
       },
-      
+
       // Gom lại thành cart hoàn chỉnh
       {
         $group: {
@@ -361,26 +362,24 @@ exports.getCartByUserId = async (req, res) => {
               ShopName: "$ShopName",
               ShopStatus: "$ShopStatus",
               ProductStatus: "$ProductStatus",
-              ProductVariant: "$ProductVariants"
-            }
-          }
-        }
+              ProductVariant: "$ProductVariants",
+            },
+          },
+        },
       },
       {
         $sort: {
           "Items._id": 1,
-          "Items.ProductVariant._id": 1
-        }
-      }
-
+          "Items.ProductVariant._id": 1,
+        },
+      },
     ]);
-if (!cart || cart.length === 0) {
+    if (!cart || cart.length === 0) {
       return res.status(404).json({ message: "Cart not found" });
     }
-    
+
     // Chỉ gửi response 1 lần duy nhất
     return res.status(200).json(cart[0]); // Lấy cart đầu tiên vì aggregate trả về array
-    
   } catch (error) {
     console.error("Get cart error:", error);
     return res.status(500).json({
@@ -413,7 +412,7 @@ exports.getToTalItemInCart = async (req, res) => {
 
     const total = result[0]?.totalProductVariantCount || 0;
 
-    return res.status(200).json({totalProductVariantCount: total});
+    return res.status(200).json({ totalProductVariantCount: total });
   } catch (error) {
     console.error("Get total product variant error:", error);
     return res.status(500).json({
@@ -425,7 +424,7 @@ exports.getToTalItemInCart = async (req, res) => {
 exports.buyAgain = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const cleanedOrderId = orderId.trim(); 
+    const cleanedOrderId = orderId.trim();
     const userId = req.body.UserId;
 
     if (!userId) return res.status(400).json({ message: "Thiếu UserId" });
@@ -437,19 +436,25 @@ exports.buyAgain = async (req, res) => {
     });
 
     if (!order || !order.Items) {
-      return res.status(404).json({ message: "Không tìm thấy đơn hàng hoặc không có sản phẩm" });
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy đơn hàng hoặc không có sản phẩm" });
     }
 
     const orderItem = order.Items; // Vì chỉ là 1 object chứ không phải mảng
 
     if (!orderItem.Product || orderItem.Product.length === 0) {
-      return res.status(400).json({ message: "Không có sản phẩm trong OrderItem" });
+      return res
+        .status(400)
+        .json({ message: "Không có sản phẩm trong OrderItem" });
     }
 
     // Tìm giỏ hàng người dùng
     const cart = await Cart.findOne({ UserId: userId });
     if (!cart) {
-      return res.status(404).json({ message: "Không tìm thấy giỏ hàng người dùng" });
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy giỏ hàng người dùng" });
     }
 
     let totalProductCount = 0;
@@ -474,7 +479,9 @@ exports.buyAgain = async (req, res) => {
     }
 
     if (totalProductCount === 0) {
-      return res.status(400).json({ message: "Không có sản phẩm hợp lệ để mua lại" });
+      return res
+        .status(400)
+        .json({ message: "Không có sản phẩm hợp lệ để mua lại" });
     }
 
     cart.Quantity += totalProductCount;
@@ -486,5 +493,3 @@ exports.buyAgain = async (req, res) => {
     res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
-
-
