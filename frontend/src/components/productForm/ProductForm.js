@@ -120,7 +120,6 @@ export default function ProductForm({
       setMainPreview("");
     }
   };
-
   const handleVariantChange = (i, field, val) => {
     setVariants((vs) => {
       const newVs = [...vs];

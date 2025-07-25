@@ -36,7 +36,10 @@ exports.getOrdersByShop = async (req, res) => {
     }
 
     console.log("Querying orders for shopId:", shopObjectId);
-    const orders = await Order.find({ ShopId: shopObjectId })
+    const orders = await Order.find({ 
+      ShopId: shopObjectId,
+      Status: { $ne: "Cancelled" } // Exclude cancelled orders
+    })
       .populate("BuyerId", "Username ShippingAddress")
       .lean()
       .sort({ createdAt: 1 });
