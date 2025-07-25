@@ -1,3 +1,4 @@
+
 import { createContext, useEffect, useState } from "react";
 //1. Tao context
 export const AppContext = createContext();

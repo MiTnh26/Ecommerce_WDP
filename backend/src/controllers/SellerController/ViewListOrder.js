@@ -52,21 +52,8 @@ exports.getOrdersByShop = async (req, res) => {
     }
 
     const result = orders.map((order) => {
-      let customerName = "N/A";
-      if (order.BuyerId && Array.isArray(order.BuyerId.ShippingAddress)) {
-        // Ưu tiên lấy receiverName của địa chỉ mặc định
-        const defaultAddr = order.BuyerId.ShippingAddress.find(
-          (addr) => addr.status === "Default"
-        );
-        if (defaultAddr && defaultAddr.receiverName) {
-          customerName = defaultAddr.receiverName;
-        } else if (
-          order.BuyerId.ShippingAddress.length > 0 &&
-          order.BuyerId.ShippingAddress[0].receiverName
-        ) {
-          customerName = order.BuyerId.ShippingAddress[0].receiverName;
-        }
-      }
+      // Use receiverName from the order document
+      const customerName = order.receiverName || "N/A";
       return {
         _id: order._id,
         customerName,

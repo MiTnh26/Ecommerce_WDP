@@ -1,3 +1,4 @@
+
 import MainLayout from "../layouts/MainLayout";
 import {
   HomePage,
@@ -43,3 +44,4 @@ const PublicRoutes = [
 ];
 
 export default PublicRoutes;
+

@@ -1,3 +1,4 @@
+
 /* prodcut-summay-section */
 .product-summary-section {
     display: flex;
@@ -192,5 +193,3 @@
         box-sizing: border-box;
         min-width: 0;
     }
-
-}

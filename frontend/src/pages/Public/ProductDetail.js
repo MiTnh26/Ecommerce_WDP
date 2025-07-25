@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import styles from "../../style/ProductDetail.module.css";

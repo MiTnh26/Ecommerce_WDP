@@ -15,7 +15,7 @@ export default function ProductIndex() {
 
   useEffect(() => {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user) return;
+      if (!user._id) return;
   
       fetch(`http://localhost:5000/seller/getShopInformation?owner=${user._id}`)
         .then((res) => res.json())
