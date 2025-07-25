@@ -41,7 +41,14 @@ const orderSchema = new mongoose.Schema(
         ref: "OrderItem",
       }
     ,
-
+    receiverName: {
+      type: String,
+      default: "",
+    },
+    phoneNumber: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

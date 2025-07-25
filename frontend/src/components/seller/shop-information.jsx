@@ -178,14 +178,12 @@ export default function ShopInformation() {
           ward: selectedWard
         }
       };
-      console.log("DATA TO SEND:", dataToSend);
       mutate(dataToSend);
     },
   });
 
   const handleImageChange = async (e) => {
     const file = e.currentTarget.files[0];
-
     try {
       const base64 = await uploadFile(
         file,

@@ -185,6 +185,12 @@ const acceptRegisterShopRequest = async (req, res) => {
       { new: true }
     );
 
+    // Đổi UserRole của chủ shop thành 'Seller'
+    if (shop.owner) {
+      shop.owner.UserRole = 'Seller';
+      await shop.owner.save();
+    }
+
     res.status(200).json(updatedShop);
   } catch (error) {
     res.status(500).json({ message: "Failed to update shop status", error });

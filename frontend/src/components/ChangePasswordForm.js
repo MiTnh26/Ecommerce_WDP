@@ -53,6 +53,10 @@ function ChangePasswordForm({ userId }) {
             setVariant("danger");
             return;
         }
+        if (formData.newPassword.includes(" ")) {
+            setMessage("Password không được chứa dấu cách.");
+            return;
+        }
 
         if (formData.newPassword !== formData.confirmPassword) {
             setMessage("New password does not match!");
@@ -168,7 +172,7 @@ function ChangePasswordForm({ userId }) {
             <Button type="submit" variant="primary">
                 Confirm
             </Button>
-             <div className="mt-3">
+            <div className="mt-3">
                 <Button
                     variant="link"
                     onClick={() => navigate("/Ecommerce/forgot-password")}

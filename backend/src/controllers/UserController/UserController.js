@@ -12,7 +12,6 @@ const OrderItem = require("../../models/OrderItems");
 
 const Shops = require("../../models/Shops");
 
-
 const client = new OAuth2Client(process.env.O2Auth_Key);
 
 const getUsers = async (req, res) => {
@@ -482,31 +481,32 @@ const setDefaultAddress = async (req, res) => {
     console.error("❌ Error setting default address:", error);
     res.status(500).json({ message: "Failed to set default address", error });
   }
-}
+};
 const findOwnerByUserId = async (req, res) => {
-  try{
-    const {UserId} = req.body;
-    if(!UserId){
-      return res.status(400).json({ message: "Not find UserID" });  
+  try {
+    const { UserId } = req.body;
+    if (!UserId) {
+      return res.status(400).json({ message: "Not find UserID" });
     }
-  
-    const owner = await Shop.findOne({ owner: new mongoose.Types.ObjectId(UserId) })
-    if(!owner){
-      return res.status(200).json({ 
+
+    const owner = await Shops.findOne({
+      owner: new mongoose.Types.ObjectId(UserId),
+    });
+    if (!owner) {
+      return res.status(200).json({
         message: "No shop found for this user",
-        owner: null 
+        owner: null,
       });
     }
-    
+
     res.status(200).json({
-      message: "Shop found successfully", 
-      owner: owner
+      message: "Shop found successfully",
+      owner: owner,
     });
-    
-  }catch(error){
+  } catch (error) {
     res.status(500).json({ message: "Failed to find owner", error });
   }
-}
+};
 const changePasswordInUser = async (req, res) => {
   const { id } = req.params;
   const { currentPassword, newPassword } = req.body;
@@ -658,9 +658,33 @@ const createOrderItems = async (req, res) => {
     if (!Product || !Array.isArray(Product) || Product.length === 0) {
       return res.status(400).json({ message: "Product array is required" });
     }
+    // Đảm bảo ProductVariant._id lấy đúng từ Product gốc
+    const ProductsModel = require("../../models/Products");
+    const fixedProductArr = [];
+    for (const p of Product) {
+      // Lấy Product gốc từ DB
+      const dbProduct = await ProductsModel.findById(p._id);
+      if (!dbProduct) continue;
+      // Map từng variant
+      const fixedVariants = p.ProductVariant.map(v => {
+        // Tìm variant gốc trong Product
+        const dbVariant = dbProduct.ProductVariant.find(
+          dbv => dbv.ProductVariantName === v.ProductVariantName && dbv.Price === v.Price
+        );
+        return {
+          ...v,
+          _id: dbVariant ? dbVariant._id : v._id // Ưu tiên lấy _id gốc
+        };
+      });
+      fixedProductArr.push({
+        ...p,
+        _id: dbProduct._id,
+        ProductVariant: fixedVariants
+      });
+    }
     // Tạo order item mới
     const newOrderItem = new OrderItem({
-      Product,
+      Product: fixedProductArr,
       Total,
       Status: Status || "Pending",
     });
@@ -685,6 +709,8 @@ const checkout = async (req, res) => {
       BuyerId,
       ShopId,
       Items,
+      receiverName,
+      phoneNumber,
     } = req.body;
 
     if (
@@ -707,6 +733,8 @@ const checkout = async (req, res) => {
       BuyerId,
       ShopId,
       Items,
+      receiverName,
+      phoneNumber,
     });
     await newOrder.save();
     res
@@ -742,5 +770,5 @@ module.exports = {
   getPaymentMethod,
   createOrderItems,
   checkout,
-  findOwnerByUserId
+  findOwnerByUserId,
 };

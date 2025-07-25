@@ -65,14 +65,14 @@ export default function ProductForm({
   useEffect(() => {
     const seen = new Set();
     let conflict = false;
-    const existingNames = (product?.ProductVariant || []).map((v) =>
-      v.ProductVariantName.trim().toLowerCase()
-    );
+    // const existingNames = (product?.ProductVariant || []).map((v) =>
+    //   v.ProductVariantName.trim().toLowerCase()
+    // );
 
     variants.forEach((v) => {
       const nm = v.name.trim().toLowerCase();
       if (!nm) return;
-      if (existingNames.includes(nm) || seen.has(nm)) {
+      if (seen.has(nm)) {
         conflict = true;
       }
       seen.add(nm);
@@ -117,9 +117,16 @@ export default function ProductForm({
   };
 
   const handleVariantChange = (i, field, val) => {
-    const c = [...variants];
-    c[i][field] = val;
-    setVariants(c);
+    setVariants((vs) => {
+      const newVs = [...vs];
+      if (field === "image") {
+        newVs[i].image = val;
+        newVs[i].imageUrl = URL.createObjectURL(val); // ← new
+      } else {
+        newVs[i][field] = val;
+      }
+      return newVs;
+    });
   };
 
   const addVariant = () => {
@@ -192,13 +199,18 @@ export default function ProductForm({
             onChange={handleMainImageChange}
             className={styles.fileInput}
           />
-          <span className={styles.uploadText}>
-            {mainImage
-              ? mainImage.name
-              : mainPreview
-              ? "Current image"
-              : "Add image"}
-          </span>
+
+          {mainPreview ? (
+            <img
+              src={mainPreview}
+              alt="Product preview"
+              className={styles.preview}
+            />
+          ) : (
+            <span className={styles.uploadText}>
+              {mainImage ? mainImage.name : "Add image"}
+            </span>
+          )}
         </div>
         {submitAttempt && imageError && (
           <p className={styles.errorText}>{imageError}</p>
@@ -261,11 +273,11 @@ export default function ProductForm({
                       }
                       className={styles.variantFile}
                     />
-                    {!v.image && v.imageUrl && (
+                    {v.imageUrl && (
                       <img
                         src={v.imageUrl}
                         className={styles.variantThumb}
-                        alt=""
+                        alt={`Variant ${i} preview`}
                       />
                     )}
                   </td>
@@ -358,7 +370,7 @@ export default function ProductForm({
           type="submit"
           className={styles.submitBtn}
           disabled={
-            variants.length === 0 
+            variants.length === 0
             // ||
             // Boolean(nameError) ||
             // Boolean(descError) ||

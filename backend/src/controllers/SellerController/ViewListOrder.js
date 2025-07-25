@@ -37,7 +37,7 @@ exports.getOrdersByShop = async (req, res) => {
 
     console.log("Querying orders for shopId:", shopObjectId);
     const orders = await Order.find({ ShopId: shopObjectId })
-      .populate("BuyerId", "Username")
+      .populate("BuyerId", "Username ShippingAddress")
       .lean()
       .sort({ createdAt: 1 });
 
@@ -50,14 +50,18 @@ exports.getOrdersByShop = async (req, res) => {
         shopId: shopId,
       });
     }
-    
-    const result = orders.map((order) => ({
-      _id: order._id,
-      customerName: order.BuyerId.Username || "N/A",
-      dateAdd: order.OrderDate ,
-      status: order.Status,
-      totalAmount: order.TotalAmount,
-    }));
+
+    const result = orders.map((order) => {
+      // Use receiverName from the order document
+      const customerName = order.receiverName || "N/A";
+      return {
+        _id: order._id,
+        customerName,
+        dateAdd: order.OrderDate,
+        status: order.Status,
+        totalAmount: order.TotalAmount,
+      };
+    });
 
     console.log("Successfully processed all orders");
     res.json(result);

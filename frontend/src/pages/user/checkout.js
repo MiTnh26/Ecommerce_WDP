@@ -7,7 +7,6 @@ import axios from "axios";
 function CheckoutPage() {
   const [selectedAddress, setSelectedAddress] = useState(0);
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [selectedShipping, setSelectedShipping] = useState("fast");
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -625,6 +624,8 @@ function CheckoutPage() {
           BuyerId: userId,
           ShopId: shop.shopId,
           Items: orderItemsId,
+          receiverName: addresses[selectedAddress]?.name, // truyền tên người nhận
+          phoneNumber: addresses[selectedAddress]?.phone, // truyền số điện thoại
         };
 
         // 4. Gọi API tạo Order cho shop
@@ -647,14 +648,17 @@ function CheckoutPage() {
       if (user && user._id && checkOut.Items) {
         for (const item of checkOut.Items) {
           // Nếu có ProductVariant_id thì xóa theo biến thể, nếu không thì xóa theo sản phẩm
-          await axios.delete("http://localhost:5000/customer/remove-p-variant-cart", {
-            data: {
-              UserId: user._id,
-              Product_id: item.Product_Id,
-              ProductVariant: { _id: item.ProductVariant_id },
-            },
-            withCredentials: true,
-          });
+          await axios.delete(
+            "http://localhost:5000/customer/remove-p-variant-cart",
+            {
+              data: {
+                UserId: user._id,
+                Product_id: item.Product_Id,
+                ProductVariant: { _id: item.ProductVariant_id },
+              },
+              withCredentials: true,
+            }
+          );
         }
       }
       setShowSuccessModal(true);
@@ -768,7 +772,7 @@ function CheckoutPage() {
                         className="shop-avatar-img"
                         onError={(e) => {
                           if (!e.target.src.includes("/placeholder.svg")) {
-                          e.target.src = "/placeholder.svg";
+                            e.target.src = "/placeholder.svg";
                           }
                         }}
                       />
@@ -803,7 +807,7 @@ function CheckoutPage() {
                           className="product-image"
                           onError={(e) => {
                             if (!e.target.src.includes("/placeholder.svg")) {
-                            e.target.src = "/placeholder.svg";
+                              e.target.src = "/placeholder.svg";
                             }
                           }}
                         />
@@ -917,8 +921,8 @@ function CheckoutPage() {
                               className="payment-option"
                               style={{ marginBottom: 0 }}
                             >
-                  <input
-                    type="radio"
+                              <input
+                                type="radio"
                                 name="payment"
                                 value={method._id}
                                 checked={selectedPayment === method._id}
@@ -949,17 +953,17 @@ function CheckoutPage() {
                                 }}
                               >
                                 {method.Provider}
-                      </span>
+                              </span>
                               {method.Default && (
                                 <span className="payment-default">
                                   Mặc định
                                 </span>
                               )}
-                </label>
-              ))}
-            </div>
+                            </label>
+                          ))}
+                        </div>
                       )}
-          </div>
+                    </div>
                   );
                 })
               )}
@@ -1225,17 +1229,36 @@ function CheckoutPage() {
         </div>
       )}
       {showSuccessModal && (
-        <div className="modal-overlay" style={{zIndex: 2000}}>
+        <div className="modal-overlay" style={{ zIndex: 2000 }}>
           <div className="success-modal">
             <div className="success-icon">
-              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="28" cy="28" r="28" fill="#eafaf1"/>
-                <path d="M18 29.5L25 36.5L39 22.5" stroke="#27ae60" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                width="56"
+                height="56"
+                viewBox="0 0 56 56"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="28" cy="28" r="28" fill="#eafaf1" />
+                <path
+                  d="M18 29.5L25 36.5L39 22.5"
+                  stroke="#27ae60"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
             <h2>Đặt hàng thành công!</h2>
             <p>Bạn sẽ được chuyển về trang chủ sau 5 giây...</p>
-            <button className="btn btn-primary" onClick={() => window.location.href = "http://localhost:3000/Ecommerce/home"}>Về trang chủ ngay</button>
+            <button
+              className="btn btn-primary"
+              onClick={() =>
+                (window.location.href = "http://localhost:3000/Ecommerce/home")
+              }
+            >
+              Về trang chủ ngay
+            </button>
           </div>
         </div>
       )}

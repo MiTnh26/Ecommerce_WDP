@@ -252,7 +252,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                         x{product.Quantity || "N/A"}
                       </div>
                       <div className="order-item-price">
-                        ₫{Number(product.Price || 0).toLocaleString("vi-VN")}
+                        ${Number(product.Price || 0).toLocaleString("vi-VN")}
                       </div>
                     </div>
                   );
@@ -285,7 +285,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                       x{variant.Quantity}
                     </div>
                     <div className="order-item-price">
-                      ₫{Number(variant.Price || 0).toLocaleString("vi-VN")}
+                      ${Number(variant.Price || 0).toLocaleString("vi-VN")}
                     </div>
                   </div>
                 ));
@@ -318,7 +318,7 @@ const PurchaseOrders = ({ userId, setActiveTab, setSelectedOrderId }) => {
                 <div className="purchaseorders-order-footer-total">
                   Total amount:{" "}
                   <span className="purchaseorders-order-footer-total-value">
-                    ₫{Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
+                    ${Number(order.TotalAmount || 0).toLocaleString("vi-VN")}
                   </span>
                 </div>
                 <div className="purchaseorders-order-footer-btns">

@@ -24,21 +24,19 @@ const ViewListOrder = () => {
   const [error, setError] = useState("");
   const [shopId, setShopId] = useState(localStorage.getItem("shopId"));
 
-  
   // Get user from localStorage
   const user = JSON.parse(localStorage.getItem("user")) || {};
+  const userId = user._id;
 
-  // First fetch the shop information if shopId is not available
+  // Luôn fetch shopId theo userId hiện tại
   useEffect(() => {
     const fetchShopInfo = async () => {
-      if (!shopId && user && user._id) {
+      if (userId) {
         try {
           const res = await axios.get(
-            `http://localhost:5000/seller/getShopInformation?owner=${user._id}`
+            `http://localhost:5000/seller/getShopInformation?owner=${userId}`
           );
-
           if (res.data && res.data._id) {
-            console.log("Fetched shop ID:", res.data._id);
             localStorage.setItem("shopId", res.data._id);
             setShopId(res.data._id);
           }
@@ -48,17 +46,14 @@ const ViewListOrder = () => {
         }
       }
     };
-
     fetchShopInfo();
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     const fetchOrders = async () => {
       if (!shopId) return;
-
       setLoading(true);
       try {
-        // Check if shopId is valid before making request
         if (typeof shopId !== "string" || shopId.length !== 24) {
           setError(
             "Invalid shop ID. Please make sure you're logged in as a seller and have registered a shop."
@@ -66,7 +61,6 @@ const ViewListOrder = () => {
           setLoading(false);
           return;
         }
-
         const res = await axios.get(
           `http://localhost:5000/seller/orders?shopId=${shopId}`
         );
@@ -78,7 +72,6 @@ const ViewListOrder = () => {
         setLoading(false);
       }
     };
-
     if (shopId) {
       fetchOrders();
     }
@@ -276,9 +269,8 @@ const ViewListOrder = () => {
                   {sortedOrders.map((order, index) => (
                     <tr key={order._id}>
                       <td>{index + 1}</td>
-                      <td>{order.customerName || "N/A"}</td>
+                      <td>{order.customerName || order.receiverName || "N/A"}</td>
                       <td>{order.totalAmount || "N/A"}</td>
-                     
                       <td>
                         {order.dateAdd
                           ? new Date(order.dateAdd).toLocaleDateString()
@@ -289,7 +281,11 @@ const ViewListOrder = () => {
                         <Button
                           variant="warning"
                           size="sm"
-                          onClick={() => navigate(`/Ecommerce/seller/vieworderdetail/${order._id}`)}
+                          onClick={() =>
+                            navigate(
+                              `/Ecommerce/seller/vieworderdetail/${order._id}`
+                            )
+                          }
                           style={{
                             backgroundColor: "#ffc107",
                             borderColor: "#ffc107",

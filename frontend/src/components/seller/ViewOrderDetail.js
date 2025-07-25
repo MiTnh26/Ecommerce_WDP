@@ -141,8 +141,8 @@ const ViewOrderDetail = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {order.Items && order.Items.Product && order.Items.Product.map((product, productIndex) => (
-                        <tr key={`${product._id}-${productIndex}`}>
+                      {order.Items.map((product, idx) => (
+                        <tr key={product._id}>
                           <td>
                             <img
                               src={product.ProductImage || "/assets/images/no-image.png"}
@@ -158,52 +158,30 @@ const ViewOrderDetail = () => {
                           </td>
                           <td className="align-middle">{product.ProductName}</td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  {variant.ProductVariantName}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductVariant.map(variant => (
+                              <div key={variant._id}>{variant.ProductVariantName}</div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  ${Number(variant.Price).toLocaleString('vi-VN')}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductVariant.map(variant => (
+                              <div key={variant._id}>${Number(variant.Price).toLocaleString('vi-VN')}</div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  {variant.Quantity}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductVariant.map(variant => (
+                              <div key={variant._id}>{variant.Quantity}</div>
                             ))}
                           </td>
                           <td className="align-middle">
-                            {product.ProductVariant.map((variant, index) => (
-                              <>
-                                <div key={variant._id}>
-                                  ${Number(variant.Price * variant.Quantity).toLocaleString('vi-VN')}
-                                  {index < product.ProductVariant.length - 1 && <br />}
-                                </div>
-                                <hr />
-                              </>
+                            {product.ProductVariant.map(variant => (
+                              <div key={variant._id}>${Number(variant.Price * variant.Quantity).toLocaleString('vi-VN')}</div>
                             ))}
                           </td>
                         </tr>
                       ))}
+
                     </tbody>
+
                   </Table>
                 </Card.Body>
               </Card>
