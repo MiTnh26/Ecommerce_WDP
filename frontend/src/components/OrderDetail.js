@@ -137,10 +137,10 @@ const OrderDetail = ({ orderId, setActiveTab }) => {
       </div>
       <div style={{ color: "#555", fontSize: 15 }}>
         <div>
-          <b>Receiver:</b> {order.BuyerId?.LastName || "N/A"}
+          <b>Receiver:</b> {order.receiverName || "N/A"}
         </div>
         <div>
-          <b>Phone:</b> {order.BuyerId?.PhoneNumber || "N/A"}
+          <b>Phone:</b> {order.phoneNumber || "N/A"}
         </div>
         <div>
           <b>Shipping Address:</b> {order.ShippingAddress}
