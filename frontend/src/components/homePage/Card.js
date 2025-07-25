@@ -70,3 +70,4 @@ const Card = ({item}) => {
     </div>
   )
 }
+export default Card

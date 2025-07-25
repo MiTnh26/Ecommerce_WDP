@@ -6,11 +6,13 @@ import { useSearchParams , useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import img_empty from "../../assets/images/data-empty.png";
 import { filterData } from "../../api/ProductApi";
+
 const ProductList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams] = useSearchParams();
   const nameSearch = searchParams.get("name") || "";
   const [dataProductFilter, setDataProductFilter] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [whereToBuy, setWhereToBuy] = useState([]);
@@ -26,7 +28,8 @@ const ProductList = () => {
     const fetchData = async () => {
     const cleanedName = nameSearch.trim().replace(/\s+/g, ' ');
     const data = await filterData(cleanedName);
-    setDataProductFilter(data || []); // tránh null
+    setDataProductFilter(data.products || []); // tránh null
+    setTotalPages(data.totalPages -1);
   };
     // fetch data where to buy
     const loadData = async () => {
@@ -183,24 +186,23 @@ const ProductList = () => {
               ))}
             </div>
           <div className="panigation">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={
-                dataProductFilter && dataProductFilter.length > 0
-                ? Math.ceil(dataProductFilter.length / 20)
-                : 1
-              }
-              onPageChange={(page) => {
-                filterData(
-                  nameSearch,
-                  category,
-                  fromPrice || undefined,  
-                  toPrice || undefined,
-                  whereToBuyFilter
-                );
-                setCurrentPage(page)
-              }}
-              />
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={async (page) => {
+                    const result = await filterData(
+                      nameSearch,
+                      category,
+                      fromPrice || undefined,
+                      toPrice || undefined,
+                      whereToBuyFilter,
+                      page,
+                      // limit = 12
+                    );
+                    setCurrentPage(page);
+                    setDataProductFilter(result.products || []);
+                  }}
+                />
           </div>
               </main>
           )}
