@@ -645,8 +645,9 @@ function CheckoutPage() {
       // Thành công
       // Xóa từng sản phẩm đã đặt khỏi giỏ hàng
       const user = JSON.parse(localStorage.getItem("user"));
-      if (user && user._id && checkOut.Items) {
-        for (const item of checkOut.Items) {
+      const latestCheckOut = JSON.parse(localStorage.getItem("checkOut"));
+      if (user && user._id && latestCheckOut && Array.isArray(latestCheckOut.Items) && latestCheckOut.Items.length > 0) {
+        for (const item of latestCheckOut.Items) {
           // Nếu có ProductVariant_id thì xóa theo biến thể, nếu không thì xóa theo sản phẩm
           await axios.delete(
             "http://localhost:5000/customer/remove-p-variant-cart",

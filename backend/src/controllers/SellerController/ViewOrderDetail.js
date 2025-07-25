@@ -18,13 +18,8 @@ exports.getOrderDetail = async (req, res) => {
     const order = await Order.findById(orderId)
       .populate("BuyerId", "Username PhoneNumber ShippingAddress")
       .populate("PaymentId")
-      .populate({
-        path: "Items",
-        populate: {
-          path: "Product",
-          select: "ProductName ProductImage ProductVariant"
-        }
-      })
+      .populate("Items") // là đủ, vì Product đã nằm trong OrderItem
+
       .lean();
     console.log("hihi " + order);
 
@@ -34,7 +29,7 @@ exports.getOrderDetail = async (req, res) => {
 
     // Get the default shipping address
     const defaultAddress = order.BuyerId.ShippingAddress.find(
-      addr => addr.status === "Default"
+      (addr) => addr.status === "Default"
     );
 
     // Format the response
@@ -47,21 +42,20 @@ exports.getOrderDetail = async (req, res) => {
       ReceiverPhone: order.phoneNumber || "N/A",
       ShippingAddress: order.ShippingAddress || "N/A",
       PaymentId: order.PaymentId?.PaymentMethod || "N/A",
-      Items: Array.isArray(order.Items) && order.Items.length > 0 ? order.Items.map(item => ({
-        _id: item._id,
-        Product: item.Product.map(product => ({
-          _id: product._id,
-          ProductName: product.ProductName,
-          ProductImage: product.ProductImage,
-          ProductVariant: product.ProductVariant.map(variant => ({
-            _id: variant._id,
-            ProductVariantName: variant.ProductVariantName,
-            Price: variant.Price,
-            Quantity: variant.Quantity,
-            Image: variant.Image
+      Items: order.Items
+        ? order.Items.Product.map((product) => ({
+            _id: product._id,
+            ProductName: product.ProductName,
+            ProductImage: product.ProductImage,
+            ProductVariant: product.ProductVariant.map((variant) => ({
+              _id: variant._id,
+              ProductVariantName: variant.ProductVariantName,
+              Price: variant.Price,
+              Quantity: variant.Quantity,
+              Image: variant.Image,
+            })),
           }))
-        }))
-      })) : []
+        : [],
     };
 
     res.json(formattedOrder);
@@ -69,7 +63,7 @@ exports.getOrderDetail = async (req, res) => {
     console.error("Error in getOrderDetail:", error);
     res.status(500).json({
       message: "Error fetching order details",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -91,14 +85,18 @@ exports.updateOrderStatus = async (req, res) => {
     // Find the order and update its status
     const order = await Order.findByIdAndUpdate(
       orderId,
-      { "Status": Status },
+      { Status: Status },
       { new: true }
     );
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (Status === "Delivered" && Array.isArray(order.Items) && order.Items.length > 0) {
+    if (
+      Status === "Delivered" &&
+      Array.isArray(order.Items) &&
+      order.Items.length > 0
+    ) {
       // Cập nhật trạng thái của các OrderItem
       await OrderItem.updateMany(
         { _id: { $in: order.Items } },
@@ -123,8 +121,8 @@ exports.updateOrderStatus = async (req, res) => {
                 $inc: {
                   "ProductVariant.$.StockQuantity": -quantitySold,
                   "ProductVariant.$.Sales": quantitySold,
-                  Sales: quantitySold 
-                }
+                  Sales: quantitySold,
+                },
               }
             );
           }
@@ -134,13 +132,13 @@ exports.updateOrderStatus = async (req, res) => {
     console.log("Order status updated successfully:", order);
     res.json({
       message: "Order status updated successfully",
-      order: order
+      order: order,
     });
   } catch (error) {
     console.error("Error in updateOrderStatus:", error);
     res.status(500).json({
       message: "Error updating order status",
-      error: error.message
+      error: error.message,
     });
   }
-}
+};
