@@ -35,12 +35,12 @@ const orderSchema = new mongoose.Schema(
       ref: "Shop",
       required: true,
     },
-    Items: [
+    Items: 
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "OrderItem",
       }
-    ],
+    ,
     receiverName: {
       type: String,
       default: ""
