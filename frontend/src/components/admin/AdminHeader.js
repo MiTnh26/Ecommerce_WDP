@@ -14,7 +14,7 @@ function AdminHeader({ title = "Dashboard", user = null }) {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         const userData = JSON.parse(storedUser);
-        adminId = userData.id || userData.userId || userData.ID;
+        adminId = userData._id || userData.id || userData.userId || userData.ID;
       }
     }
     if (!adminId) return;
@@ -27,9 +27,10 @@ function AdminHeader({ title = "Dashboard", user = null }) {
   const currentUser = adminInfo
     ? {
         name:
-          adminInfo.FirstName && adminInfo.LastName
-            ? `${adminInfo.FirstName} ${adminInfo.LastName}`
-            : adminInfo.Username || "Admin",
+          (adminInfo.FirstName && adminInfo.LastName && `${adminInfo.FirstName} ${adminInfo.LastName}`) ||
+          adminInfo.Username ||
+          adminInfo.Email ||
+          "Admin",
         avatar: adminInfo.Image || "/placeholder.svg?height=32&width=32",
       }
     : user || { name: "Admin", avatar: "/placeholder.svg?height=32&width=32" };

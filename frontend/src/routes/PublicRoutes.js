@@ -8,7 +8,15 @@ import {
   ProductDetail,
   ProductList,
 } from "../pages/public/index";
+import { Navigate } from "react-router-dom";
+
 const PublicRoutes = [
+  // 🔁 Redirect "/" => "/Ecommerce/home"
+  {
+    path: "/",
+    element: <Navigate to="/Ecommerce/home" replace />,
+  },
+
   {
     path: "/Ecommerce",
     element: <MainLayout />, // dùng Outlet bên trong layout
@@ -22,7 +30,7 @@ const PublicRoutes = [
         element: <ProductDetail />,
       },
       {
-        path: "/Ecommerce/search/:keyword",
+        path: "/Ecommerce/search",
         element: <ProductList />,
       },
     ],

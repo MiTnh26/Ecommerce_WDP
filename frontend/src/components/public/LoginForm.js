@@ -324,7 +324,7 @@ function Login() {
                       Remember me
                     </label>
                   </div>
-                  <a href="/forgot-password" className="text-body">
+                  <a href="/Ecommerce/forgot-password" className="text-body">
                     Forgot password?
                   </a>
                 </div>

@@ -48,8 +48,8 @@ function ProfileView({ onUpdateSuccess }) {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
           const userData = JSON.parse(storedUser);
-          if (userData.id || userData.userId || userData.ID) {
-            return userData.id || userData.userId || userData.ID;
+          if (userData._id || userData.id || userData.userId || userData.ID) {
+            return userData._id || userData.id || userData.userId || userData.ID;
           }
         }
 
@@ -76,7 +76,17 @@ function ProfileView({ onUpdateSuccess }) {
     };
 
     const id = getUserIdFromStorage();
+    console.log("userId lấy được khi mount:", id);
     setUserId(id);
+
+    // Listen for localStorage changes to update userId
+    const handleStorageChange = () => {
+      const newId = getUserIdFromStorage();
+      console.log("userId lấy được khi storage thay đổi:", newId);
+      setUserId(newId);
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -85,6 +95,7 @@ function ProfileView({ onUpdateSuccess }) {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
+        console.log("userId dùng để fetch profile:", userId);
         const response = await fetch(
           `http://localhost:5000/customer/profile/${userId}`
         );
@@ -116,6 +127,7 @@ function ProfileView({ onUpdateSuccess }) {
 
   const handleProfileUpdated = async () => {
     try {
+      console.log("userId dùng để refetch profile:", userId);
       const response = await fetch(
         `http://localhost:5000/customer/profile/${userId}`
       );
@@ -167,7 +179,7 @@ function ProfileView({ onUpdateSuccess }) {
     if (file) {
       // Validate file type
       if (!file.type.startsWith("image/")) {
-        setMessage({ type: "error", text: "Please select a valid image file" });
+        setMessage({ type: "error", text: "Vui lòng chọn một file ảnh hợp lệ" });
         return;
       }
 
@@ -175,7 +187,7 @@ function ProfileView({ onUpdateSuccess }) {
       if (file.size > 5 * 1024 * 1024) {
         setMessage({
           type: "error",
-          text: "Image size cannot exceed 5MB",
+          text: "Kích thước ảnh không được vượt quá 5MB",
         });
         return;
       }
@@ -224,7 +236,7 @@ function ProfileView({ onUpdateSuccess }) {
     ];
     if (requiredFields.some((val) => !val)) {
       setFormLoading(false);
-      setMessage({ type: "error", text: "All fields are required and cannot be empty or only spaces." });
+      setMessage({ type: "error", text: "Tất cả các trường đều bắt buộc và không được để trống hoặc chỉ chứa khoảng trắng." });
       return;
     }
     // Validate date of birth is not in the future
@@ -233,7 +245,7 @@ function ProfileView({ onUpdateSuccess }) {
       const now = new Date();
       if (dob > now) {
         setFormLoading(false);
-        setMessage({ type: "error", text: "Date of birth cannot be in the future." });
+        setMessage({ type: "error", text: "Ngày sinh không được trong tương lai." });
         return;
       }
     }
@@ -255,6 +267,7 @@ function ProfileView({ onUpdateSuccess }) {
         form.append("Image", selectedImage);
       }
 
+      console.log("userId dùng để update profile:", userId);
       const response = await fetch(
         `http://localhost:5000/customer/profile/${userId}`,
         {
@@ -267,13 +280,13 @@ function ProfileView({ onUpdateSuccess }) {
 
       if (!response.ok) {
         throw new Error(
-          data.message || "An error occurred while updating information"
+          data.message || "Đã xảy ra lỗi khi cập nhật thông tin"
         );
       }
 
       setMessage({
         type: "success",
-        text: "Information updated successfully!",
+        text: "Cập nhật thông tin thành công!",
       });
       setTimeout(() => {
         handleProfileUpdated();
@@ -282,7 +295,7 @@ function ProfileView({ onUpdateSuccess }) {
       console.error("Lỗi khi gửi request:", error);
       setMessage({
         type: "error",
-        text: error.message || "Could not connect to server",
+        text: error.message || "Không thể kết nối đến máy chủ",
       });
     } finally {
       setFormLoading(false);
@@ -1233,22 +1246,12 @@ function ProfileView({ onUpdateSuccess }) {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    onChange={() => {}} // prevent editing
                     placeholder="Enter email"
-                    style={styles.input}
+                    style={{ ...styles.input, backgroundColor: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed' }}
                     required
-                    onFocus={(e) => {
-                      e.target.style.outline = "none";
-                      e.target.style.borderColor = "#3b82f6";
-                      e.target.style.boxShadow =
-                        "0 0 0 3px rgba(59, 130, 246, 0.1)";
-                      e.target.style.backgroundColor = "white";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e5e7eb";
-                      e.target.style.boxShadow = "none";
-                      e.target.style.backgroundColor = "#fafafa";
-                    }}
+                    readOnly
+                    tabIndex={-1}
                   />
                 </div>
 

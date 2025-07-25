@@ -1,3 +1,4 @@
+
 .card-title-custom {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -40,4 +41,7 @@
 .amount {
   font-weight: bold;
 }
-
+.rounded-4 .carousel-control-prev-icon,
+.rounded-4 .carousel-control-next-icon {
+  filter: drop-shadow(0 0 3px rgb(15, 14, 14)); /* thêm hiệu ứng nếu muốn */
+}
