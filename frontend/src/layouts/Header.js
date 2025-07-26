@@ -124,6 +124,7 @@ const Header = () => {
     //console.log("logout");
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.clear();
     navigate("/Ecommerce/home");
     window.location.reload();
   };

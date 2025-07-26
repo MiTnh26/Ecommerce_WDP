@@ -75,6 +75,7 @@ describe("SellerController › getOrdersByShop", () => {
 
     expect(Order.find).toHaveBeenCalledWith({
       ShopId: new mongoose.Types.ObjectId(hex24),
+      Status: { $ne: "Cancelled" },
     });
     expect(chain.populate).toHaveBeenCalledWith(
       "BuyerId",
