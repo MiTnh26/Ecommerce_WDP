@@ -159,6 +159,15 @@ function Login() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
+        // Check user status
+        if (data.user.Status === "Banned") {
+          setErrors((prev) => ({
+            ...prev,
+            general: "Your account has been locked. Please contact support for assistance.",
+          }));
+          return;
+        }
+
         setSuccess("Login successful!");
 
         // Redirect after 2 seconds
@@ -204,6 +213,15 @@ function Login() {
         setSuccess("Google login successful!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
+
+        // Check user status
+        if (data.user.Status === "Banned") {
+          setErrors((prev) => ({
+            ...prev,
+            general: "Your account has been locked. Please contact support for assistance.",
+          }));
+          return;
+        }
 
         // Redirect after 2 seconds
         setTimeout(() => {

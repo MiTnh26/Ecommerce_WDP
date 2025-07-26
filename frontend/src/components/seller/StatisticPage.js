@@ -51,14 +51,12 @@ function StatisticPage({ shopId }) {
 
     if (shopId && userId) fetchStats();
   }, [shopId, year]);
-
   const userId = user._id;
 
   useEffect(() => {
     const fetchShopInfo = async () => {
       if (userId) {
         try {
-          console.log("userid for shop", userId);
           const res = await axios.get(
             `http://localhost:5000/seller/getShopInformation?owner=${userId}`
           );

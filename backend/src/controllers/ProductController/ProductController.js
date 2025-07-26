@@ -1,25 +1,23 @@
-
 const Product = require("../../models/Products");
 const Category = require("../../models/Categories");
 const OrderItem = require("../../models/OrderItems");
 const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Types;
 
-
 /**
  * GET /products
  */
-  exports.getAllProducts = async (req, res) => {
-    try {
-      const products = await Product.find()
-        .populate("CategoryId")
-        .populate("ShopId");
-      res.json(products);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Server error fetching products" });
-    }
-  };
+exports.getAllProducts = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .populate("CategoryId")
+      .populate("ShopId");
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error fetching products" });
+  }
+};
 
 exports.getAllProductsByShop = async (req, res) => {
   const { shopId } = req.params;
@@ -184,7 +182,6 @@ exports.toggleStatus = async (req, res) => {
   }
 };
 
-
 /**
  * DELETE /products/:id
  */
@@ -218,22 +215,25 @@ exports.getCategories = async (req, res) => {
 };
 
 /*
-* GET /products/trending
-* Returns top 10 trending products based on sales or views.
-*/ 
+ * GET /products/trending
+ * Returns top 10 trending products based on sales or views.
+ */
 exports.getTrendingProducts = async (req, res) => {
-  const limit = 10, trendingDays = 7, comparisonDays = 14
+  const limit = 10,
+    trendingDays = 7,
+    comparisonDays = 14;
   try {
     //console.log("Fetching trending products...");
     const now = new Date();
-    const currentPeriodStart = new Date(now.getTime() - (trendingDays * 24 * 60 * 60 * 1000));
-    const previousPeriodStart = new Date(now.getTime() - (comparisonDays * 24 * 60 * 60 * 1000));
+    const currentPeriodStart = new Date(
+      now.getTime() - trendingDays * 24 * 60 * 60 * 1000
+    );
+    const previousPeriodStart = new Date(
+      now.getTime() - comparisonDays * 24 * 60 * 60 * 1000
+    );
     //
 
-     
-    
     res.status(200).json({ message: "Fetching trending products..." });
-    
   } catch (error) {
     console.error("Error getting trending products:", error);
     throw error;
@@ -241,60 +241,59 @@ exports.getTrendingProducts = async (req, res) => {
 };
 
 exports.getNewProducts = async (req, res) => {
-  const {limit = 10} = req.query;
-  const {page = 0} = req.query;
+  const { limit = 10 } = req.query;
+  const { page = 0 } = req.query;
   //console.log("Fetching new products with limit:", limit, "and page:", page);
   try {
     const products = await Product.aggregate([
-    {
-      $match : {"Status": {$ne: "Inactive"}}
-    },
-    {
-      $lookup: {
-        from: "shops",
-        localField: "ShopId",
-        foreignField: "_id",
-        as: "shop"
-      }
-    },
-    { $unwind: "$shop" },
-    { $match: { "shop.status": { $ne: "Banned" } } },
-    {
-      $project: {
-        _id: 1,
-        ProductName: 1,
-        ProductImage: 1,
-        ShopId: 1,
-        StockQuantity: { $arrayElemAt: ["$ProductVariant.StockQuantity", 0] },
-        Price: { $arrayElemAt: ["$ProductVariant.Price", 0] },
-        
-      }
-    },
-    { $sort: { createdAt: -1 } },
-    { $skip: Number(page) * Number(limit) },
-    { $limit: Number(limit) }
-  ]);
-    
+      {
+        $match: { Status: { $ne: "Inactive" } },
+      },
+      {
+        $lookup: {
+          from: "shops",
+          localField: "ShopId",
+          foreignField: "_id",
+          as: "shop",
+        },
+      },
+      { $unwind: "$shop" },
+      { $match: { "shop.status": { $ne: "Banned" } } },
+      {
+        $project: {
+          _id: 1,
+          ProductName: 1,
+          ProductImage: 1,
+          ShopId: 1,
+          StockQuantity: { $arrayElemAt: ["$ProductVariant.StockQuantity", 0] },
+          Price: { $arrayElemAt: ["$ProductVariant.Price", 0] },
+        },
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: Number(page) * Number(limit) },
+      { $limit: Number(limit) },
+    ]);
+
     res.status(200).json(products);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error fetching new products" });
   }
-  }
+};
 
 exports.getBestSellerProducts = async (req, res) => {
   //console.log("Fetching best selling products...");
-  const {limit = 10, page = 0} = req.query;
+  const { limit = 10, page = 0 } = req.query;
   try {
     const bestSellingProducts = await OrderItem.aggregate([
       {
-        $match: { Status: "Delivered" }
+        $match: { Status: "Delivered" },
       },
       {
-        $unwind: "$Product"
+        $unwind: "$Product",
       },
       {
-        $unwind: "$Product.ProductVariant"
+        $unwind: "$Product.ProductVariant",
       },
       // join bảng product lây được shop id
       {
@@ -302,11 +301,11 @@ exports.getBestSellerProducts = async (req, res) => {
           from: "products",
           localField: "Product._id",
           foreignField: "_id",
-          as: "Product_detail"
-        }
+          as: "Product_detail",
+        },
       },
       {
-        $match: {"Product_detail.Status": {$ne: "Inactive"} }
+        $match: { "Product_detail.Status": { $ne: "Inactive" } },
       },
       // join bang shop de lay duoc trang thai status
       {
@@ -314,69 +313,73 @@ exports.getBestSellerProducts = async (req, res) => {
           from: "shops",
           localField: "Product_detail.ShopId",
           foreignField: "_id",
-          as: "Product_detail_with_shop"
-        }
+          as: "Product_detail_with_shop",
+        },
       },
       // match with not banned
       {
         $match: {
-          "Product_detail_with_shop.status": { $ne: "Banned" }
-        }
+          "Product_detail_with_shop.status": { $ne: "Banned" },
+        },
       },
       {
         $group: {
-         _id: "$Product._id",
+          _id: "$Product._id",
           ProductName: { $first: "$Product.ProductName" },
           ProductImage: { $first: "$Product.ProductImage" },
           Price: { $first: "$Product.ProductVariant.Price" },
           totalSold: { $sum: "$Product.ProductVariant.Quantity" },
-        }
+        },
       },
       {
-        $sort: { totalSold: -1 } // Sort by total sold, descending
+        $sort: { totalSold: -1 }, // Sort by total sold, descending
       },
       {
-        $skip: Number(page) * Number(limit)
+        $skip: Number(page) * Number(limit),
       },
       {
-        $limit: Number(limit)
-      }
+        $limit: Number(limit),
+      },
     ]);
-    
+
     res.status(200).json(bestSellingProducts);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error fetching best selling products" });
+    res
+      .status(500)
+      .json({ message: "Server error fetching best selling products" });
   }
-  };
+};
 
 exports.getProductById = async (req, res) => {
   const { id } = req.params;
   try {
-  const product = await Product.findOne({ _id: id.toString() })
-    .select('_id ProductName ProductImage Description ProductVariant Status') // chỉ gọi 1 lần duy nhất
-    .populate({
-      path: 'ShopId',
-      select: '_id name shopAvatar description address status',
-    });
+    const product = await Product.findOne({ _id: id.toString() })
+      .select("_id ProductName ProductImage Description ProductVariant Status") // chỉ gọi 1 lần duy nhất
+      .populate({
+        path: "ShopId",
+        select: "_id name shopAvatar description address status",
+      });
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
     // Shop: Banned - inactive, active: product =>  Shop is banned
-    if (product.ShopId.status === "Banned" ) {
+    if (product.ShopId.status === "Banned") {
       return res.status(200).json({ product: null, message: "Shop is banned" });
     }
     // Shop: Active  - inactive, active: product =>  Product is stop selling
     if (product.ShopId.status === "Active" && product.Status === "Inactive") {
-      return res.status(200).json({ product: null, message: "Product is stop selling" });
+      return res
+        .status(200)
+        .json({ product: null, message: "Product is stop selling" });
     }
     res.json({ product: product, message: "Fetch product successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error fetching product" });
   }
-}
+};
 const buildSearchPatterns = (input) => {
   const words = input.trim().toLowerCase().split(/\s+/); // Tách theo khoảng trắng
   const patterns = new Set();
@@ -390,8 +393,7 @@ const buildSearchPatterns = (input) => {
     patterns.add(word);
   }
   return Array.from(patterns);
-}
-
+};
 
 exports.fetchProductsRelated = async (req, res) => {
   try {
@@ -404,27 +406,27 @@ exports.fetchProductsRelated = async (req, res) => {
 
     const searchWords = buildSearchPatterns(product_name);
     //console.log("Search words:", searchWords);
-    const orConditions = searchWords.map(keyword => ({
-      ProductName: { $regex: `\\b${keyword}\\b`, $options: "i" }
+    const orConditions = searchWords.map((keyword) => ({
+      ProductName: { $regex: `\\b${keyword}\\b`, $options: "i" },
     }));
 
     const products = await Product.aggregate([
-  {
-    $match: {
-      $or: orConditions,
-    },
-  },
-  {
-    $addFields: {
-      Price: {
-        $arrayElemAt: ["$ProductVariant.Price", 0], // không được dùng trực tiếp như vậy
+      {
+        $match: {
+          $or: orConditions,
+        },
       },
-    },
-  },
-  {
-    $limit: 10,
-  },
-]);
+      {
+        $addFields: {
+          Price: {
+            $arrayElemAt: ["$ProductVariant.Price", 0], // không được dùng trực tiếp như vậy
+          },
+        },
+      },
+      {
+        $limit: 10,
+      },
+    ]);
 
     return res.status(200).json(products);
   } catch (err) {
@@ -432,7 +434,6 @@ exports.fetchProductsRelated = async (req, res) => {
     return res.status(500).json({ error: "Lỗi khi tìm sản phẩm liên quan" });
   }
 };
-
 
 exports.filterProduct = async (req, res) => {
   try {
@@ -459,10 +460,10 @@ exports.filterProduct = async (req, res) => {
     }
 
     if (fromPrice !== undefined || toPrice !== undefined) {
-      matchStage.ProductVariant = { 
+      matchStage.ProductVariant = {
         $elemMatch: {
-          Price: {}
-        }
+          Price: {},
+        },
       };
       if (fromPrice !== undefined && fromPrice !== null && fromPrice !== "") {
         matchStage.ProductVariant.$elemMatch.Price.$gte = Number(fromPrice);
@@ -481,31 +482,35 @@ exports.filterProduct = async (req, res) => {
       {
         $addFields: {
           Price: { $ifNull: [{ $first: "$ProductVariant.Price" }, 0] },
-          StockQuantity: { $ifNull: [{ $first: "$ProductVariant.StockQuantity" }, 0] }
-        }
+          StockQuantity: {
+            $ifNull: [{ $first: "$ProductVariant.StockQuantity" }, 0],
+          },
+        },
       },
       {
         $lookup: {
           from: "shops", // 👈 tên collection Shop
           localField: "ShopId",
           foreignField: "_id",
-          as: "shopData"
-        }
+          as: "shopData",
+        },
       },
       { $unwind: "$shopData" },
-      { $match : {
-        "shopData.status": "Active"
-      }}
+      {
+        $match: {
+          "shopData.status": "Active",
+        },
+      },
     ];
 
     if (whereToBuyFilter && whereToBuyFilter.length > 0) {
       pipeline.push({
         $match: {
-          "shopData.address.province": { $in: whereToBuyFilter }
-        }
+          "shopData.address.province": { $in: whereToBuyFilter },
+        },
       });
     }
-     // Chỉ lấy các trường cần thiết
+    // Chỉ lấy các trường cần thiết
     pipeline.push({
       $project: {
         _id: 1,
@@ -514,8 +519,8 @@ exports.filterProduct = async (req, res) => {
         CategoryId: 1,
         Price: 1,
         StockQuantity: 1,
-        ProductImage: 1
-      }
+        ProductImage: 1,
+      },
     });
     //sort theo createAt
     pipeline.push({ $sort: { createdAt: -1 } });
@@ -523,12 +528,10 @@ exports.filterProduct = async (req, res) => {
       $facet: {
         data: [
           { $skip: Number(page) * Number(limit) },
-          { $limit: Number(limit) }
+          { $limit: Number(limit) },
         ],
-        totalCount: [
-          { $count: "count" }
-        ]
-      }
+        totalCount: [{ $count: "count" }],
+      },
     });
     const result = await Product.aggregate(pipeline);
     const totalItems = result[0].totalCount[0]?.count || 0;
@@ -540,19 +543,25 @@ exports.filterProduct = async (req, res) => {
   }
 };
 exports.getTrendingProducts2 = async (req, res) => {
-  const limit = 10, trendingDays = 7, comparisonDays = 14;
+  const limit = 10,
+    trendingDays = 7,
+    comparisonDays = 14;
   try {
     const now = new Date();
-    const currentPeriodStart = new Date(now.getTime() - (trendingDays * 24 * 60 * 60 * 1000));
-    const previousPeriodStart = new Date(now.getTime() - (comparisonDays * 24 * 60 * 60 * 1000));
+    const currentPeriodStart = new Date(
+      now.getTime() - trendingDays * 24 * 60 * 60 * 1000
+    );
+    const previousPeriodStart = new Date(
+      now.getTime() - comparisonDays * 24 * 60 * 60 * 1000
+    );
 
     // Lấy dữ liệu giai đoạn hiện tại (7 ngày gần đây)
     const currentPeriodData = await OrderItem.aggregate([
       {
         $match: {
           Status: "Delivered",
-          createdAt: { $gte: currentPeriodStart }
-        }
+          createdAt: { $gte: currentPeriodStart },
+        },
       },
       { $unwind: "$Product" },
       { $unwind: "$Product.ProductVariant" },
@@ -560,35 +569,38 @@ exports.getTrendingProducts2 = async (req, res) => {
         $group: {
           _id: "$Product._id",
           ProductName: { $first: "$Product.ProductName" },
-          ProductImage: { $first: "$Product.ProductImage" },
+          // ProductImage: { $first: "$Product.ProductImage" },
           Price: { $first: "$Product.ProductVariant.Price" },
           currentSold: { $sum: "$Product.ProductVariant.Quantity" },
           currentRevenue: {
             $sum: {
               $multiply: [
                 "$Product.ProductVariant.Quantity",
-                "$Product.ProductVariant.Price"
-              ]
-            }
-          }
-        }
+                "$Product.ProductVariant.Price",
+              ],
+            },
+          },
+        },
       },
       {
         $lookup: {
           from: "products",
           localField: "_id",
           foreignField: "_id",
-          as: "productDetails"
-        }
+          as: "productDetails",
+        },
       },
       {
-        $match: {"productDetails.Status": {$ne: "Inactive"} }
+        $match: { "productDetails.Status": { $ne: "Inactive" } },
       },
       { $unwind: "$productDetails" },
       {
         $addFields: {
-          StockQuantity: { $first: "$productDetails.ProductVariant.StockQuantity" }
-        }
+          ProductImage: "$productDetails.ProductImage",
+          StockQuantity: {
+            $first: "$productDetails.ProductVariant.StockQuantity",
+          },
+        },
       },
       {
         $project: {
@@ -598,9 +610,9 @@ exports.getTrendingProducts2 = async (req, res) => {
           Price: 1,
           currentSold: 1,
           currentRevenue: 1,
-          StockQuantity: 1
-        }
-      }
+          StockQuantity: 1,
+        },
+      },
     ]);
 
     // Lấy dữ liệu giai đoạn trước đó (7 ngày trước đó)
@@ -610,25 +622,25 @@ exports.getTrendingProducts2 = async (req, res) => {
           Status: "Delivered",
           createdAt: {
             $gte: previousPeriodStart,
-            $lt: currentPeriodStart
-          }
-        }
+            $lt: currentPeriodStart,
+          },
+        },
       },
       { $unwind: "$Product" },
       { $unwind: "$Product.ProductVariant" },
       {
         $group: {
           _id: "$Product._id",
-          previousSold: { $sum: "$Product.ProductVariant.Quantity" }
-        }
-      }
+          previousSold: { $sum: "$Product.ProductVariant.Quantity" },
+        },
+      },
     ]);
 
     // Tính toán trending
     const trendingProducts = currentPeriodData
-      .map(current => {
+      .map((current) => {
         const previous = previousPeriodData.find(
-          p => p._id.toString() === current._id.toString()
+          (p) => p._id.toString() === current._id.toString()
         );
         const previousSold = previous ? previous.previousSold : 0;
 
@@ -649,10 +661,10 @@ exports.getTrendingProducts2 = async (req, res) => {
           currentSold: current.currentSold,
           previousSold: previousSold,
           growthRate: Math.round(growthRate * 100) / 100,
-          trendingScore: current.currentSold * (1 + growthRate / 100) // Scoring formula
+          trendingScore: current.currentSold * (1 + growthRate / 100), // Scoring formula
         };
       })
-      .filter(product => product.growthRate > 20)
+      .filter((product) => product.growthRate > 20)
       .sort((a, b) => b.trendingScore - a.trendingScore)
       .slice(0, limit);
 
