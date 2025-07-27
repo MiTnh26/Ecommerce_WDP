@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+import { useNavigate, useSearchParams } from "react-router-dom";
+// useQuery to state Cart
 import {
   Col,
   Container,
@@ -6,24 +11,134 @@ import {
   Form,
   Offcanvas,
   ListGroup,
+  OverlayTrigger,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import image from "../assets/images/logo_page.jpg";
+
+import axios from "axios";
+import Tooltip from "react-bootstrap/Tooltip";
+import img_empty from "../assets/images/data-empty.png";
 const Header = () => {
   const [popUpSearch, setPopUpSearch] = useState(false);
   const [showCanvasCart, setShowCanvasCart] = useState(false);
+  // navigate
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState("");
+  const [UserId, setUserId] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [owner, setOwner] = useState(null);
+  console.log("owner", owner);
+  //toast
+  const [showToast, setShowToast] = useState(false);
+
+  // config
+  const URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  // fetch data owner
+  useEffect(() => {
+    const fetchOwnerByUserId = async () => {
+      try {
+        if (!UserId._id) {
+          return;
+        }
+        const res = await axios.post(
+          `http://localhost:5000/customer/find-owner-by-user-id`,
+          {
+            UserId: UserId._id,
+          },
+          { withCredentials: true }
+        );
+        if (res.status === 200) {
+          if (res.data.owner) {
+            setOwner(res.data.owner); // Có shop
+          } else {
+            setOwner(null); // User chưa có shop
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    fetchOwnerByUserId();
+  }, [UserId]);
+
+  //inview hook for cart
+  const { ref: cartRef, inView: cartInView } = useInView({ triggerOnce: true });
+
+  // useQuery to state Cart
+  //fetch cart data
+  const fetchCartData = async () => {
+    try {
+      console.log("Fetch cart data");
+      if (!UserId._id) {
+        return;
+      }
+      const res = await axios.post(
+        `${URL}/customer/get-cart`,
+        {
+          UserId: UserId._id,
+        },
+        { withCredentials: true }
+      );
+      const data = res.data;
+      console.log("cartdata", data);
+      return data;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const { data: cartData, isLoading: cartLoading } = useQuery({
+    queryKey: ["cart"],
+    queryFn: fetchCartData,
+    enabled: showCanvasCart,
+    staleTime: 1000 * 60 * 10,
+    cacheTime: 1000 * 60 * 30,
+  });
 
   const handlePopUpSearch = () => {
+    console.log("popUpSearch", popUpSearch);
     setPopUpSearch(!popUpSearch);
   };
   const handleShowCanvasCart = () => {
+    if (!UserId) {
+      setShowToast(true);
+      setTimeout(() => {
+        navigate("/Ecommerce/login");
+      }, 2000); // 2 giây = 2000 ms
+      return;
+    }
     setShowCanvasCart(!showCanvasCart);
   };
+  
+  const handleSubmitSearch = async () => {
+    const cleanedSearch = search.trim().replace(/\s+/g, ' ');
+    //await filterData(cleanedSearch);
+    navigate(`/Ecommerce/search?name=${encodeURIComponent(cleanedSearch)}`);
+  }
+  
+  const handleLogout = () => {
+    //console.log("logout");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/Ecommerce/home");
+    window.location.reload();
+  };
+  const renderTooltip = (name) => (props) =>
+    (
+      <Tooltip id="button-tooltip" {...props}>
+        {name}
+      </Tooltip>
+    );
   return (
     <>
-      <Container fluid>
+      <Container fluid >
         <Row
-          className=" py-2 d-flex align-items-center"
-          style={{ borderBottom: "1px solid #f7f7f7" }}
+          className="py-2 d-flex align-items-center"
+          style={{ borderBottom: "1px solid #f7f7f7", backgroundColor: "#ffe88f" }}
         >
           {/* Responsive __sm md lg__ */}
           {/* Logo */}
@@ -42,33 +157,42 @@ const Header = () => {
           <Col
             md={12}
             lg={6}
-            className="d-none d-md-block d-lg-block order-md-last order-lg-2 "
+            className="d-none d-md-block d-lg-block order-md-last order-lg-2"
           >
-            <div className="row search-bar p-2 my-2 bg-light rounded-4 ">
-              <Col md={1} lg={0} className="d-block d-lg-none"></Col>
-              <Col md={3} lg={4}>
-                <Form.Select className="bg-transparent border-0 ">
-                  <option>All Categories</option>
-                  <option>Groceries</option>
-                  <option>Drinks</option>
-                  <option>Chocolates</option>
-                </Form.Select>
-              </Col>
-              <Col md={6} lg={7}>
-                <Form id="search-form" className="text-center">
+            <Row className="search-bar p-2 my-2 bg-light rounded-4 align-items-center">
+              {/* Có thể chừa ra 1 khoảng trống nhỏ trái/phải khi ở md */}
+              <Col md={1} className="d-md-block d-lg-none"></Col>
+
+              {/* Ô nhập liệu */}
+              <Form id="search-form" className="d-flex w-100">
+                <Col md={11} lg={10}>
                   <Form.Control
                     type="text"
                     className="border-0 bg-transparent"
                     placeholder="Search for more than 20,000 products"
+                    value={search || ""}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault(); // tránh reload trang
+                        handleSubmitSearch();
+                      }
+                    }}
                   />
-                </Form>
-              </Col>
-              <Col md={1} lg={1}>
-                <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
-              </Col>
-              <Col md={1} lg={0} className="d-block d-lg-none"></Col>
-            </div>
+                </Col>
+                <Col
+                  md={1}
+                  lg={2}
+                  onClick={handleSubmitSearch}
+                  className="text-center"
+                  style={{ cursor: "pointer" }}
+                >
+                  <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
+                </Col>
+              </Form>
+            </Row>
           </Col>
+
           {/* Icon right header */}
           <Col
             sm={8}
@@ -77,35 +201,106 @@ const Header = () => {
           >
             <ul className="d-flex justify-content-end list-unstyled m-0 gap-2">
               <li>
-                <a
-                  href="/Ecommerce/login"
-                  className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                  style={{ width: "50px", height: "50px" }}
-                >
-                  <i className="fa-solid fa-right-to-bracket text-black fs-4"></i>
-                </a>
+                {UserId && UserId ? (
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Logout")}
+                  >
+                    <a
+                      onClick={handleLogout}
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="bi bi-box-arrow-left text-danger fs-4 pe-1 fw-bold "></i>
+                    </a>
+                  </OverlayTrigger>
+                ) : (
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Login")}
+                  >
+                    <a
+                      href="/Ecommerce/login"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="fa-solid fa-right-to-bracket text-black fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
+                )}
               </li>
+              {UserId && UserId._id && (
+                <li>
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Profile")}
+                  >
+                    <a
+                      href="/Ecommerce/user/profile"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="fa-regular fa-user text-black fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
+                </li>
+              )}
               <li>
-                <a
-                  href="/"
-                  className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                  style={{ width: "50px", height: "50px" }}
-                >
-                  <i className="fa-regular fa-user text-black fs-4"></i>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/"
-                  className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
-                  style={{ width: "50px", height: "50px" }}
-                >
-                  <i className="fa-regular fa-heart text-black fs-4"></i>
-                </a>
+                {/* owner null => hiện thỉ nút dăng kí */}
+                {/* owner not null và status "pending" => click vào hiển thị alert : "Shop đang được duyệt" */}
+                {/* owner not null và status "active" => click vào chuyển sang seller */}
+                {owner == null && UserId && (
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Go to Page Seller register")}
+                  >
+                    <a
+                      href="/Ecommerce/seller/seller-register"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="fa-solid fa-shop text-black fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
+                )}
+                {owner && owner.status == "Pending" && (
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Pending")}
+                  >
+                    <a
+                      onClick={() => alert("Shop is being approved")}
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="fa-solid fa-shop text-primary fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
+                )}
+                {owner && owner.status == "Active" && (
+                  <OverlayTrigger
+                    placement="bottom"
+                    delay={{ show: 250, hide: 400 }}
+                    overlay={renderTooltip("Go to page seller")}
+                  >
+                    <a
+                      href="/Ecommerce/seller/statistic"
+                      className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
+                      style={{ width: "50px", height: "50px" }}
+                    >
+                      <i className="fa-solid fa-shop text-success fs-4"></i>
+                    </a>
+                  </OverlayTrigger>
+                )}
+
               </li>
               <li className="d-md-none" onClick={handlePopUpSearch}>
                 <a
-                  href="/"
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -114,7 +309,7 @@ const Header = () => {
               </li>
               <li className="d-lg-none" onClick={handleShowCanvasCart}>
                 <a
-                  href="/"
+                  onClick={handleShowCanvasCart}
                   className="d-flex align-items-center justify-content-center rounded-circle bg-light text-decoration-none"
                   style={{ width: "50px", height: "50px" }}
                 >
@@ -127,8 +322,10 @@ const Header = () => {
               className="d-none d-lg-flex flex-column gap-2 lh-1 border-0 p-0 ms-5"
               onClick={handleShowCanvasCart}
             >
-              <span className="fs-6 text-muted">Your Cart</span>
-              <span className="cart-total fs-5 fw-bold">$1290.00</span>
+              <span className="cart-total fs-5 fw-bold">Your Cart</span>
+              <span className="fs-6 text-muted text-center">
+                <i className="fa-solid fa-cart-shopping"></i>
+              </span>
             </div>
           </Col>
         </Row>
@@ -138,24 +335,22 @@ const Header = () => {
             <Row className="d-block d-md-none">
               <div className=" row search-bar p-2 my-2 rounded-3">
                 <Col xs={1} className="d-block d-lg-none"></Col>
-                <Col xs={3} className=" bg-light p-2">
-                  <Form.Select className="bg-transparent border-0 ">
-                    <option>All Categories</option>
-                    <option>Groceries</option>
-                    <option>Drinks</option>
-                    <option>Chocolates</option>
-                  </Form.Select>
-                </Col>
-                <Col xs={6} className=" bg-light p-2">
+                <Col xs={9} className=" bg-light p-2">
                   <Form id="search-form" className="text-center">
                     <Form.Control
                       type="text"
                       className="border-0 bg-transparent"
                       placeholder="Search for more than 20,000 products"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
                     />
                   </Form>
                 </Col>
-                <Col xs={1} className=" bg-light p-2">
+                <Col
+                  xs={1}
+                  className=" bg-light p-2"
+                  onClick={() => navigate(`/Ecommerce/search?name=${search}`)}
+                >
                   <i className="fa-solid fa-magnifying-glass fs-4 pt-2"></i>
                 </Col>
                 <Col xs={1} className="d-block d-lg-none"></Col>
@@ -175,29 +370,91 @@ const Header = () => {
             className="bg-warning  d-flex justify-content-center align-items-center rounded-circle"
             style={{ width: "40px", height: "40px" }}
           >
-            <span className="text-white p-0">0</span>
+            <span className="total item text-white p-0">
+              {cartData?.Quantity}
+            </span>
           </div>
         </Offcanvas.Header>
-        <Offcanvas.Body>
-          <ListGroup>
-            <ListGroup.Item className="px-0">
-              <div className="d-flex gap-2">
-                <img
-                  src={image}
-                  alt=""
-                  className="p-0 m-0"
-                  style={{ width: "80px", height: "80px" }}
-                />
-                <div className="inforItem d-flex">
-                  <div className="">
-                    <p>Product Name</p>
-                  </div>
-                </div>
-              </div>
-            </ListGroup.Item>
-          </ListGroup>
+        <Offcanvas.Body className="h-100 d-flex flex-column" ref={cartRef}>
+          <div className="flex-grow-1 overflow-auto">
+            <ListGroup>
+              {cartLoading ? (
+                <p>Loading Cart Items .. </p>
+              ) : (
+                <>
+                  {cartData?.Items && cartData?.Items.length == 0 ? (
+                    <>
+                    <img 
+                      src={img_empty}
+                      alt="no data"
+                      className="object-fit-cover"></img>
+                      <p className="text-center text-muted">Your cart is empty</p>
+                      </>
+                  ) : ((cartData?.Items || []).map((item, itemIndex) => (
+                    (item.ProductVariant || []).map((variant, variantIndex) => (
+                      <ListGroup.Item
+                        className="px-1 border-0 border-bottom"
+                        key={`${itemIndex}-${variantIndex}`}
+                      >
+                      <div className="d-flex gap-3">
+                        <img
+                          src={variant.Image}
+                          alt=""
+                          className="p-0 m-0"
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <div className="overflow-hidden flex-grow-1">
+                          <p
+                            className={`product-name-cart two-line-truncate ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}
+                            style={{ fontSize: "0.8rem" }}
+                          >
+                            {item.ProductName}
+                          </p>
+                        </div>
+                          <span className={`fw-light text-muted ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`} style={{ fontSize: "0.7rem" }}>{variant.ProductVariantName}</span>
+                        <p
+                          className={`product-price text-danger ${variant.Status == "Inactive" || item.ShopStatus === "Inactive" || item.ProductStatus === "Inactive" ? "text-decoration-line-through" : ""}`}
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          {variant.Price? variant.Price.toLocaleString("vi-VN") : "0".toLocaleString("vi-VN")}
+                        </p>
+                        </div>
+                      </ListGroup.Item>
+                    )
+                  )))
+                  )}
+                </>
+              )}
+            </ListGroup>
+          </div>
+          <div className="p-3 border-top mb-auto">
+            <button
+              className="btn bg-warning w-100 text-white fw-bold"
+              onClick={() => navigate("/Ecommerce/user/cart")}
+            >
+              XEM GIỎ HÀNG
+            </button>
+          </div>
         </Offcanvas.Body>
       </Offcanvas>
+      <ToastContainer position="top-center" className="p-3">
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={2000}
+          autohide
+          bg="warning"
+        >
+          <Toast.Header>
+            <strong className="me-auto">Thông báo</strong>
+          </Toast.Header>
+          <Toast.Body>Vui lòng đăng nhập trước!</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </>
   );
 };

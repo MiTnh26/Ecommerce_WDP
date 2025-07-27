@@ -17,7 +17,7 @@ const orderSchema = new mongoose.Schema(
     },
     Status: {
       type: String,
-      enum: ["Pending", "Completed", "Cancelled"],
+      enum: ["Pending", "Cancelled", "Delivered"],
       default: "Pending",
     },
     TotalAmount: {
@@ -25,10 +25,29 @@ const orderSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
-    UserId: {
+    BuyerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    ShopId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shop",
+      required: true,
+    },
+    Items: 
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "OrderItem",
+      }
+    ,
+    receiverName: {
+      type: String,
+      default: "",
+    },
+    phoneNumber: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }

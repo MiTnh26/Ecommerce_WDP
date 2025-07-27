@@ -1,0 +1,21 @@
+.product-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.4;
+  max-height: calc(1.4em * 2); /* Đảm bảo chiều cao tối đa cho 2 dòng */
+}
+.flex-basic-15{
+    flex-basis: 15%;
+    
+}
+.flex-basic-10{
+    flex-basis: 10%;
+}
+.option-choose-voucher{
+    font-size: 0.8rem;
+}

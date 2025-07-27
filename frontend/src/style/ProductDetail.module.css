@@ -1,0 +1,196 @@
+
+/* prodcut-summay-section */
+.product-summary-section {
+    display: flex;
+}
+
+/* img-product-view */
+.product-image-main {
+    width: 450px;
+    height: 450px;
+    overflow: hidden;
+}
+
+.thumbnail-list-product {
+    max-width: 450px;
+}
+
+.thumbnail-wrapper {
+    border: 1px solid #00000027;
+    /* đen nhạt */
+    flex: 0 0 auto;
+    width: 82px;
+    height: 82px;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.thumbnail-wrapper.active {
+    border-color: rgb(241, 208, 97);
+    border-width: 3px;
+    /* đen đậm hơn */
+}
+
+.prev-button {
+    position: absolute;
+    left: 0%;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.next-button {
+    position: absolute;
+    right: 0%;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+/* rating */
+.rating-text,
+.feedback-value {
+    text-decoration: underline;
+    text-underline-offset: 6px;
+}
+
+
+.feedback-text,
+.accuse {
+    font-size: 0.75rem;
+}
+
+/* price */
+.price-value::after {
+    content: "$";
+    font-size: 0.9rem;
+    color: red;
+}
+
+.price-old-value {
+    text-decoration: line-through;
+
+    &::after {
+        /*::after là pseudo-element được render như một phần nội dung inline mặc định. 
+                    => thêm display: inline-block
+                    => tách ::after ra khỏi dòng văn bản gốc (inline text) => trở thành một hộp riêng biệt (box)*/
+        content: "$";
+        font-size: 0.8rem;
+        color: black;
+        text-decoration: none;
+        display: inline-block;
+    }
+}
+
+.price-discount {
+    font-size: 0.7rem;
+    font-weight: bold;
+    background: #f29292;
+}
+
+/* size, color */
+.color-label,
+.size-label,
+.quantity-label {
+    width: 80px;
+}
+
+.list-item-color {
+    height: 90px;
+    max-height: 90px;
+    padding-right: 10px;
+}
+
+.list-item-size {
+    height: 150px;
+    max-height: 150px;
+    padding-right: 10px;
+}
+
+/* scrollbar size color cho trình duyệt WebKit (Chrome, Safari, Edge) */
+
+.list-item-color::-webkit-scrollbar,
+.list-item-size::-webkit-scrollbar {
+    width: 6px;
+    margin-left: 3px;
+}
+
+.list-item-color::-webkit-scrollbar-track,
+.list-item-size::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    /* Màu nền track */
+    border-radius: 10px;
+}
+
+.list-item-color::-webkit-scrollbar-thumb,
+.list-item-size::-webkit-scrollbar-thumb {
+    background: #888;
+    /* Màu thanh cuộn */
+    border-radius: 10px;
+}
+
+
+
+/* quality CSS */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinner {
+    -moz-appearance: textfield;
+}
+
+/* add to cart */
+.btn-buy-now:hover,
+.btn-add-cart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+/* view shop */
+.vertical-line {
+    width: 2px;
+    height: 60px;
+    background-color: #00000027;
+}
+
+/* outstanding */
+.product-outstanding {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+@media (max-width: 1026px) {
+    .product-summary-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
+.card-item-related{
+    flex: 0 0 calc(20% - 0.4rem), 
+}
+
+/* Khi dưới 768px: đổi sang ngang, chia 3 */
+@media (max-width: 768px) {
+    .product-outstanding {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        /* Cho phép xuống hàng */
+        gap: 10px;
+    }
+     .card-item-outstanding,
+     .card-item-related {
+        flex: 0 0 calc(33.333% - 14px);
+        /* Chia 3 cột và trừ gap */
+        box-sizing: border-box;
+        min-width: 0;
+    }
+}

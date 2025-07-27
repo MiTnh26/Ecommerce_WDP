@@ -2,7 +2,7 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
-import SideBar from "./SideBar";
+// import SideBar from "./SideBar";
 
 const MainLayout = () => {
   return (
@@ -11,11 +11,11 @@ const MainLayout = () => {
         <Header />
       </header>
 
-      <div className="container">
+      {/* <div className="container">
         <SideBar />
-      </div>
+      </div> */}
 
-      <main className="flex-fill container-fluid">
+      <main className="flex-fill container-fluid p-0 m-0" style={{backgroundColor:"#f5f5f5"}}>
         <Outlet />
       </main>
 

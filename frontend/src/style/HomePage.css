@@ -5,3 +5,12 @@
 .nav-underline .nav-link.active {
   border-bottom: 3px solid hsl(29, 88.6%, 55.3%) !important;
 }
+.two-line-truncate {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Số dòng muốn hiển thị */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal; /* Phải để là normal để xuống dòng */
+  max-height: 2.6em; /* Tuỳ theo line-height của font-size */
+}

@@ -5,8 +5,18 @@ import {
   LoginPage,
   RegisterPage,
   ForgotPasswordPage,
-} from "../pages/Public/index";
+  ProductDetail,
+  ProductList,
+} from "../pages/public/index";
+import { Navigate } from "react-router-dom";
+
 const PublicRoutes = [
+  // 🔁 Redirect "/" => "/Ecommerce/home"
+  {
+    path: "/",
+    element: <Navigate to="/Ecommerce/home" replace />,
+  },
+
   {
     path: "/Ecommerce",
     element: <MainLayout />, // dùng Outlet bên trong layout
@@ -14,6 +24,14 @@ const PublicRoutes = [
       {
         path: "home",
         element: <HomePage />,
+      },
+      {
+        path: "product-detail/:id",
+        element: <ProductDetail />,
+      },
+      {
+        path: "/Ecommerce/search",
+        element: <ProductList />,
       },
     ],
   },
@@ -30,8 +48,6 @@ const PublicRoutes = [
     element: <ForgotPasswordPage />,
   },
   { path: "*", element: <NotFound404 /> },
-
-  
 ];
 
 export default PublicRoutes;

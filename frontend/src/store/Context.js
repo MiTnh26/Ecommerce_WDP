@@ -1,17 +1,25 @@
-import { createContext, useState } from "react";
 
+import { createContext, useEffect, useState } from "react";
 //1. Tao context
-const AppContext = createContext();
+export const AppContext = createContext();
 
 //2. Tao provider
 export function AppProvider({ children }) {
-    const [dataTest, setDataTest] = useState("hello");
-
-    return (
-        <AppContext.Provider value={{ 
-            dataTest, setDataTest 
-            }}>
-            {children}
-        </AppContext.Provider>
-    )
+  const [checkOut, setCheckOut] = useState();
+  useEffect(() => {
+    if (checkOut) {
+      localStorage.setItem("checkOutData", JSON.stringify(checkOut));
+    }
+  }, [checkOut]);
+  
+  return (
+    <AppContext.Provider
+      value={{
+        checkOut,
+        setCheckOut,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
 }

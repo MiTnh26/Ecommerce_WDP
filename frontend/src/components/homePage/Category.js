@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap';
+import '../../style/category.css'
+import { useNavigate } from 'react-router-dom';
+import { AppContext  } from "../../store/Context";
+import { useContext } from "react"; 
 // default values trong es6 Component = CategoryItemDefault
-const Category = ({ dataList, title, Component = CategoryItemDefault }) => {
+const Category = ({ dataList, title, Component = CategoryItemDefault, dataLength, onClickNext }) => {
     const [itemsPerView, setItemsPerView] = useState(2); // default với mobile = 2
     const [currentIndex, setCurrentIndex] = useState(0); // Tinh toan index slide hien tai và gia tri can truot
-    console.log(dataList)
+    //console.log(dataList)
     // update items khi resize
     useEffect(() => {
         // set up 4 3 2
@@ -23,11 +27,14 @@ const Category = ({ dataList, title, Component = CategoryItemDefault }) => {
         return () => window.removeEventListener("resize", updateItemsPerView)
     }, []) // dependence one mounted
     // Tinh toán số slide có thể trượt 
-    const maxSlides = Math.max(0, dataList.length - itemsPerView);
+    const maxSlides = Math.max(0, dataLength - itemsPerView);
     // Tinh toán phần trăm translateX cần trượt trái 
     const transformValue = -(currentIndex * (100 / itemsPerView))
     // xu ly next slide
     const handleNext = () => {
+        if (typeof onClickNext === 'function' && dataList.length < dataLength) {
+            onClickNext();
+        }
         setCurrentIndex((prev) => Math.min(prev + 1, maxSlides));
     }
     // xu ly prev slide
@@ -39,7 +46,7 @@ const Category = ({ dataList, title, Component = CategoryItemDefault }) => {
             <div className="controls mb-2 d-flex justify-content-between">
                 <p className="title h3">{title}</p>
                 <div className="controls button d-flex align-items-center">
-                    <p className="text-muted fw-bold p-0 m-0 me-3"> View All Category <i className="fa-solid fa-arrow-right text-muted"></i></p>                
+                    <p className="text-muted fw-bold p-0 m-0 me-3"> View All {title.charAt(0).toUpperCase() + title.slice(1)} <i className="fa-solid fa-arrow-right text-muted"></i></p>                
                         <Button className={`bg-light rounded-2 border-0 ${currentIndex === 0 ? 'text-white' : 'text-black'}`} onClick={handlePrev} disabled={currentIndex === 0}>
                             {/* <i className="fa-solid fa-arrow-left"></i>*/} ❮
                         </Button>
@@ -57,9 +64,9 @@ const Category = ({ dataList, title, Component = CategoryItemDefault }) => {
                     }}
                 >
                     {dataList.length > 0 &&
-                        dataList.map((item) => (
+                        dataList.map((item, index) => (
                             <div
-                                key={item.id}
+                                key={index}
                                 className="flex-shrink-0"
                                 style={{
                                     width: `calc(${100 / itemsPerView}% - 1rem)`,
@@ -76,7 +83,7 @@ const Category = ({ dataList, title, Component = CategoryItemDefault }) => {
             {Array.from({ length: maxSlides + 1 }).map((_, index) => (
               <Button
                 key={index}
-                onClick={() => setCurrentIndex(index)}
+                //onClick={() => setCurrentIndex(index)}
                 variant={index === currentIndex ? "primary" : "light"}
                 
                 className="rounded-circle mx-1 p-0"
@@ -89,13 +96,21 @@ const Category = ({ dataList, title, Component = CategoryItemDefault }) => {
 }
 
 export default Category;
-export const CategoryItemDefault = ({ item }) => (
-    <div
-        className="border rounded-3 d-flex flex-column justify-content-center align-items-center"
-        style={{
-            aspectRatio: "5/3"
-        }}>
-        <div className="fs-1 mb-2">{item.icon}</div>
-        <h5 className="fw-semibold mt-2">{item.title}</h5>
-    </div>
-)
+export const CategoryItemDefault = ({ item }) => {
+    const navigate = useNavigate(); // 👈 gọi tại đây
+     const {filterData} = useContext(AppContext);
+    return (
+        <div
+            className="border rounded-3 d-flex flex-column justify-content-center align-items-center"
+            style={{
+                aspectRatio: "5/3"
+            }}
+            onClick={() => {            
+                filterData("", item._id);
+                navigate(`/Ecommerce/search?name=&category=${item._id}`);
+            }}>
+            <div className="fs-1 mb-2">{item.icon}</div>
+            <h5 className="fw-semibold mt-2">{item.CategoryName}</h5>
+        </div>
+    )
+}
